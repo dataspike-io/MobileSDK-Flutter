@@ -11,6 +11,8 @@ dependencies:
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
+  flutter_svg: ^2.0.10+1
+  url_launcher: ^6.2.6
 
 dev_dependencies:
   flutter_test:
@@ -32,6 +34,16 @@ flutter:
   # This is required for using `dart:ffi`.
   # All these are used by the tooling to maintain consistency when
   # adding or updating assets for this project.
+  assets:
+    - assets/images/
+  
+  fonts:
+      - family: Mont
+        fonts:
+          - asset: assets/fonts/Mont-Regular.ttf
+          - asset: assets/fonts/Mont-Semibold.ttf
+            weight: 500
+
   plugin:
     platforms:
       android:

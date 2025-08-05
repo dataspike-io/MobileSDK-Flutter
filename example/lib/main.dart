@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:dataspikemobilesdk/dataspikemobilesdk.dart';
+import 'package:dataspikemobilesdk/screens/onboarding_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -50,14 +51,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Plugin example app'),
-        ),
-        body: Center(
-          child: Text('Running on: $_platformVersion\n'),
-        ),
-      ),
+      home: OnboardingScreen(),
     );
   }
 }
