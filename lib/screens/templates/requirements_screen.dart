@@ -25,31 +25,29 @@ class DocumentRequirementsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top + 16;
+
     return Scaffold(
       backgroundColor: AppColors.white,
       body: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 400),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: EdgeInsets.fromLTRB(16, topPadding, 16, 0),
           decoration: const BoxDecoration(color: AppColors.white),
           child: Stack(
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 32),
                   Row(
                     children: [
-                      IconButton(
-                        onPressed: () => Navigator.of(context).maybePop(),
-                        icon: SvgPicture.asset(
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).maybePop(),
+                        child: SvgPicture.asset(
                           'packages/dataspikemobilesdk/assets/images/back_arrow.svg',
-                          width: 36,
-                          height: 36,
-                          fit: BoxFit.fill,
+                          width: 24,
+                          height: 30,
+                          fit: BoxFit.contain,
                         ),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -69,30 +67,49 @@ class DocumentRequirementsScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontFamily: 'Mont',
-                      package: 'dataspikemobilesdk',
-                      color: AppColors.textGrey,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
                   Expanded(
-                    child: GridView.builder(
-                      itemCount: requirements.length,
-                      padding: EdgeInsets.only(bottom: 70),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 6,
+                    child: CustomScrollView(
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                subtitle,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontFamily: 'Mont',
+                                  package: 'dataspikemobilesdk',
+                                  color: AppColors.textGrey,
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+                            ],
                           ),
-                      itemBuilder: (context, index) {
-                        final r = requirements[index];
-                        return RequirementBox(image: r.image, label: r.text);
-                      },
+                        ),
+                        SliverGrid(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                mainAxisSpacing: 12,
+                                crossAxisSpacing: 6,
+                                childAspectRatio: 1,
+                              ),
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
+                            final r = requirements[index];
+                            return RequirementBox(
+                              image: r.image,
+                              label: r.text,
+                            );
+                          }, childCount: requirements.length),
+                        ),
+                        SliverToBoxAdapter(
+                          child: SizedBox(height: 70),
+                        ), // отступ под кнопку
+                      ],
                     ),
                   ),
                 ],

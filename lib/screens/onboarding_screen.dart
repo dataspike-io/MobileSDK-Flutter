@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:dataspikemobilesdk/ui/dashboard_underline_text.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
-import 'package:dataspikemobilesdk/screens/templates/requirements_screen.dart';
+import 'package:dataspikemobilesdk/screens/builders/screens_factory.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({Key? key}) : super(key: key);
@@ -57,7 +57,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     fontFamily: 'Mont',
                     fontWeight: FontWeight.w500,
                     package: 'dataspikemobilesdk',
-                    color: AppColors.black
+                    color: AppColors.black,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -98,7 +98,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       color: AppColors.black,
                                       fontFamily: 'Mont',
                                       fontWeight: FontWeight.w500,
-                                      package: 'dataspikemobilesdk'
+                                      package: 'dataspikemobilesdk',
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -220,7 +220,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => documentRequirementsScreen,
+                        builder: (context) =>
+                            RequirementScreenFactory.documentRequirementsScreen(
+                              context: context,
+                              onContinue: () {},
+                            ),
                       ),
                     );
                   },
@@ -269,40 +273,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 }
-
-final documentRequirementsScreen = DocumentRequirementsScreen(
-  title: 'Document Requirements',
-  subtitle: 'To confirm your identity, we need you to upload a valid document. Check out the requirements below',
-  requirements: [
-    Requirement(
-      image: 'packages/dataspikemobilesdk/assets/images/document_requirements_1.svg',
-      text: 'Original, full-size, unedited document',
-    ),
-    Requirement(
-      image: 'packages/dataspikemobilesdk/assets/images/document_requirements_2.svg',
-      text: 'No black and white images',
-    ),
-    Requirement(
-      image: 'packages/dataspikemobilesdk/assets/images/document_requirements_3.svg',
-      text: 'No dark images',
-    ),
-    Requirement(
-      image: 'packages/dataspikemobilesdk/assets/images/document_requirements_4.svg',
-      text: 'No blurred and without reflections',
-    ),
-    Requirement(
-      image: 'packages/dataspikemobilesdk/assets/images/document_requirements_5.svg',
-      text: 'No damaged documents',
-    ),
-    Requirement(
-      image: 'packages/dataspikemobilesdk/assets/images/document_requirements_6.svg',
-      text: 'No expired documents',
-    ),
-  ],
-  onContinue: () {
-    /* ... */
-  },
-);
 
 class _OnboardingSlide {
   final String image;

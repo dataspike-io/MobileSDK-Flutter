@@ -38,11 +38,11 @@ flutter:
     - assets/images/
   
   fonts:
-      - family: Mont
-        fonts:
-          - asset: assets/fonts/Mont-Regular.ttf
-          - asset: assets/fonts/Mont-Semibold.ttf
-            weight: 500
+    - family: Mont
+      fonts:
+        - asset: assets/fonts/Mont_Regular.ttf
+        - asset: assets/fonts/Mont_Semibold.ttf
+          weight: 500
 
   plugin:
     platforms:
