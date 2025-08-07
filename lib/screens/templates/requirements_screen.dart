@@ -1,6 +1,8 @@
 import 'package:dataspikemobilesdk/colors/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:dataspikemobilesdk/ui/continue_button.dart';
+import 'package:dataspikemobilesdk/ui/requirement_box.dart';
 
 class Requirement {
   final String image;
@@ -39,6 +41,7 @@ class DocumentRequirementsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       GestureDetector(
                         onTap: () => Navigator.of(context).maybePop(),
@@ -120,77 +123,13 @@ class DocumentRequirementsScreen extends StatelessWidget {
                 bottom: 24,
                 child: SafeArea(
                   top: false,
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 46,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.accent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      onPressed: onContinue,
-                      child: const Text(
-                        'Continue',
-                        style: TextStyle(
-                          fontFamily: 'Mont',
-                          package: 'dataspikemobilesdk',
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
-                          color: AppColors.white,
-                        ),
-                      ),
-                    ),
-                  ),
+                  child: ContinueButton(onPressed: onContinue),
                 ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class RequirementBox extends StatelessWidget {
-  final String image;
-  final String label;
-
-  const RequirementBox({required this.image, required this.label, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: SvgPicture.asset(
-            image,
-            width: double.infinity,
-            height: double.infinity,
-            fit: BoxFit.fill, // или BoxFit.cover для полного заполнения
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 36,
-          width: double.infinity,
-          child: Text(
-            label,
-            textAlign: TextAlign.left,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontFamily: 'Mont',
-              package: 'dataspikemobilesdk',
-              fontWeight: FontWeight.w500,
-              fontSize: 12,
-              color: AppColors.black,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

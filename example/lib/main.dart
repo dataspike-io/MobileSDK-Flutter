@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/dataspikemobilesdk.dart';
-import 'package:dataspikemobilesdk/screens/onboarding_screen.dart';
+import 'package:dataspikemobilesdk/screens/onboarding_screen/onboarding_screen.dart';
 
 void main() {
   runApp(const MyApp());

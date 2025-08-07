@@ -5,6 +5,8 @@ import 'package:dataspikemobilesdk/ui/dashboard_underline_text.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:dataspikemobilesdk/screens/builders/screens_factory.dart';
+import 'package:dataspikemobilesdk/ui/continue_button.dart';
+import 'package:dataspikemobilesdk/ui/custom_checkbox_tile.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({Key? key}) : super(key: key);
@@ -244,27 +246,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 SizedBox(
                   height: 44,
                   width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
+                  child: ContinueButton(
                     onPressed: termsAccepted && dataAccepted ? () {} : null,
-                    child: const Text(
-                      'Start Verification',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.white,
-                        fontFamily: 'Mont',
-                        fontWeight: FontWeight.w500,
-                        package: 'dataspikemobilesdk',
-                      ),
-                    ),
-                  ),
-                ),
+                    text: "Start Verification"
+                    )
+                )
               ],
             ),
           ),
@@ -278,54 +264,4 @@ class _OnboardingSlide {
   final String image;
   final String text;
   const _OnboardingSlide({required this.image, required this.text});
-}
-
-class CustomCheckboxTile extends StatelessWidget {
-  final bool value;
-  final ValueChanged<bool?> onChanged;
-  final InlineSpan text;
-
-  const CustomCheckboxTile({
-    required this.value,
-    required this.onChanged,
-    required this.text,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => onChanged(!value),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(1),
-            child: Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                border: Border.all(color: AppColors.accent, width: 1),
-                color: Colors.transparent,
-              ),
-              alignment: Alignment.center,
-              child: value
-                  ? SvgPicture.asset(
-                      'packages/dataspikemobilesdk/assets/images/check_icon.svg',
-                      height: 8.5,
-                      width: 12,
-                      fit: BoxFit.contain,
-                    )
-                  : null,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: RichText(text: text, textAlign: TextAlign.left),
-          ),
-        ],
-      ),
-    );
-  }
 }

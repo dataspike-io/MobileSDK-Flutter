@@ -1,7 +1,7 @@
 
 import 'dataspikemobilesdk_platform_interface.dart';
 import 'package:flutter/material.dart';
-import 'screens/onboarding_screen.dart';
+import 'screens/onboarding_screen/onboarding_screen.dart';
 
 class Dataspikemobilesdk {
   Future<String?> getPlatformVersion() {

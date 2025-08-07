@@ -128,17 +128,7 @@ class RequirementScreenFactory {
           text: 'No expired documents',
         ),
       ],
-      onContinue: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) =>
-                RequirementScreenFactory.documentRequirementsScreen(
-                  context: context,
-                  onContinue: () {},
-                ),
-          ),
-        );
-      },
+      onContinue: onContinue
     );
   }
 }
