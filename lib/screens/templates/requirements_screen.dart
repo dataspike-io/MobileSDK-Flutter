@@ -111,7 +111,7 @@ class DocumentRequirementsScreen extends StatelessWidget {
                         ),
                         SliverToBoxAdapter(
                           child: SizedBox(height: 70),
-                        ), // отступ под кнопку
+                        ),
                       ],
                     ),
                   ),

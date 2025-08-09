@@ -128,7 +128,7 @@ class RequirementScreenFactory {
           text: 'No expired documents',
         ),
       ],
-      onContinue: onContinue
+      onContinue: () => Navigator.of(context).popUntil((route) => route.isFirst),
     );
   }
 }

@@ -7,6 +7,9 @@ import 'package:flutter/gestures.dart';
 import 'package:dataspikemobilesdk/screens/builders/screens_factory.dart';
 import 'package:dataspikemobilesdk/ui/continue_button.dart';
 import 'package:dataspikemobilesdk/ui/custom_checkbox_tile.dart';
+import 'package:dataspikemobilesdk/timer/timer_box.dart';
+import 'package:dataspikemobilesdk/screens/alarm_screen/alarm_screen.dart';
+import 'package:dataspikemobilesdk/screens/recommendations_screen/recommendations_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({Key? key}) : super(key: key);
@@ -63,8 +66,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 24),
-                // Swipeable block (PageView + dots)
+                const SizedBox(height: 12),
+                TimeBox(
+                  initialTime: Duration(hours: 30),
+                  onFinish: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (_) => const VerificationExpiredScreen(),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                ),
+                // Handle timer finish;
+                const SizedBox(height: 12),
                 SizedBox(
                   height: 238,
                   width: double.infinity,
@@ -236,6 +251,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       color: AppColors.accent,
                       fontFamily: 'Mont',
                       fontWeight: FontWeight.w500,
+                      package: 'dataspikemobilesdk',
                       fontSize: 14,
                       letterSpacing: 0.2,
                     ),
@@ -247,10 +263,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   height: 44,
                   width: double.infinity,
                   child: ContinueButton(
-                    onPressed: termsAccepted && dataAccepted ? () {} : null,
-                    text: "Start Verification"
-                    )
-                )
+                    onPressed: termsAccepted && dataAccepted ? () {
+                      Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) =>
+                           DocumentRecomendationScreen()
+                      ),
+                    );
+                    } : null,
+                    text: "Start Verification",
+                  ),
+                ),
               ],
             ),
           ),
