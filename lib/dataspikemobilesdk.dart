@@ -1,14 +1,18 @@
-
-import 'dataspikemobilesdk_platform_interface.dart';
 import 'package:flutter/material.dart';
-import 'screens/onboarding_screen/onboarding_screen.dart';
+import 'main/models/dataspike_dependencies.dart';
+import 'main/manager/dataspike_manager.dart';
+import 'main/models/verification_completion.dart';
 
 class Dataspikemobilesdk {
-  Future<String?> getPlatformVersion() {
-    return DataspikemobilesdkPlatform.instance.getPlatformVersion();
-  }
-
-  static Future<void> navigateToMyScreen(BuildContext context) async {
-    await Navigator.of(context).push(OnboardingScreen.route());
+  Future<void> startDataspikeFlow({
+    required BuildContext context,
+    required DataspikeDependencies dependencies,
+    required VerificationCompletedCallback callback,
+  }) async {
+    DataspikeManager.startDataspikeFlow(
+      dependencies: dependencies,
+      callback: callback,
+      context: context,
+    );
   }
 }

@@ -1,0 +1,42 @@
+class VerificationSettingsResponse {
+  final bool? poiRequired;
+  final List<String>? poiAllowedDocuments;
+  final bool? faceComparisonRequired;
+  final List<String>? faceComparisonAllowedDocuments;
+  final bool? poaRequired;
+  final List<String>? poaAllowedDocuments;
+  final List<String>? countries;
+  final String? uiSettings;
+
+  VerificationSettingsResponse({
+    this.poiRequired,
+    this.poiAllowedDocuments,
+    this.faceComparisonRequired,
+    this.faceComparisonAllowedDocuments,
+    this.poaRequired,
+    this.poaAllowedDocuments,
+    this.countries,
+    this.uiSettings,
+  });
+
+  factory VerificationSettingsResponse.fromJson(Map<String, dynamic> json) {
+    return VerificationSettingsResponse(
+      poiRequired: json['poi_required'] as bool?,
+      poiAllowedDocuments: json['poi_allowed_documents'] != null
+          ? List<String>.from(json['poi_allowed_documents'] as List)
+          : null,
+      faceComparisonRequired: json['face_comparison_required'] as bool?,
+      faceComparisonAllowedDocuments: json['face_comparison_allowed_documents'] != null
+          ? List<String>.from(json['face_comparison_allowed_documents'] as List)
+          : null,
+      poaRequired: json['poa_required'] as bool?,
+      poaAllowedDocuments: json['poa_allowed_documents'] != null
+          ? List<String>.from(json['poa_allowed_documents'] as List)
+          : null,
+      countries: json['countries'] != null
+          ? List<String>.from(json['countries'] as List)
+          : null,
+      uiSettings: json['ui_settings'] as String?,
+    );
+  }
+}

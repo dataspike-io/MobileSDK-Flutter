@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/dataspikemobilesdk.dart';
-import 'package:dataspikemobilesdk/screens/onboarding_screen/onboarding_screen.dart';
+import 'sample_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,14 +17,18 @@ class _MyAppState extends State<MyApp> {
   final _dataspikemobilesdkPlugin = Dataspikemobilesdk();
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: OnboardingScreen(),
+      home: DependenciesInputScreen(
+        onSubmit: (context, deps) {
+          Navigator.of(context).pop();
+          _dataspikemobilesdkPlugin.startDataspikeFlow(
+            context: context,
+            dependencies: deps,
+            callback: (status) {},
+          );
+        },
+      ),
     );
   }
 }
