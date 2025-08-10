@@ -13,6 +13,8 @@ dependencies:
   plugin_platform_interface: ^2.0.2
   flutter_svg: ^2.0.10+1
   url_launcher: ^6.2.6
+  camera: ^0.10.5+X
+  image: ^4.1.7
 
 dev_dependencies:
   flutter_test:

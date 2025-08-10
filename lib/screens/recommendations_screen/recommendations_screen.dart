@@ -6,6 +6,7 @@ import 'package:dataspikemobilesdk/ui/continue_button.dart';
 import 'package:dataspikemobilesdk/ui/dashboard_underline_text.dart';
 import 'package:dataspikemobilesdk/ui/rich_title.dart';
 import 'package:dataspikemobilesdk/ui/tab_chip.dart';
+import 'package:dataspikemobilesdk/screens/camera/camera_screen.dart';
 
 class DocumentRecomendationScreen extends StatelessWidget {
   final VoidCallback? onBack;
@@ -106,7 +107,17 @@ class DocumentRecomendationScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                  ContinueButton(onPressed: onContinue),
+                  ContinueButton(onPressed: () {
+                     Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) =>
+                           LiveCropCamera(
+                            cropBox: const Size(260, 360),
+                            onCropped: (bytes) { }
+                           )
+                      )
+                     );
+                  }),
                 ],
               ),
             ],
