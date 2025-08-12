@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/dataspikemobilesdk.dart';
-import 'sample_screen.dart';
+import 'src/view/sample_screen.dart';
 
 void main() {
   runApp(const MyApp());

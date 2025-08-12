@@ -18,7 +18,7 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
 
   @override
   Future<VerificationResponse> getVerification(String shortId) async {
-    final url = Uri.parse('$baseUrl${DataspikeEndpoint.getVerification.path(shortId: 'VBA45F44FB3FE268F')}');
+    final url = Uri.parse('$baseUrl${DataspikeEndpoint.getVerification.path(shortId: shortId)}');
     final headers = DataspikeEndpoint.getVerification.headers(apiToken);
 
     final response = await http.get(url, headers: headers);
