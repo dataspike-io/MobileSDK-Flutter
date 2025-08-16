@@ -21,6 +21,18 @@ extension DataspikeEndpointPath on DataspikeEndpoint {
         return 'api/v3/sdk/${shortId ?? ''}/proceed';
     }
   }
+
+  String method() {
+    switch (this) {
+      case DataspikeEndpoint.getVerification:
+      case DataspikeEndpoint.getCountries:
+        return 'GET';
+      case DataspikeEndpoint.uploadImage:
+      case DataspikeEndpoint.setCountry:
+      case DataspikeEndpoint.proceedWithVerification:
+        return 'POST';
+    }
+  }
 }
 
 extension DataspikeEndpointHeaders on DataspikeEndpoint {

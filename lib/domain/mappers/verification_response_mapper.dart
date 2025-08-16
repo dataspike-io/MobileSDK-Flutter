@@ -1,5 +1,5 @@
 import 'package:dataspikemobilesdk/data/models/response/verification_response.dart';
-import 'package:dataspikemobilesdk/domain/models/verification_state.dart';
+import 'package:dataspikemobilesdk/domain/models/states/verification_state.dart';
 import 'package:dataspikemobilesdk/domain/models/dataspike_verification_checks_domain_model.dart';
 import 'package:dataspikemobilesdk/domain/models/dataspike_checks_domain_model.dart';
 import 'package:dataspikemobilesdk/domain/models/dataspike_error_domain_model.dart';

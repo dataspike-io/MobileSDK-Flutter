@@ -1,5 +1,5 @@
-import 'dataspike_verification_checks_domain_model.dart';
-import 'verification_settings_domain_model.dart';
+import '../dataspike_verification_checks_domain_model.dart';
+import '../verification_settings_domain_model.dart';
 
 abstract class VerificationState {
   const VerificationState();

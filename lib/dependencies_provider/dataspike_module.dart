@@ -3,6 +3,11 @@ import 'package:dataspikemobilesdk/data/api/dataspike_api_service.dart';
 import 'package:dataspikemobilesdk/data/repository/dataspike_repository.dart';
 import 'package:dataspikemobilesdk/domain/managers/dataspike_verification_manager.dart';
 import 'package:dataspikemobilesdk/domain/mappers/verification_response_mapper.dart';
+import 'package:dataspikemobilesdk/domain/mappers/upload_image_response_mapper.dart';
+import 'package:dataspikemobilesdk/domain/mappers/countries_response_mapper.dart';
+import 'package:dataspikemobilesdk/domain/mappers/empty_response_mapper.dart';
+import 'package:dataspikemobilesdk/domain/mappers/proceed_with_verification_response_mapper.dart';
+
 
 abstract class DataspikeModule {
   IDataspikeRepository get dataspikeRepository;
@@ -27,6 +32,10 @@ class DataspikeModuleImpl implements DataspikeModule {
       apiService: apiService,
       shortId: dependencies.shortId,
       verificationResponseMapper: VerificationResponseMapper(),
+      uploadImageResponseMapper: UploadImageResponseMapper(),
+      countriesResponseMapper: CountriesResponseMapper(),
+      emptyResponseMapper: EmptyResponseMapper(),
+      proceedWithVerificationResponseMapper: ProceedWithVerificationResponseMapper(),
     );
     _verificationManager = VerificationManager();
   }

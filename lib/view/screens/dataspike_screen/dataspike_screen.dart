@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/view_models/dataspike_activity_view_model.dart';
 import 'package:dataspikemobilesdk/view_models/factory/dataspike_view_model_factory.dart';
-import 'package:dataspikemobilesdk/domain/models/verification_state.dart';
+import 'package:dataspikemobilesdk/domain/models/states/verification_state.dart';
 
 class DataspikeScreen extends StatefulWidget {
   final void Function(BuildContext context) onSuccess;

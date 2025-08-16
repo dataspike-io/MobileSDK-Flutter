@@ -1,6 +1,6 @@
 import 'package:dataspikemobilesdk/data/repository/dataspike_repository.dart';
 import 'package:dataspikemobilesdk/domain/managers/dataspike_verification_manager.dart';
-import 'package:dataspikemobilesdk/domain/models/verification_state.dart';
+import 'package:dataspikemobilesdk/domain/models/states/verification_state.dart';
 // import 'package:dataspikemobilesdk/domain/ui/ui_manager.dart';
 
 class VerificationUseCase {
