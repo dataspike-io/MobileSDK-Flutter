@@ -1,4 +1,4 @@
-import 'package:dataspikemobilesdk/dependecies_provider/dataspike_component.dart';
+import 'package:dataspikemobilesdk/dependencies_provider/dataspike_component.dart';
 import 'package:dataspikemobilesdk/main/models/dataspike_dependencies.dart';
 
 class DataspikeInjector {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:dataspikemobilesdk/dependecies_provider/dataspike_injector.dart';
+import 'package:dataspikemobilesdk/dependencies_provider/dataspike_injector.dart';
 import '../models/dataspike_verifications_status.dart';
 import '../models/verification_completion.dart';
 import '../models/dataspike_dependencies.dart';

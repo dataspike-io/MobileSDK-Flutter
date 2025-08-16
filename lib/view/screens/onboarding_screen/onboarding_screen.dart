@@ -10,6 +10,8 @@ import 'package:dataspikemobilesdk/view/ui/custom_checkbox_tile.dart';
 import 'package:dataspikemobilesdk/view/timer/timer_box.dart';
 import 'package:dataspikemobilesdk/view/screens/alarm_screen/alarm_screen.dart';
 import 'package:dataspikemobilesdk/view/screens/recommendations_screen/recommendations_screen.dart';
+import '/view_models/onboarding_view_model.dart';
+import '/view_models/factory/dataspike_view_model_factory.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({Key? key}) : super(key: key);
@@ -23,8 +25,7 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  bool termsAccepted = true;
-  bool dataAccepted = true;
+  late final OnboardingViewModel viewModel;
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
@@ -42,6 +43,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       text: 'Step 3. Prepare a proof of Address document',
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    viewModel = DataspikeViewModelFactory().create<OnboardingViewModel>();
+    viewModel.setVerificationTimer();
+    viewModel.addListener(_onViewModelChanged);
+  }
+
+  @override
+  void dispose() {
+    viewModel.removeListener(_onViewModelChanged);
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onViewModelChanged() {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,17 +87,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
-                TimeBox(
-                  initialTime: Duration(hours: 30),
-                  onFinish: () {
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (_) => const VerificationExpiredScreen(),
-                      ),
-                      (route) => false,
-                    );
-                  },
-                ),
+                if (viewModel.timerDuration != null)
+                  TimeBox(
+                    initialTime: viewModel.timerDuration!,
+                    onFinish: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (_) => const VerificationExpiredScreen(),
+                        ),
+                        (route) => false,
+                      );
+                    },
+                  ),
                 // Handle timer finish;
                 const SizedBox(height: 12),
                 SizedBox(
@@ -150,8 +171,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Spacer(),
                 // Checkbox 1
                 CustomCheckboxTile(
-                  value: termsAccepted,
-                  onChanged: (v) => setState(() => termsAccepted = v ?? false),
+                  value: viewModel.termsAccepted,
+                  onChanged: (v) => viewModel.setTermsAccepted(v ?? false),
                   text: TextSpan(
                     children: [
                       TextSpan(
@@ -192,8 +213,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 const SizedBox(height: 12),
                 // Checkbox 2
                 CustomCheckboxTile(
-                  value: dataAccepted,
-                  onChanged: (v) => setState(() => dataAccepted = v ?? false),
+                  value: viewModel.dataAccepted,
+                  onChanged: (v) => viewModel.setDataAccepted(v ?? false),
                   text: TextSpan(
                     children: [
                       TextSpan(
@@ -263,14 +284,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   height: 44,
                   width: double.infinity,
                   child: ContinueButton(
-                    onPressed: termsAccepted && dataAccepted ? () {
-                      Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) =>
-                           DocumentRecomendationScreen()
-                      ),
-                    );
-                    } : null,
+                    onPressed: viewModel.termsAccepted && viewModel.dataAccepted
+                        ? () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    DocumentRecomendationScreen(),
+                              ),
+                            );
+                          }
+                        : null,
                     text: "Start Verification",
                   ),
                 ),

@@ -18,7 +18,9 @@ class DataspikeCoordinator {
     );
   }
 
-  static void _showOnboarding(BuildContext context) {
+  static void _showOnboarding(
+    BuildContext context
+  ) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => OnboardingScreen(),
