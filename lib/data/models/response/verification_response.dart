@@ -20,7 +20,6 @@ class VerificationResponse {
     this.expiresAt,
   });
 
-  // Пример парсинга из JSON
   factory VerificationResponse.fromJson(Map<String, dynamic> json) {
     return VerificationResponse(
       id: json['id'] as String?,
