@@ -4,6 +4,7 @@ import 'package:image/image.dart' as img;
 import 'package:flutter/services.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:image_picker/image_picker.dart';
 
 class LiveCropCamera extends StatefulWidget {
   final Size cropBox;
@@ -126,6 +127,27 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
     widget.onCropped(Uint8List.fromList(out));
   }
 
+  Future<void> _pickAndUploadDocument() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? picked = await picker.pickImage(source: ImageSource.gallery);
+      if (picked == null) return;
+
+      final Uint8List raw = await picked.readAsBytes();
+
+      widget.onCropped(raw);
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Upload failed')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Upload error: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final previewKey = GlobalKey();
@@ -245,7 +267,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: _pickAndUploadDocument,
                     child: Text(
                       'Upload document',
                       style: TextStyle(
