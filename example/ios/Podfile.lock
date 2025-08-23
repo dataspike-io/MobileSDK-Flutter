@@ -4,7 +4,11 @@ PODS:
   - dataspikemobilesdk (0.0.1):
     - Flutter
   - Flutter (1.0.0)
+  - image_gallery_saver (2.0.2):
+    - Flutter
   - integration_test (0.0.1):
+    - Flutter
+  - permission_handler_apple (9.3.0):
     - Flutter
   - url_launcher_ios (0.0.1):
     - Flutter
@@ -13,7 +17,9 @@ DEPENDENCIES:
   - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/ios`)
   - dataspikemobilesdk (from `.symlinks/plugins/dataspikemobilesdk/ios`)
   - Flutter (from `Flutter`)
+  - image_gallery_saver (from `.symlinks/plugins/image_gallery_saver/ios`)
   - integration_test (from `.symlinks/plugins/integration_test/ios`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
 EXTERNAL SOURCES:
@@ -23,8 +29,12 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/dataspikemobilesdk/ios"
   Flutter:
     :path: Flutter
+  image_gallery_saver:
+    :path: ".symlinks/plugins/image_gallery_saver/ios"
   integration_test:
     :path: ".symlinks/plugins/integration_test/ios"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
 
@@ -32,7 +42,9 @@ SPEC CHECKSUMS:
   camera_avfoundation: be3be85408cd4126f250386828e9b1dfa40ab436
   dataspikemobilesdk: 17e854ca87fb3a4bcf36ff122e8510f63166bc86
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  image_gallery_saver: 14711d79da40581063e8842a11acf1969d781ed7
   integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
+  permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
   url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
 
 PODFILE CHECKSUM: 4305caec6b40dde0ae97be1573c53de1882a07e5

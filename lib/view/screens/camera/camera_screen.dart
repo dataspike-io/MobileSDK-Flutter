@@ -2,10 +2,12 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter/services.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class LiveCropCamera extends StatefulWidget {
-  final Size cropBox;                 
-  final ValueChanged<Uint8List> onCropped; 
+  final Size cropBox;
+  final ValueChanged<Uint8List> onCropped;
 
   const LiveCropCamera({
     super.key,
@@ -29,9 +31,12 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
 
   Future<void> _setup() async {
     final cams = await availableCameras();
+
     _ctrl = CameraController(
-      cams.firstWhere((c) => c.lensDirection == CameraLensDirection.back,
-          orElse: () => cams.first),
+      cams.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.back,
+        orElse: () => cams.first,
+      ),
       ResolutionPreset.max,
       enableAudio: false,
     );
@@ -48,58 +53,89 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
   Future<void> _shootAndCrop(GlobalKey previewKey) async {
     if (!(_ctrl?.value.isInitialized ?? false)) return;
 
+    await Permission.photos.request();
+
     final file = await _ctrl!.takePicture();
     final bytes = await file.readAsBytes();
 
     img.Image? original = img.decodeImage(bytes);
     if (original == null) return;
 
-    int imgW = original.width;
-    int imgH = original.height;
+    // 1) Учитываем EXIF — иначе кроп «съедет»
+    original = img.bakeOrientation(original);
 
-    final renderBox = previewKey.currentContext!.findRenderObject() as RenderBox;
-    final previewSize = renderBox.size; 
-    final camAspect = _ctrl!.value.previewSize!.height / _ctrl!.value.previewSize!.width; 
+    final imgW = original.width.toDouble();
+    final imgH = original.height.toDouble();
 
-    final widgetAR = previewSize.width / previewSize.height;
-    final imageAR  = 1 / camAspect;
+    // 2) Размер контейнера превью
+    final rb = previewKey.currentContext!.findRenderObject() as RenderBox;
+    final containerW = rb.size.width;
+    final containerH = rb.size.height;
 
-    double shownW, shownH;
-    if (widgetAR > imageAR) {
-      shownW = previewSize.width;
-      shownH = previewSize.width / imageAR;
+    // 3) Те же параметры, что в build()
+    final ps = _ctrl!.value.previewSize!;
+    final previewAR = ps.height / ps.width; // width/height (портрет)
+    final containerAR = containerW / containerH;
+    final coverScale = previewAR / containerAR; // как в Transform.scale
+
+    // 4) Базовый "fit" размер дочернего AspectRatio до масштабирования
+    double childW, childH;
+    if (containerAR > previewAR) {
+      // контейнер шире, чем превью — вписываем по высоте
+      childH = containerH;
+      childW = childH * previewAR;
     } else {
-      shownH = previewSize.height;
-      shownW = previewSize.height * imageAR;
+      // контейнер уже — вписываем по ширине
+      childW = containerW;
+      childH = childW / previewAR;
     }
 
-    final cropW = widget.cropBox.width;
-    final cropH = widget.cropBox.height;
-    final cropLeftInWidget = (previewSize.width - cropW) / 2;
-    final cropTopInWidget  = (previewSize.height - cropH) / 2;
+    // 5) Итоговый размер показанного кадра с учетом coverScale
+    final displayW = childW * coverScale;
+    final displayH = childH * coverScale;
 
-    final offsetX = (previewSize.width - shownW) / 2;
-    final offsetY = (previewSize.height - shownH) / 2;
+    // 6) Смещения (обрезка по краям из-за cover)
+    final offsetX = (containerW - displayW) / 2.0;
+    final offsetY = (containerH - displayH) / 2.0;
 
-    final fracLeft = (cropLeftInWidget - offsetX) / shownW;
-    final fracTop  = (cropTopInWidget - offsetY) / shownH;
-    final fracW    = cropW / shownW;
-    final fracH    = cropH / shownH;
+    // 7) Те же размеры рамки, что в UI
+    final screenSize = MediaQuery.of(context).size;
+    final cropW = screenSize.width * 0.85;
+    final cropH = screenSize.height * 0.45;
+    final cropLeftInWidget = (containerW - cropW) / 2.0;
+    final cropTopInWidget = (containerH - cropH) / 2.0;
 
-    int x = (fracLeft * imgW).clamp(0, imgW - 1).toInt();
-    int y = (fracTop  * imgH).clamp(0, imgH - 1).toInt();
-    int w = (fracW    * imgW).clamp(1, imgW - x).toInt();
-    int h = (fracH    * imgH).clamp(1, imgH - y).toInt();
+    // 8) Масштаб от изображения к показу (единичный в обеих осях)
+    final scale = displayW / imgW; // = displayH / imgH при корректном AR
+
+    int x = (((cropLeftInWidget - offsetX) / scale).round()).clamp(
+      0,
+      imgW.toInt() - 1,
+    );
+    int y = (((cropTopInWidget - offsetY) / scale).round()).clamp(
+      0,
+      imgH.toInt() - 1,
+    );
+    int w = ((cropW / scale).round()).clamp(1, imgW.toInt() - x);
+    int h = ((cropH / scale).round()).clamp(1, imgH.toInt() - y);
 
     final cropped = img.copyCrop(original, x: x, y: y, width: w, height: h);
-    final out = img.encodeJpg(cropped, quality: 95);
+    final out = img.encodeJpg(cropped, quality: 100);
 
+    await ImageGallerySaver.saveImage(Uint8List.fromList(out));
     widget.onCropped(Uint8List.fromList(out));
   }
 
   @override
   Widget build(BuildContext context) {
     final previewKey = GlobalKey();
+    final screenSize = MediaQuery.of(context).size;
+
+    final cropWidth = screenSize.width * 0.85;
+    final cropHeight = screenSize.height * 0.45;
+
+    final camWidth = screenSize.width - 10;
+    final camHeight = screenSize.height * 0.65;
 
     return FutureBuilder(
       future: _init,
@@ -107,80 +143,209 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
         if (snap.connectionState != ConnectionState.done) {
           return const Center(child: CircularProgressIndicator());
         }
-        final cropSize = widget.cropBox;
 
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            AspectRatio(
-              aspectRatio: _ctrl!.value.aspectRatio,
-              child: Container(
-                key: previewKey,
-                color: Colors.black,
-                child: CameraPreview(_ctrl!),
-              ),
-            ),
+        return Container(
+          color: Colors.white,
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              SizedBox(height: 128),
 
-            IgnorePointer(
-              child: CustomPaint(
-                size: Size.infinite,
-                painter: _OverlayMaskPainter(
-                  box: cropSize,
-                  borderColor: Colors.white,
+              Center(
+                child: SizedBox(
+                  key: previewKey,
+                  width: camWidth,
+                  height: camHeight,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(32),
+                    child: LayoutBuilder(
+                      builder: (context, c) {
+                        final ps = _ctrl!.value.previewSize!;
+                        final previewAR = ps.height / ps.width; // width/height
+                        final containerAR = c.maxWidth / c.maxHeight;
+                        final coverScale = previewAR / containerAR; // >= 1
+
+                        return Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Transform.scale(
+                              scale: coverScale,
+                              child: Center(
+                                child: AspectRatio(
+                                  aspectRatio: previewAR,
+                                  child: CameraPreview(_ctrl!),
+                                ),
+                              ),
+                            ),
+
+                            Center(
+                              child: CustomPaint(
+                                size: Size(cropWidth, cropHeight),
+                                painter: GreyCornersPainter(
+                                  rect: Rect.fromLTWH(
+                                    0,
+                                    0,
+                                    cropWidth,
+                                    cropHeight,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: 24,
+                              left: 0,
+                              right: 0,
+                              child: Center(
+                                child: Text(
+                                  'Please make a photo of front-side of ID',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(height: 32),
 
-            Positioned(
-              bottom: 32,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black87,
-                  shape: const StadiumBorder(),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              SizedBox(
+                width: double.infinity,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF6C63FF),
+                      foregroundColor: Colors.white,
+                      shape: StadiumBorder(),
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                    ),
+                    onPressed: () => _shootAndCrop(previewKey),
+                    child: Text(
+                      'Take a photo',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ),
-                onPressed: () => _shootAndCrop(previewKey),
-                child: const Text('Capture'),
               ),
-            ),
-          ],
+              const SizedBox(height: 10),
+
+              SizedBox(
+                width: double.infinity,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      'Upload document',
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
   }
 }
 
-class _OverlayMaskPainter extends CustomPainter {
-  final Size box;
-  final Color borderColor;
+class GreyCornersPainter extends CustomPainter {
+  final Rect rect;
 
-  _OverlayMaskPainter({required this.box, required this.borderColor});
+  GreyCornersPainter({required this.rect});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final overlay = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
-    final r = Rect.fromLTWH(
-      (size.width - box.width) / 2,
-      (size.height - box.height) / 2,
-      box.width,
-      box.height,
-    );
-    final hole = Path()..addRRect(RRect.fromRectXY(r, 12, 12));
-    final mask = Path.combine(PathOperation.difference, overlay, hole);
+    final cornerLen = 40.0;
+    final radius = 20.0;
+    final stroke = 5.0;
+    final color = Colors.grey.shade400;
 
-    canvas.drawPath(mask, Paint()..color = Colors.black.withOpacity(0.5));
-    canvas.drawRRect(
-      RRect.fromRectXY(r, 12, 12),
-      Paint()
-        ..color = borderColor
+    final corners = [
+      rect.topLeft,
+      rect.topRight,
+      rect.bottomRight,
+      rect.bottomLeft,
+    ];
+
+    for (int i = 0; i < 4; i++) {
+      final paint = Paint()
+        ..color = color
+        ..strokeWidth = stroke
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    );
+        ..strokeCap = StrokeCap.round;
+
+      final path = Path();
+      switch (i) {
+        case 0:
+          path.moveTo(corners[i].dx + radius, corners[i].dy);
+          path.lineTo(corners[i].dx + cornerLen, corners[i].dy);
+          path.moveTo(corners[i].dx, corners[i].dy + radius);
+          path.lineTo(corners[i].dx, corners[i].dy + cornerLen);
+          path.moveTo(corners[i].dx + radius, corners[i].dy);
+          path.arcToPoint(
+            Offset(corners[i].dx, corners[i].dy + radius),
+            radius: Radius.circular(radius),
+            clockwise: false,
+          );
+          break;
+        case 1:
+          path.moveTo(corners[i].dx - radius, corners[i].dy);
+          path.lineTo(corners[i].dx - cornerLen, corners[i].dy);
+          path.moveTo(corners[i].dx, corners[i].dy + radius);
+          path.lineTo(corners[i].dx, corners[i].dy + cornerLen);
+          path.moveTo(corners[i].dx - radius, corners[i].dy);
+          path.arcToPoint(
+            Offset(corners[i].dx, corners[i].dy + radius),
+            radius: Radius.circular(radius),
+            clockwise: true,
+          );
+          break;
+        case 2:
+          path.moveTo(corners[i].dx - radius, corners[i].dy);
+          path.lineTo(corners[i].dx - cornerLen, corners[i].dy);
+          path.moveTo(corners[i].dx, corners[i].dy - radius);
+          path.lineTo(corners[i].dx, corners[i].dy - cornerLen);
+          path.moveTo(corners[i].dx - radius, corners[i].dy);
+          path.arcToPoint(
+            Offset(corners[i].dx, corners[i].dy - radius),
+            radius: Radius.circular(radius),
+            clockwise: false,
+          );
+          break;
+        case 3:
+          path.moveTo(corners[i].dx + radius, corners[i].dy);
+          path.lineTo(corners[i].dx + cornerLen, corners[i].dy);
+          path.moveTo(corners[i].dx, corners[i].dy - radius);
+          path.lineTo(corners[i].dx, corners[i].dy - cornerLen);
+          path.moveTo(corners[i].dx + radius, corners[i].dy);
+          path.arcToPoint(
+            Offset(corners[i].dx, corners[i].dy - radius),
+            radius: Radius.circular(radius),
+            clockwise: true,
+          );
+          break;
+      }
+      canvas.drawPath(path, paint);
+    }
   }
 
   @override
-  bool shouldRepaint(covariant _OverlayMaskPainter oldDelegate) =>
-      oldDelegate.box != box || oldDelegate.borderColor != borderColor;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-
