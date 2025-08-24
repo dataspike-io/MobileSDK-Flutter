@@ -7,12 +7,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
 
 class LiveCropCamera extends StatefulWidget {
-  final Size cropBox;
   final ValueChanged<Uint8List> onCropped;
 
   const LiveCropCamera({
     super.key,
-    required this.cropBox,
     required this.onCropped,
   });
 
@@ -170,6 +168,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
     try {
       await _ctrl!.initialize();
       await _ctrl!.lockCaptureOrientation(DeviceOrientation.portraitUp);
+      await _ctrl!.setFlashMode(FlashMode.off);
       if (mounted) setState(() {});
     } catch (e) {
       debugPrint('Camera switch error: $e');
