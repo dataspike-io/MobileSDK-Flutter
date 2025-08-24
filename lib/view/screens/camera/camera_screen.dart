@@ -23,6 +23,9 @@ class LiveCropCamera extends StatefulWidget {
 class _LiveCropCameraState extends State<LiveCropCamera> {
   CameraController? _ctrl;
   late Future<void> _init;
+  CameraDescription? _backCam;
+  CameraDescription? _frontCam;
+  bool _useFront = false;
 
   @override
   void initState() {
@@ -32,12 +35,17 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
 
   Future<void> _setup() async {
     final cams = await availableCameras();
-
+    for (final c in cams) {
+      if (c.lensDirection == CameraLensDirection.back && _backCam == null) {
+        _backCam = c;
+      }
+      if (c.lensDirection == CameraLensDirection.front && _frontCam == null) {
+        _frontCam = c;
+      }
+    }
+    final initial = _backCam ?? _frontCam ?? cams.first;
     _ctrl = CameraController(
-      cams.firstWhere(
-        (c) => c.lensDirection == CameraLensDirection.back,
-        orElse: () => cams.first,
-      ),
+      initial,
       ResolutionPreset.max,
       enableAudio: false,
     );
@@ -102,7 +110,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
     // 7) Те же размеры рамки, что в UI
     final screenSize = MediaQuery.of(context).size;
     final cropW = screenSize.width * 0.85;
-    final cropH = screenSize.height * 0.45;
+    final cropH = screenSize.height * 0.3;
     final cropLeftInWidget = (containerW - cropW) / 2.0;
     final cropTopInWidget = (containerH - cropH) / 2.0;
 
@@ -148,13 +156,33 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
     }
   }
 
+  Future<void> _toggleCamera() async {
+    if (_frontCam == null && _backCam == null) return;
+    final newDesc = _useFront ? (_backCam ?? _ctrl!.description) : (_frontCam ?? _ctrl!.description);
+    if (newDesc == _ctrl!.description) return; // nothing to change
+    _useFront = !_useFront;
+    await _ctrl?.dispose();
+    _ctrl = CameraController(
+      newDesc,
+      ResolutionPreset.max,
+      enableAudio: false,
+    );
+    try {
+      await _ctrl!.initialize();
+      await _ctrl!.lockCaptureOrientation(DeviceOrientation.portraitUp);
+      if (mounted) setState(() {});
+    } catch (e) {
+      debugPrint('Camera switch error: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final previewKey = GlobalKey();
     final screenSize = MediaQuery.of(context).size;
 
     final cropWidth = screenSize.width * 0.85;
-    final cropHeight = screenSize.height * 0.45;
+    final cropHeight = screenSize.height * 0.3;
 
     final camWidth = screenSize.width - 10;
     final camHeight = screenSize.height * 0.65;
@@ -214,19 +242,41 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                               ),
                             ),
                             Positioned(
-                              top: 24,
+                              top: 10,
+                              right: 16,
+                              child: (_frontCam != null || _backCam != null)
+                                  ? Builder(
+                                      builder: (context) {
+                                        final canSwitch = _frontCam != null && _backCam != null;
+                                        return Opacity(
+                                          opacity: canSwitch ? 1 : 0.4,
+                                          child: Material(
+                                            color: Colors.black45,
+                                            shape: const CircleBorder(),
+                                            child: IconButton(
+                                              icon: const Icon(
+                                                Icons.cameraswitch,
+                                                color: Colors.white,
+                                              ),
+                                              onPressed: canSwitch ? _toggleCamera : null,
+                                              tooltip: _useFront
+                                                  ? 'Switch to back camera'
+                                                  : 'Switch to front camera',
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
+                            Positioned(
+                              top: 100,
                               left: 0,
                               right: 0,
                               child: Center(
-                                child: Text(
-                                  'Please make a photo of front-side of ID',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
+                                child: Text('Please make a photo of front-side of ID',
+                                  style: const TextStyle(color: Colors.white, fontSize: 14, decoration: TextDecoration.none),
+                                  textAlign: TextAlign.center,)
                               ),
                             ),
                           ],
