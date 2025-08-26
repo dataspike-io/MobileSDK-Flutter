@@ -2,7 +2,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter/services.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class LiveAvatarCamera extends StatefulWidget {
@@ -130,7 +130,7 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
 
     final cropped = img.copyCrop(original, x: x, y: y, width: w, height: h);
     final out = img.encodeJpg(cropped, quality: 100);
-    await ImageGallerySaver.saveImage(Uint8List.fromList(out));
+    await ImageGallerySaverPlus.saveImage(Uint8List.fromList(out));
     widget.onCropped(Uint8List.fromList(out));
   }
 
