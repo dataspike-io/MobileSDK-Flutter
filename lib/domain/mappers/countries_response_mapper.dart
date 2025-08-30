@@ -1,6 +1,6 @@
 import 'package:dataspikemobilesdk/data/models/response/country_response.dart';
 import 'package:dataspikemobilesdk/domain/models/states/countries_state.dart';
-import 'package:dataspikemobilesdk/domain/models/country_domatin_model.dart';
+import 'package:dataspikemobilesdk/domain/models/country_domain_model.dart';
 
 class CountriesResponseMapper {
   CountriesState map({
@@ -20,7 +20,6 @@ class CountriesResponseMapper {
       );
     } else if (error != null) {
       String message = error.toString();
-      // Можно добавить парсинг ошибки, если есть структура
       return CountriesError(message: message);
     } else {
       return CountriesError(message: "Unknown error occurred");

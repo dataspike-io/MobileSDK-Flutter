@@ -1,0 +1,30 @@
+import 'manual_field_domain_model.dart';
+import 'manual_custom_field_domain_model.dart';
+
+class ManualFieldsSettingsDomainModel {
+  final bool enabled;
+
+  final ManualFieldDomainModel? fullName;
+  final ManualFieldDomainModel? email;
+  final ManualFieldDomainModel? phone;
+  final ManualFieldDomainModel? country;
+  final ManualFieldDomainModel? dob;
+  final ManualFieldDomainModel? gender;
+  final ManualFieldDomainModel? citizenship;
+  final ManualFieldDomainModel? address;
+
+  final List<ManualCustomFieldDomainModel>? customFields;
+
+  const ManualFieldsSettingsDomainModel({
+    required this.enabled,
+    this.fullName,
+    this.email,
+    this.phone,
+    this.country,
+    this.dob,
+    this.gender,
+    this.citizenship,
+    this.address,
+    this.customFields,
+  });
+}

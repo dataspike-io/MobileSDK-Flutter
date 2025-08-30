@@ -9,9 +9,9 @@ class VerificationSettingsResponse {
   final bool? poaRequired;
   final List<String>? poaAllowedDocuments;
   final List<String>? countries;
-  final String? uiSettings;
   final ManualFieldsSettingsResponse? manualFields;
   final FinishScreenSettingsResponse? finishScreenSettings;
+  final String? uiSettings;
 
   VerificationSettingsResponse({
     this.poiRequired,
@@ -21,9 +21,9 @@ class VerificationSettingsResponse {
     this.poaRequired,
     this.poaAllowedDocuments,
     this.countries,
-    this.uiSettings,
     this.manualFields,
     this.finishScreenSettings,
+    this.uiSettings,
   });
 
   factory VerificationSettingsResponse.fromJson(Map<String, dynamic> json) {
@@ -42,6 +42,16 @@ class VerificationSettingsResponse {
           : null,
       countries: json['countries'] != null
           ? List<String>.from(json['countries'] as List)
+          : null,
+          manualFields: json['manual_fields_settings'] != null
+          ? ManualFieldsSettingsResponse.fromJson(
+              json['manual_fields_settings'],
+            )
+          : null,
+      finishScreenSettings: json['finish_screen_settings'] != null
+          ? FinishScreenSettingsResponse.fromJson(
+              json['finish_screen_settings'],
+            )
           : null,
       uiSettings: json['ui_settings'] as String?,
     );

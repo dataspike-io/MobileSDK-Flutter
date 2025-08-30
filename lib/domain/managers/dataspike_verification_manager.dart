@@ -7,6 +7,7 @@ class VerificationManager {
     poiIsRequired: false,
     livenessIsRequired: false,
     poaIsRequired: false,
+    personalDataRequired: false,
   );
 
   String _expiresAt = '';
@@ -23,6 +24,7 @@ class VerificationManager {
       poiIsRequired: settings.poiRequired,
       livenessIsRequired: settings.faceComparisonRequired,
       poaIsRequired: settings.poaRequired,
+      personalDataRequired: settings.manualFields.enabled,
     );
     _status = status;
     _expiresAt = expiresAt;

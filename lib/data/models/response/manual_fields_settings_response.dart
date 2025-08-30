@@ -12,7 +12,7 @@ class ManualFieldsSettingsResponse {
   final ManualFieldResponse? gender;
   final ManualFieldResponse? citizenship;
   final ManualFieldResponse? address;
-  
+
   final List<ManualCustomFieldResponse>? customFields;
 
   const ManualFieldsSettingsResponse({
@@ -29,29 +29,28 @@ class ManualFieldsSettingsResponse {
   });
 
   factory ManualFieldsSettingsResponse.fromJson(Map<String, dynamic>? json) {
-    if (json == null) {
-      return const ManualFieldsSettingsResponse();
-    }
-    ManualFieldResponse? _field(dynamic v) =>
-        v is Map<String, dynamic> ? ManualFieldResponse.fromJson(v) : null;
+    ManualFieldResponse? field(dynamic v) => ManualFieldResponse.fromJson(v);
 
-    final customList = (json['custom_fields'] as List<dynamic>?)
-            ?.map((e) => ManualCustomFieldResponse.fromJson(
-                  e is Map<String, dynamic> ? e : null,
-                ))
+    final customList =
+        (json?['custom_fields'] as List<dynamic>?)
+            ?.map(
+              (e) => ManualCustomFieldResponse.fromJson(
+                e is Map<String, dynamic> ? e : null,
+              ),
+            )
             .toList() ??
         const <ManualCustomFieldResponse>[];
 
     return ManualFieldsSettingsResponse(
-      enabled: json['enabled'] as bool?,
-      fullName: _field(json['full_name']),
-      email: _field(json['email']),
-      phone: _field(json['phone']),
-      country: _field(json['country']),
-      dob: _field(json['dob']),
-      gender: _field(json['gender']),
-      citizenship: _field(json['citizenship']),
-      address: _field(json['address']),
+      enabled: json?['enabled'] as bool?,
+      fullName: field(json?['full_name']),
+      email: field(json?['email']),
+      phone: field(json?['phone']),
+      country: field(json?['country']),
+      dob: field(json?['dob']),
+      gender: field(json?['gender']),
+      citizenship: field(json?['citizenship']),
+      address: field(json?['address']),
       customFields: customList,
     );
   }

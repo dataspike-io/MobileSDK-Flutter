@@ -1,3 +1,6 @@
+import 'manual_field_settings_domain_model.dart';
+import 'finish_screen_settings_domain_model.dart';
+
 class VerificationSettingsDomainModel {
   final bool poiRequired;
   final List<String> poiAllowedDocuments;
@@ -6,6 +9,9 @@ class VerificationSettingsDomainModel {
   final bool poaRequired;
   final List<String> poaAllowedDocuments;
   final List<String> countries;
+  final ManualFieldsSettingsDomainModel manualFields;
+  final FinishScreenSettingsDomainModel? finishScreenSettings;
+
   // final UiConfigModel uiConfig;
 
   const VerificationSettingsDomainModel({
@@ -16,6 +22,8 @@ class VerificationSettingsDomainModel {
     required this.poaRequired,
     required this.poaAllowedDocuments,
     required this.countries,
+    required this.manualFields,
+    this.finishScreenSettings,
     // required this.uiConfig,
   });
 }

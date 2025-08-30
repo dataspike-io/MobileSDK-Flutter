@@ -4,7 +4,11 @@ import 'package:dataspikemobilesdk/domain/models/dataspike_verification_checks_d
 import 'package:dataspikemobilesdk/domain/models/dataspike_checks_domain_model.dart';
 import 'package:dataspikemobilesdk/domain/models/dataspike_error_domain_model.dart';
 import 'package:dataspikemobilesdk/domain/models/verification_settings_domain_model.dart';
-// import 'package:dataspikemobilesdk/domain/models/ui_config_model.dart';
+import 'package:dataspikemobilesdk/domain/models/manual_field_settings_domain_model.dart';
+import 'package:dataspikemobilesdk/domain/models/manual_field_domain_model.dart';
+import 'package:dataspikemobilesdk/domain/models/manual_custom_field_domain_model.dart';
+import 'package:dataspikemobilesdk/domain/models/finish_screen_settings_domain_model.dart';
+import 'package:dataspikemobilesdk/domain/models/manual_custom_field_option_domain_model.dart';
 
 class VerificationResponseMapper {
   VerificationState map({
@@ -13,50 +17,101 @@ class VerificationResponseMapper {
     required bool darkModeIsEnabled,
   }) {
     if (response != null) {
+      ManualFieldDomainModel field(f) => ManualFieldDomainModel(
+        enabled: f?.enabled ?? false,
+        caption: f?.caption ?? "",
+        order: f?.order ?? 0,
+      );
+
+      ManualFieldsSettingsDomainModel settingsField(f) =>
+          ManualFieldsSettingsDomainModel(
+            enabled: f?.enabled ?? false,
+            fullName: field(f?.fullName),
+            email: field(f?.email),
+            phone: field(f?.phone),
+            country: field(f?.country),
+            dob: field(f?.dob),
+            gender: field(f?.gender),
+            citizenship: field(f?.citizenship),
+            address: field(f?.address),
+            customFields: f?.customFields?.map<ManualCustomFieldDomainModel>((c) {
+              final o = c.options;
+              return ManualCustomFieldDomainModel(
+                label: c.label ?? "",
+                caption: c.caption ?? "",
+                    order: c.order,
+                    options: o == null
+                        ? null
+                        : ManualCustomFieldOptionsDomainModel(
+                            type: ManualCustomFieldOptionType.fromRaw(o.type),
+                            choices: o.choices,
+                            attachmentTypePreset: o.attachmentTypePreset,
+                            allowedMimeTypes: o.allowedMimeTypes,
+                            maxSize: o.maxSize,
+                          ),
+                  );
+                })
+                .toList()
+          );
+
       return VerificationSuccess(
         id: response.id ?? "",
         status: response.status ?? "",
         checks: DataspikeVerificationChecksDomainModel(
           faceComparison: DataspikeChecksDomainModel(
             status: response.checks?.faceComparison?.status ?? "",
-            errors: response.checks?.faceComparison?.errors
-                    ?.map((e) => DataspikeErrorDomainModel(
-                          code: e.code ?? -1,
-                          message: e.message ?? "",
-                        ))
+            errors:
+                response.checks?.faceComparison?.errors
+                    ?.map(
+                      (e) => DataspikeErrorDomainModel(
+                        code: e.code ?? -1,
+                        message: e.message ?? "",
+                      ),
+                    )
                     .toList() ??
                 [],
-            pendingDocuments: response.checks?.faceComparison?.pendingDocuments ?? [],
+            pendingDocuments:
+                response.checks?.faceComparison?.pendingDocuments ?? [],
           ),
           liveness: DataspikeChecksDomainModel(
             status: response.checks?.liveness?.status ?? "",
-            errors: response.checks?.liveness?.errors
-                    ?.map((e) => DataspikeErrorDomainModel(
-                          code: e.code ?? -1,
-                          message: e.message ?? "",
-                        ))
+            errors:
+                response.checks?.liveness?.errors
+                    ?.map(
+                      (e) => DataspikeErrorDomainModel(
+                        code: e.code ?? -1,
+                        message: e.message ?? "",
+                      ),
+                    )
                     .toList() ??
                 [],
             pendingDocuments: response.checks?.liveness?.pendingDocuments ?? [],
           ),
           documentMrz: DataspikeChecksDomainModel(
             status: response.checks?.documentMrz?.status ?? "",
-            errors: response.checks?.documentMrz?.errors
-                    ?.map((e) => DataspikeErrorDomainModel(
-                          code: e.code ?? -1,
-                          message: e.message ?? "",
-                        ))
+            errors:
+                response.checks?.documentMrz?.errors
+                    ?.map(
+                      (e) => DataspikeErrorDomainModel(
+                        code: e.code ?? -1,
+                        message: e.message ?? "",
+                      ),
+                    )
                     .toList() ??
                 [],
-            pendingDocuments: response.checks?.documentMrz?.pendingDocuments ?? [],
+            pendingDocuments:
+                response.checks?.documentMrz?.pendingDocuments ?? [],
           ),
           poa: DataspikeChecksDomainModel(
             status: response.checks?.poa?.status ?? "",
-            errors: response.checks?.poa?.errors
-                    ?.map((e) => DataspikeErrorDomainModel(
-                          code: e.code ?? -1,
-                          message: e.message ?? "",
-                        ))
+            errors:
+                response.checks?.poa?.errors
+                    ?.map(
+                      (e) => DataspikeErrorDomainModel(
+                        code: e.code ?? -1,
+                        message: e.message ?? "",
+                      ),
+                    )
                     .toList() ??
                 [],
             pendingDocuments: response.checks?.poa?.pendingDocuments ?? [],
@@ -67,14 +122,24 @@ class VerificationResponseMapper {
         settings: VerificationSettingsDomainModel(
           poiRequired: response.settings?.poiRequired ?? false,
           poiAllowedDocuments: response.settings?.poiAllowedDocuments ?? [],
-          faceComparisonRequired: response.settings?.faceComparisonRequired ?? false,
-          faceComparisonAllowedDocuments: response.settings?.faceComparisonAllowedDocuments ?? [],
+          faceComparisonRequired:
+              response.settings?.faceComparisonRequired ?? false,
+          faceComparisonAllowedDocuments:
+              response.settings?.faceComparisonAllowedDocuments ?? [],
           poaRequired: response.settings?.poaRequired ?? false,
           poaAllowedDocuments: response.settings?.poaAllowedDocuments ?? [],
           countries: response.settings?.countries ?? [],
+          manualFields: settingsField(response.settings?.manualFields),
+          finishScreenSettings: FinishScreenSettingsDomainModel(
+            enabled: response.settings?.finishScreenSettings?.enabled ?? false,
+          ),
           // uiConfig: UiConfigModel.getConfig(darkModeIsEnabled),
         ),
         expiresAt: response.expiresAt ?? "",
+        manualFields: settingsField(response.manualFields),
+        finishScreenSettings: FinishScreenSettingsDomainModel(
+          enabled: response.finishScreenSettings?.enabled ?? false,
+        ),
       );
     } else if (error != null) {
       return VerificationError(

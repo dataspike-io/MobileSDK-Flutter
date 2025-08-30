@@ -1,4 +1,4 @@
-import '../country_domatin_model.dart';
+import '../country_domain_model.dart';
 
 abstract class CountriesState {}
 

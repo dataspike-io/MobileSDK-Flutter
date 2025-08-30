@@ -30,19 +30,21 @@ class OnboardingViewModel extends ChangeNotifier {
     final requiresDocument = vm.poiIsRequired;
     final requiresSelfie = vm.livenessIsRequired;
     final requiresAddress = vm.poaIsRequired;
+    final personalData = vm.personalDataRequired;
 
     final list = <StageItem>[
+      if (personalData)
       const StageItem(
         id: 'personal',
         title: 'Complete your personal data',
         subtitle: 'No special needed',
         required: true,
-        completed: true, 
+        completed: true,
       ),
       if (requiresDocument)
         const StageItem(
           id: 'document',
-            title: 'Verify your documents',
+          title: 'Verify your documents',
           subtitle: 'You’ll need passport or ID to make photo.',
           required: true,
           completed: false,
@@ -105,10 +107,10 @@ class StageItem {
   });
 
   StageItem copyWith({bool? completed}) => StageItem(
-        id: id,
-        title: title,
-        subtitle: subtitle,
-        required: required,
-        completed: completed ?? this.completed,
-      );
+    id: id,
+    title: title,
+    subtitle: subtitle,
+    required: required,
+    completed: completed ?? this.completed,
+  );
 }

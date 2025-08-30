@@ -1,5 +1,7 @@
 import '../dataspike_verification_checks_domain_model.dart';
 import '../verification_settings_domain_model.dart';
+import '../finish_screen_settings_domain_model.dart';
+import '../manual_field_settings_domain_model.dart';
 
 abstract class VerificationState {
   const VerificationState();
@@ -13,6 +15,8 @@ class VerificationSuccess extends VerificationState {
   final String countryCode;
   final VerificationSettingsDomainModel settings;
   final String expiresAt;
+  final ManualFieldsSettingsDomainModel manualFields;
+  final FinishScreenSettingsDomainModel? finishScreenSettings;
 
   const VerificationSuccess({
     required this.id,
@@ -22,6 +26,8 @@ class VerificationSuccess extends VerificationState {
     required this.countryCode,
     required this.settings,
     required this.expiresAt,
+    required this.manualFields,
+    this.finishScreenSettings,
   });
 }
 

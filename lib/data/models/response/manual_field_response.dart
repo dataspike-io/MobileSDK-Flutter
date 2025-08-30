@@ -9,9 +9,7 @@ class ManualFieldResponse {
     return ManualFieldResponse(
       enabled: json['enabled'] as bool?,
       caption: json['caption'] as String?,
-      order: json['order'] is int
-          ? json['order'] as int?
-          : int.tryParse('${json['order']}'),
+      order: json['order'] as int?
     );
   }
 
