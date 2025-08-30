@@ -1,5 +1,7 @@
 import 'package:dataspikemobilesdk/data/models/response/dataspike_verification_check_response.dart';
 import 'package:dataspikemobilesdk/data/models/response/verification_settings_response.dart';
+import 'manual_fields_settings_response.dart';
+import 'finish_screen_settings_response.dart';
 
 class VerificationResponse {
   final String? id;
@@ -9,6 +11,8 @@ class VerificationResponse {
   final String? countryCode;
   final VerificationSettingsResponse? settings;
   final String? expiresAt;
+  final ManualFieldsSettingsResponse? manualFields;
+  final FinishScreenSettingsResponse? finishScreenSettings;
 
   VerificationResponse({
     this.id,
@@ -18,6 +22,8 @@ class VerificationResponse {
     this.countryCode,
     this.settings,
     this.expiresAt,
+    this.manualFields,
+    this.finishScreenSettings,
   });
 
   factory VerificationResponse.fromJson(Map<String, dynamic> json) {
@@ -33,6 +39,16 @@ class VerificationResponse {
           ? VerificationSettingsResponse.fromJson(json['settings'])
           : null,
       expiresAt: json['expires_at'] as String?,
+      manualFields: json['manual_fields_settings'] != null
+          ? ManualFieldsSettingsResponse.fromJson(
+              json['manual_fields_settings'],
+            )
+          : null,
+      finishScreenSettings: json['finish_screen_settings'] != null
+          ? FinishScreenSettingsResponse.fromJson(
+              json['finish_screen_settings'],
+            )
+          : null,
     );
   }
 }

@@ -1,3 +1,6 @@
+import 'manual_fields_settings_response.dart';
+import 'finish_screen_settings_response.dart';
+
 class VerificationSettingsResponse {
   final bool? poiRequired;
   final List<String>? poiAllowedDocuments;
@@ -7,6 +10,8 @@ class VerificationSettingsResponse {
   final List<String>? poaAllowedDocuments;
   final List<String>? countries;
   final String? uiSettings;
+  final ManualFieldsSettingsResponse? manualFields;
+  final FinishScreenSettingsResponse? finishScreenSettings;
 
   VerificationSettingsResponse({
     this.poiRequired,
@@ -17,6 +22,8 @@ class VerificationSettingsResponse {
     this.poaAllowedDocuments,
     this.countries,
     this.uiSettings,
+    this.manualFields,
+    this.finishScreenSettings,
   });
 
   factory VerificationSettingsResponse.fromJson(Map<String, dynamic> json) {
