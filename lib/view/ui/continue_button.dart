@@ -15,12 +15,12 @@ class ContinueButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 44,
+      height: 60,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.accent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
           ),
           elevation: 0,
         ),
@@ -28,10 +28,10 @@ class ContinueButton extends StatelessWidget {
         child: Text(
           text,
           style: const TextStyle(
-            fontFamily: 'Mont',
-            package: 'dataspikemobilesdk',
-            fontWeight: FontWeight.w500,
-            fontSize: 14,
+            // fontFamily: 'Mont',
+            // package: 'dataspikemobilesdk',
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
             color: AppColors.white,
           ),
         ),

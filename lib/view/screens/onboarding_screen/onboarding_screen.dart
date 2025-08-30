@@ -14,7 +14,8 @@ import '/view_models/factory/dataspike_view_model_factory.dart';
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({Key? key}) : super(key: key);
 
-  static Route route() => MaterialPageRoute<void>(builder: (_) => const OnboardingScreen());
+  static Route route() =>
+      MaterialPageRoute<void>(builder: (_) => const OnboardingScreen());
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -22,29 +23,6 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   late final OnboardingViewModel viewModel;
-
-  // Один дефолтный ассет для всех иллюстраций (замени путём на существующий у тебя).
-  static const String _placeholderAsset = 'assets/images/onboarding_placeholder.svg';
-
-  // Ступени (данные для списка).
-  final List<_Stage> _stages = const [
-    _Stage(
-      title: 'Complete your personal data',
-      subtitle: 'No special needed',
-    ),
-    _Stage(
-      title: 'Verify your documents',
-      subtitle: 'You’ll need passport or ID to make photo.',
-    ),
-    _Stage(
-      title: 'Make a selfie',
-      subtitle: 'Please use clear background and daylight',
-    ),
-    _Stage(
-      title: 'Confirm your address',
-      subtitle: 'No special needed',
-    ),
-  ];
 
   @override
   void initState() {
@@ -74,18 +52,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       MaterialPageRoute(
         builder: (context) =>
             RequirementScreenFactory.documentRequirementsScreen(
-          context: context,
-          onContinue: () {},
-        ),
+              context: context,
+              onContinue: () {},
+            ),
       ),
     );
   }
 
   void _onStart() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => DocumentRecomendationScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => DocumentRecomendationScreen()),
     );
   }
 
@@ -101,56 +77,61 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: LayoutBuilder(
           builder: (ctx, c) {
             return SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 26),
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: c.maxHeight - 48),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Верх (логотип / можно вставить AppBar отдельно если нужно)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Лого (замени при необходимости)
-                        Text(
-                          'dataspike',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.accent,
-                            fontFamily: 'Mont',
-                            package: 'dataspikemobilesdk',
-                          ),
+                        SvgPicture.asset(
+                          'packages/dataspikemobilesdk/assets/images/dataspike_logo.svg',
+                          height: 16,
+                          width: 80,
+                          fit: BoxFit.contain,
                         ),
-                        // Флаг / язык (упрощённый placeholder)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.lightAccent.withOpacity(.2),
-                            borderRadius: BorderRadius.circular(16),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.flag, size: 16, color: AppColors.accent),
+                              SvgPicture.asset(
+                                'packages/dataspikemobilesdk/assets/images/flags_ae.svg',
+                                height: 15,
+                                width: 20,
+                                fit: BoxFit.contain,
+                              ),
                               const SizedBox(width: 4),
-                              const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: AppColors.accent),
+                              const Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                size: 18,
+                                color: AppColors.accent,
+                              ),
                             ],
                           ),
-                        )
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 20),
+                    Container(
+                      height: 1,
+                      width: double.infinity,
+                      color: AppColors.lightAccent.withOpacity(.1),
+                    ),
+                    const SizedBox(height: 16),
 
-                    // Заголовок блока
                     Text(
                       'Get verified for\nJP Morgan application',
                       style: TextStyle(
                         fontSize: 28,
-                        height: 1.15,
                         fontWeight: FontWeight.w600,
                         color: AppColors.black,
-                        fontFamily: 'Mont',
-                        package: 'dataspikemobilesdk',
+                        // fontFamily: 'Mont',
+                        // package: 'dataspikemobilesdk',
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -158,22 +139,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     if (timer != null)
                       Row(
                         children: [
-                          Text(
-                            'Remaining time ',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppColors.accent,
-                              fontFamily: 'Mont',
-                              fontWeight: FontWeight.w500,
-                              package: 'dataspikemobilesdk',
-                            ),
-                          ),
                           TimeBox(
                             initialTime: timer,
                             onFinish: () {
                               Navigator.of(context).pushAndRemoveUntil(
                                 MaterialPageRoute(
-                                  builder: (_) => const VerificationExpiredScreen(),
+                                  builder: (_) =>
+                                      const VerificationExpiredScreen(),
                                 ),
                                 (r) => false,
                               );
@@ -181,20 +153,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                         ],
                       ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 12),
 
-                    // Инфо карточка
-                    _InfoCard(
-                      asset: _placeholderAsset,
-                      text:
-                          'JP Morgan requests proof of address verification and documents check to complete bank account opening.',
-                    ),
-                    const SizedBox(height: 28),
+                    _InfoCard(),
+                    const SizedBox(height: 16),
 
-                    // Карточка со стадиями и чекбоксом + кнопкой
                     _StagesCard(
-                      stages: _stages,
-                      placeholderAsset: _placeholderAsset,
+                      stages: viewModel.stages
+                          .map(
+                            (s) => _Stage(title: s.title, subtitle: s.subtitle),
+                          )
+                          .toList(),
+                      placeholderAsset:
+                          'packages/dataspikemobilesdk/assets/images/dinosaur.svg',
                       accepted: accepted,
                       onAcceptChanged: (v) {
                         viewModel.setTermsAccepted(v);
@@ -202,8 +173,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       },
                       onRequirementsTap: _onRequirementsTap,
                       onStartPressed: accepted ? _onStart : null,
-                      openTerms: () => _openUrl("https://dataspike.io/terms?lang=en"),
-                      openPrivacy: () => _openUrl("https://dataspike.io/privacy?lang=en"),
+                      openTerms: () =>
+                          _openUrl("https://dataspike.io/terms?lang=en"),
+                      openPrivacy: () =>
+                          _openUrl("https://dataspike.io/privacy?lang=en"),
                     ),
 
                     const SizedBox(height: 32),
@@ -225,49 +198,35 @@ class _Stage {
 }
 
 class _InfoCard extends StatelessWidget {
-  final String asset;
-  final String text;
-  const _InfoCard({required this.asset, required this.text});
-
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.lightAccent.withOpacity(.25),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            alignment: Alignment.center,
-            child: SvgPicture.asset(
-              asset,
-              width: 32,
-              height: 32,
-              fit: BoxFit.contain,
-            ),
+          Image.asset(
+            'packages/dataspikemobilesdk/assets/images/jp_logo.png',
+            width: 48,
+            height: 48,
+            fit: BoxFit.contain,
           ),
-            const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
-              text,
+              'JP Morgan requests proof of address verification and documents check to complete bank account opening.',
               style: TextStyle(
-                fontSize: 13,
-                height: 1.3,
-                color: AppColors.black,
-                fontFamily: 'Mont',
+                fontSize: 12,
+                color: AppColors.textGrey,
+                // fontFamily: 'Mont',
                 fontWeight: FontWeight.w500,
-                package: 'dataspikemobilesdk',
+                // package: 'dataspikemobilesdk',
               ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -298,7 +257,7 @@ class _StagesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(22, 22, 22, 26),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(32),
@@ -307,29 +266,35 @@ class _StagesCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Заголовок + иллюстрация справа
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(
-                child: _SectionHeader(),
+              Expanded(child: _SectionHeader()),
+              const SizedBox(width: 12),
+              SizedBox(
+                width: 65,
+                height: 65,
+                child: SvgPicture.asset(
+                  placeholderAsset,
+                  fit: BoxFit.contain,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 26),
           ...stages.map((s) => _StageRow(stage: s)).toList(),
-          const SizedBox(height: 20),
-          // Единый чекбокс
+          const SizedBox(height: 46),
+
           InkWell(
             onTap: () => onAcceptChanged(!accepted),
             borderRadius: BorderRadius.circular(8),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 160),
-                  width: 20,
-                  height: 20,
+                  width: 22,
+                  height: 22,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(5),
                     border: Border.all(
@@ -351,21 +316,20 @@ class _StagesCard extends StatelessWidget {
                           text: 'I accept ',
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textGrey,
-                            fontFamily: 'Mont',
-                            fontWeight: FontWeight.w500,
-                            package: 'dataspikemobilesdk',
+                            color: AppColors.black,
+                            // fontFamily: 'Mont',
+                            fontWeight: FontWeight.w400,
+                            // package: 'dataspikemobilesdk',
                           ),
                         ),
                         TextSpan(
                           text: 'terms & services',
                           style: const TextStyle(
                             fontSize: 12,
-                            color: AppColors.accent,
-                            fontFamily: 'Mont',
-                            fontWeight: FontWeight.w500,
-                            decoration: TextDecoration.underline,
-                            package: 'dataspikemobilesdk',
+                            color: AppColors.black,
+                            // fontFamily: 'Mont',
+                            fontWeight: FontWeight.w400,
+                            // package: 'dataspikemobilesdk',
                           ),
                           recognizer: TapGestureRecognizer()..onTap = openTerms,
                         ),
@@ -373,23 +337,23 @@ class _StagesCard extends StatelessWidget {
                           text: ' and ',
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textGrey,
-                            fontFamily: 'Mont',
-                            fontWeight: FontWeight.w500,
-                            package: 'dataspikemobilesdk',
+                            color: AppColors.black,
+                            // fontFamily: 'Mont',
+                            fontWeight: FontWeight.w400,
+                            // package: 'dataspikemobilesdk',
                           ),
                         ),
                         TextSpan(
                           text: 'privacy policy',
                           style: const TextStyle(
                             fontSize: 12,
-                            color: AppColors.accent,
-                            fontFamily: 'Mont',
-                            fontWeight: FontWeight.w500,
-                            decoration: TextDecoration.underline,
-                            package: 'dataspikemobilesdk',
+                            color: AppColors.black,
+                            // fontFamily: 'Mont',
+                            fontWeight: FontWeight.w400,
+                            // package: 'dataspikemobilesdk',
                           ),
-                          recognizer: TapGestureRecognizer()..onTap = openPrivacy,
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = openPrivacy,
                         ),
                       ],
                     ),
@@ -398,16 +362,11 @@ class _StagesCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 22),
-          SizedBox(
-            height: 56,
-            width: double.infinity,
-            child: ContinueButton(
+          const SizedBox(height: 12),
+          ContinueButton(
               onPressed: onStartPressed,
               text: "Start verification",
             ),
-          ),
-          const SizedBox(height: 18),
         ],
       ),
     );
@@ -423,9 +382,8 @@ class _StageRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Иконка чек (пока всегда одинаковая — можно связать с прогрессом)
           Container(
             width: 32,
             height: 32,
@@ -434,38 +392,37 @@ class _StageRow extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child: Icon(Icons.check, size: 18, color: AppColors.accent.withOpacity(.9)),
+            child: SvgPicture.asset('packages/dataspikemobilesdk/assets/images/onboarding_unchecked.svg')
           ),
-          const SizedBox(width: 14),
-            Expanded(
+          const SizedBox(width: 10),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   stage.title,
                   style: TextStyle(
-                    fontSize: 15,
-                    fontFamily: 'Mont',
+                    fontSize: 14,
+                    // fontFamily: 'Mont',
                     fontWeight: FontWeight.w600,
                     color: AppColors.black,
-                    package: 'dataspikemobilesdk',
+                    // package: 'dataspikemobilesdk',
                   ),
                 ),
-                const SizedBox(height: 4),
                 Text(
                   stage.subtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    height: 1.3,
-                    fontFamily: 'Mont',
+                    // height: 1.3,
+                    // fontFamily: 'Mont',
                     fontWeight: FontWeight.w500,
                     color: AppColors.textGrey,
-                    package: 'dataspikemobilesdk',
+                    // package: 'dataspikemobilesdk',
                   ),
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -482,21 +439,20 @@ class _SectionHeader extends StatelessWidget {
           'Follow this stages',
           style: TextStyle(
             fontSize: 20,
-            fontFamily: 'Mont',
+            // fontFamily: 'Mont',
             fontWeight: FontWeight.w600,
             color: AppColors.black,
-            package: 'dataspikemobilesdk',
+            // package: 'dataspikemobilesdk',
           ),
         ),
-        const SizedBox(height: 4),
         Text(
           'Check what documents you’ll needed',
           style: TextStyle(
-            fontSize: 13,
-            fontFamily: 'Mont',
+            fontSize: 12,
+            // fontFamily: 'Mont',
             fontWeight: FontWeight.w500,
             color: AppColors.textGrey,
-            package: 'dataspikemobilesdk',
+            // package: 'dataspikemobilesdk',
           ),
         ),
       ],

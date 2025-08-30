@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class TimeBox extends StatefulWidget {
   final Duration initialTime;
@@ -60,50 +59,14 @@ class _TimeLeftBoxState extends State<TimeBox> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: isActive ? AppColors.lightBlue : AppColors.lightRed,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SvgPicture.asset(
-            'packages/dataspikemobilesdk/assets/images/timer.svg',
-            height: 13.5,
-            width: 13.5,
-            fit: BoxFit.contain,
-            colorFilter: ColorFilter.mode(
-              isActive ? AppColors.accent : AppColors.red,
-              BlendMode.srcIn,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            'Time left:',
-            style: TextStyle(
-              color: isActive ? AppColors.accent : AppColors.red,
-              fontFamily: 'Mont',
-              package: 'dataspikemobilesdk',
-              fontWeight: FontWeight.w500,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            _format(_timeLeft),
-            style: TextStyle(
-              fontFamily: 'Mont',
-              package: 'dataspikemobilesdk',
-              fontWeight: FontWeight.w500,
-              fontSize: 12,
-              color: isActive ? AppColors.accent : AppColors.red,
-              letterSpacing: 1,
-            ),
-          ),
-        ],
+    return Text(
+      'Remaining time: ${_format(_timeLeft)}',
+      style: TextStyle(
+        color: AppColors.accent,
+        // fontFamily: 'Mont',
+        // package: 'dataspikemobilesdk',
+        fontWeight: FontWeight.w600,
+        fontSize: 14,
       ),
     );
   }

@@ -68,52 +68,42 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
     img.Image? original = img.decodeImage(bytes);
     if (original == null) return;
 
-    // 1) Учитываем EXIF — иначе кроп «съедет»
     original = img.bakeOrientation(original);
 
     final imgW = original.width.toDouble();
     final imgH = original.height.toDouble();
 
-    // 2) Размер контейнера превью
     final rb = previewKey.currentContext!.findRenderObject() as RenderBox;
     final containerW = rb.size.width;
     final containerH = rb.size.height;
 
-    // 3) Те же параметры, что в build()
     final ps = _ctrl!.value.previewSize!;
-    final previewAR = ps.height / ps.width; // width/height (портрет)
+    final previewAR = ps.height / ps.width; 
     final containerAR = containerW / containerH;
-    final coverScale = previewAR / containerAR; // как в Transform.scale
+    final coverScale = previewAR / containerAR; 
 
-    // 4) Базовый "fit" размер дочернего AspectRatio до масштабирования
     double childW, childH;
     if (containerAR > previewAR) {
-      // контейнер шире, чем превью — вписываем по высоте
       childH = containerH;
       childW = childH * previewAR;
     } else {
-      // контейнер уже — вписываем по ширине
       childW = containerW;
       childH = childW / previewAR;
     }
 
-    // 5) Итоговый размер показанного кадра с учетом coverScale
     final displayW = childW * coverScale;
     final displayH = childH * coverScale;
 
-    // 6) Смещения (обрезка по краям из-за cover)
     final offsetX = (containerW - displayW) / 2.0;
     final offsetY = (containerH - displayH) / 2.0;
 
-    // 7) Те же размеры рамки, что в UI
     final screenSize = MediaQuery.of(context).size;
     final cropW = screenSize.width * 0.85;
     final cropH = screenSize.height * 0.3;
     final cropLeftInWidget = (containerW - cropW) / 2.0;
     final cropTopInWidget = (containerH - cropH) / 2.0;
 
-    // 8) Масштаб от изображения к показу (единичный в обеих осях)
-    final scale = displayW / imgW; // = displayH / imgH при корректном AR
+    final scale = displayW / imgW;
 
     int x = (((cropLeftInWidget - offsetX) / scale).round()).clamp(
       0,
@@ -210,9 +200,9 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                     child: LayoutBuilder(
                       builder: (context, c) {
                         final ps = _ctrl!.value.previewSize!;
-                        final previewAR = ps.height / ps.width; // width/height
+                        final previewAR = ps.height / ps.width; 
                         final containerAR = c.maxWidth / c.maxHeight;
-                        final coverScale = previewAR / containerAR; // >= 1
+                        final coverScale = previewAR / containerAR; 
 
                         return Stack(
                           fit: StackFit.expand,
@@ -227,7 +217,6 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                               ),
                             ),
 
-                            // Димминг всего кроме окна
                             Positioned.fill(
                               child: CustomPaint(
                                 painter: DimOverlayPainter(
@@ -239,7 +228,6 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                                 ),
                               ),
                             ),
-                            // Рамка (углы) поверх затемнения
                             Center(
                               child: CustomPaint(
                                 size: Size(cropWidth, cropHeight),
@@ -360,7 +348,7 @@ class DimOverlayPainter extends CustomPainter {
     final path = Path()
       ..addRect(Rect.fromLTWH(0, 0, size.width, size.height))
       ..addRRect(RRect.fromRectXY(holeRect, borderRadius, borderRadius));
-    path.fillType = PathFillType.evenOdd; // вырезаем отверстие
+    path.fillType = PathFillType.evenOdd;
     final paint = Paint()..color = overlayColor;
     canvas.drawPath(path, paint);
   }
