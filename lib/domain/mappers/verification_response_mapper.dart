@@ -9,6 +9,7 @@ import 'package:dataspikemobilesdk/domain/models/manual_field_domain_model.dart'
 import 'package:dataspikemobilesdk/domain/models/manual_custom_field_domain_model.dart';
 import 'package:dataspikemobilesdk/domain/models/finish_screen_settings_domain_model.dart';
 import 'package:dataspikemobilesdk/domain/models/manual_custom_field_option_domain_model.dart';
+import 'package:dataspikemobilesdk/domain/models/manual_custom_field_option_type.dart';
 
 class VerificationResponseMapper {
   VerificationState map({

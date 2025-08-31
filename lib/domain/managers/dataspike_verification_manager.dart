@@ -1,6 +1,7 @@
 import '../models/verification_settings_domain_model.dart';
 import '../models/dataspike_check_domain_model.dart';
 import 'package:intl/intl.dart';
+import '../models/manual_field_settings_domain_model.dart';
 
 class VerificationManager {
   DataspikeCheckDomainModel checks = const DataspikeCheckDomainModel(
@@ -8,6 +9,7 @@ class VerificationManager {
     livenessIsRequired: false,
     poaIsRequired: false,
     personalDataRequired: false,
+    manualFields: null
   );
 
   String _expiresAt = '';
@@ -25,6 +27,7 @@ class VerificationManager {
       livenessIsRequired: settings.faceComparisonRequired,
       poaIsRequired: settings.poaRequired,
       personalDataRequired: settings.manualFields.enabled,
+      manualFields: settings.manualFields,
     );
     _status = status;
     _expiresAt = expiresAt;

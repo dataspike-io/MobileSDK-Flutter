@@ -12,10 +12,15 @@ import '/view_models/onboarding_view_model.dart';
 import '/view_models/factory/dataspike_view_model_factory.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({Key? key}) : super(key: key);
+  const OnboardingScreen({
+    Key? key,
+    this.onStart, 
+  }) : super(key: key);
 
-  static Route route() =>
-      MaterialPageRoute<void>(builder: (_) => const OnboardingScreen());
+  final VoidCallback? onStart;
+
+  static Route route({VoidCallback? onStart}) =>
+      MaterialPageRoute<void>(builder: (_) => OnboardingScreen(onStart: onStart));
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -60,9 +65,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _onStart() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => DocumentRecomendationScreen()),
-    );
+    // Локальная логика перед стартом (если нужна)
+    widget.onStart?.call();
   }
 
   @override
@@ -171,8 +175,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         viewModel.setTermsAccepted(v);
                         viewModel.setDataAccepted(v);
                       },
+                      onStartPressed: accepted ? _onStart : null, // изменено
                       onRequirementsTap: _onRequirementsTap,
-                      onStartPressed: accepted ? _onStart : null,
                       openTerms: () =>
                           _openUrl("https://dataspike.io/terms?lang=en"),
                       openPrivacy: () =>
