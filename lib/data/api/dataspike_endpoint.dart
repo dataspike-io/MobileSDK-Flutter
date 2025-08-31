@@ -4,6 +4,7 @@ enum DataspikeEndpoint {
   setCountry,
   getCountries,
   proceedWithVerification,
+  setProfileFields,
 }
 
 extension DataspikeEndpointPath on DataspikeEndpoint {
@@ -19,6 +20,8 @@ extension DataspikeEndpointPath on DataspikeEndpoint {
         return 'api/v3/public/dictionary/countries';
       case DataspikeEndpoint.proceedWithVerification:
         return 'api/v3/sdk/${shortId ?? ''}/proceed';
+      case DataspikeEndpoint.setProfileFields:
+        return 'api/v3/sdk/${shortId ?? ''}/fields';
     }
   }
 
@@ -30,6 +33,7 @@ extension DataspikeEndpointPath on DataspikeEndpoint {
       case DataspikeEndpoint.uploadImage:
       case DataspikeEndpoint.setCountry:
       case DataspikeEndpoint.proceedWithVerification:
+      case DataspikeEndpoint.setProfileFields:
         return 'POST';
     }
   }
