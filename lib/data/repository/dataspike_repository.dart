@@ -1,3 +1,4 @@
+import 'package:dataspikemobilesdk/domain/models/states/message_state.dart';
 import 'package:dataspikemobilesdk/domain/models/states/verification_state.dart';
 import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart';
 import 'package:dataspikemobilesdk/domain/models/states/countries_state.dart';
@@ -10,6 +11,8 @@ import 'package:dataspikemobilesdk/domain/mappers/countries_response_mapper.dart
 import 'package:dataspikemobilesdk/domain/mappers/empty_response_mapper.dart';
 import 'package:dataspikemobilesdk/domain/mappers/proceed_with_verification_response_mapper.dart';
 import 'package:dataspikemobilesdk/data/models/request/country_request_body.dart';
+import 'package:dataspikemobilesdk/data/models/request/profile_fields_request_body.dart';
+import 'package:dataspikemobilesdk/domain/mappers/message_response_mapper.dart';
 
 abstract class IDataspikeRepository {
   Future<VerificationState> getVerification({required bool darkModeIsEnabled});
@@ -21,6 +24,7 @@ abstract class IDataspikeRepository {
   Future<CountriesState> getCountries();
   Future<EmptyState> setCountry({required CountryRequestBody body});
   Future<ProceedWithVerificationState> proceedWithVerification();
+  Future<MessageState> setProfileFields(ProfileFieldsRequestBody body);
 }
 
 class DataspikeRepositoryImpl implements IDataspikeRepository {
@@ -31,6 +35,7 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
   final CountriesResponseMapper countriesResponseMapper;
   final EmptyResponseMapper emptyResponseMapper;
   final ProceedWithVerificationResponseMapper proceedWithVerificationResponseMapper;
+  final MessageResponseMapper messageResponseMapper;
 
   DataspikeRepositoryImpl({
     required this.apiService,
@@ -40,6 +45,7 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
     required this.countriesResponseMapper,
     required this.emptyResponseMapper,
     required this.proceedWithVerificationResponseMapper,
+    required this.messageResponseMapper,
   });
 
   @override
@@ -101,6 +107,16 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
       return proceedWithVerificationResponseMapper.map(response: response, error: null);
     } catch (e) {
       return proceedWithVerificationResponseMapper.map(response: null, error: e is Exception ? e : Exception(e.toString()));
+    }
+  }
+
+  @override
+  Future<MessageState> setProfileFields(ProfileFieldsRequestBody body) async {
+    try {
+      final response = await apiService.setProfileFields(shortId, body);
+      return messageResponseMapper.map(response: response, error: null);
+    } catch (e) {
+      return messageResponseMapper.map(response: null, error: e is Exception ? e : Exception(e.toString()));
     }
   }
 }

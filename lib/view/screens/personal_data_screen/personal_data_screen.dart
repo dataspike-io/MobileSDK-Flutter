@@ -48,7 +48,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
         payload[key] = v;
       }
     }
-    Navigator.of(context).pop(); 
+    viewModel.submitProfileData(payload);
   }
 
   bool get _allFilled {

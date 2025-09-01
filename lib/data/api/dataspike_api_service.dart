@@ -9,6 +9,7 @@ import 'package:dataspikemobilesdk/data/models/response/proceed_with_verificatio
 import 'package:dataspikemobilesdk/data/api/dataspike_endpoint.dart';
 import 'package:dataspikemobilesdk/data/models/response/upload_image_error_response.dart';
 import 'package:dataspikemobilesdk/data/models/response/dataspike_profile_fields_response.dart';
+import 'package:dataspikemobilesdk/data/models/request/profile_fields_request_body.dart';
 
 abstract class IDataspikeApiService {
   Future<VerificationResponse> getVerification(String shortId);
@@ -24,7 +25,10 @@ abstract class IDataspikeApiService {
   );
   Future<List<CountryResponse>> getCountries();
   Future<ProceedWithVerificationResponse> proceedWithVerification(String shortId);
-  Future<DataspikeProfileFieldsResponse> setProfileFields(String shortId);
+  Future<DataspikeProfileFieldsResponse> setProfileFields(
+    String shortId,
+    ProfileFieldsRequestBody body,
+  );
 }
 
 class DataspikeApiServiceImpl implements IDataspikeApiService {
@@ -147,11 +151,18 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
   }
 
   @override
-  Future<DataspikeProfileFieldsResponse> setProfileFields(String shortId) async {
+  Future<DataspikeProfileFieldsResponse> setProfileFields(
+    String shortId,
+    ProfileFieldsRequestBody body,
+  ) async {
     final url = Uri.parse('$baseUrl${DataspikeEndpoint.setProfileFields.path(shortId: shortId)}');
     final headers = DataspikeEndpoint.setProfileFields.headers(apiToken);
 
-    final response = await http.post(url, headers: headers);
+     final response = await http.post(
+      url,
+      headers: headers,
+      body: json.encode(body.toJson()),
+    );
 
     if (response.statusCode == 200) {
       final jsonBody = json.decode(response.body) as Map<String, dynamic>;

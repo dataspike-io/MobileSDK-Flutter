@@ -4,6 +4,7 @@ import '../dataspike_activity_view_model.dart';
 import '../templates/base_view_model.dart';
 import '../onboarding_view_model.dart';
 import '../personal_data_view_model.dart';
+import 'package:dataspikemobilesdk/data/use_cases/set_profile_use_case.dart';
 
 class DataspikeViewModelFactory {
   T create<T extends Object>() {
@@ -23,7 +24,11 @@ class DataspikeViewModelFactory {
         return OnboardingViewModel() as T;
 
       case PersonalDataViewModel:
-        return PersonalDataViewModel() as T;
+        return PersonalDataViewModel(
+          setProfileUseCase: SetProfileUseCase(
+            dataspikeRepository: DataspikeInjector.component.dataspikeRepository,
+          ),
+        ) as T;
 
       default:
         throw Exception("Unknown ViewModel Type");

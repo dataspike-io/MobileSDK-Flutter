@@ -7,7 +7,7 @@ import 'package:dataspikemobilesdk/domain/mappers/upload_image_response_mapper.d
 import 'package:dataspikemobilesdk/domain/mappers/countries_response_mapper.dart';
 import 'package:dataspikemobilesdk/domain/mappers/empty_response_mapper.dart';
 import 'package:dataspikemobilesdk/domain/mappers/proceed_with_verification_response_mapper.dart';
-
+import 'package:dataspikemobilesdk/domain/mappers/message_response_mapper.dart';
 
 abstract class DataspikeModule {
   IDataspikeRepository get dataspikeRepository;
@@ -36,6 +36,7 @@ class DataspikeModuleImpl implements DataspikeModule {
       countriesResponseMapper: CountriesResponseMapper(),
       emptyResponseMapper: EmptyResponseMapper(),
       proceedWithVerificationResponseMapper: ProceedWithVerificationResponseMapper(),
+      messageResponseMapper: MessageResponseMapper(),
     );
     _verificationManager = VerificationManager();
   }
