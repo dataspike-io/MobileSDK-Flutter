@@ -1,5 +1,5 @@
 import '../models/manual_field_settings_domain_model.dart';
-// import '../models/manual_custom_field_domain_model.dart';
+import '../models/manual_custom_field_domain_model.dart';
 import '../models/manual_custom_field_option_type.dart';
 import '../models/manual_custom_field_type.dart';
 import '../models/manual_custom_field_option_domain_model.dart';
@@ -21,6 +21,8 @@ class PersonalDataManager {
     addGenderIfRequired(result, manualFields);
     addCitizenshipIfRequired(result, manualFields);
     addAddressIfRequired(result, manualFields);
+
+    addCustomFieldsIfRequired(result, manualFields.customFields);
 
     result.sort((a, b) => (a.order).compareTo(b.order));
     return result;
@@ -82,7 +84,6 @@ class PersonalDataManager {
     target.add(ManualCustomFieldRepresentationModel(
       caption: 'Date of birth',
       order: f.order ?? 0,
-      value: null,
       placeholder: 'yyyy-MM-dd',
       options: ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text),
       fieldType: ManualCustomFieldType.dob,
@@ -95,7 +96,6 @@ class PersonalDataManager {
     target.add(ManualCustomFieldRepresentationModel(
       caption: 'Gender',
       order: f.order ?? 0,
-      value: null,
       options: ManualCustomFieldOptionsDomainModel(
         type: ManualCustomFieldOptionType.select,
         choices: [
@@ -113,7 +113,6 @@ class PersonalDataManager {
     target.add(ManualCustomFieldRepresentationModel(
       caption: 'Citizenship',
       order: f.order ?? 0,
-      value: null,
       options: ManualCustomFieldOptionsDomainModel(
         type: ManualCustomFieldOptionType.list,
         choices: [
@@ -131,9 +130,28 @@ class PersonalDataManager {
     target.add(ManualCustomFieldRepresentationModel(
       caption: 'Address',
       order: f.order ?? 0,
-      value: null,
       options: ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text),
       fieldType: ManualCustomFieldType.address,
     ));
+  }
+
+  void addCustomFieldsIfRequired(
+    List<ManualCustomFieldRepresentationModel> target,
+    List<ManualCustomFieldDomainModel>? custom,
+  ) {
+    if (custom == null || custom.isEmpty) return;
+
+    for (final customField in custom) {
+      if (customField.order == null) continue;
+
+      target.add(
+        ManualCustomFieldRepresentationModel(
+          caption: customField.label ?? 'Custom field',
+          order: customField.order ?? 0,
+          options: customField.options ?? ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text),
+          fieldType: ManualCustomFieldType.custom,
+        ),
+      );
+    }
   }
 }

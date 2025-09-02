@@ -28,7 +28,7 @@ class ManualCustomFieldRepresentationModel implements ManualCustomFieldRepresent
   ManualCustomFieldRepresentationModel({
     required this.caption,
     required this.order,
-    this.value = null,
+    this.value,
     this.placeholder,
     required this.options,
     required this.fieldType,

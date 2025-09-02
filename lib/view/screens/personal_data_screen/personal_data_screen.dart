@@ -185,7 +185,7 @@ class _FieldsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       decoration: BoxDecoration(
         border: Border.all(color: AppColors.lightAccent.withOpacity(.6)),
         borderRadius: BorderRadius.circular(28),
@@ -211,7 +211,7 @@ class _FieldsCard extends StatelessWidget {
               ),
           ],
           const SizedBox(height: 28),
-          // Картинка внизу рамки
+
           Center(
             child: Image.asset(
               'packages/dataspikemobilesdk/assets/images/personal_data_dinosaurs.png',
