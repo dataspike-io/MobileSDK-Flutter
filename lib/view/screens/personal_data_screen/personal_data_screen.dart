@@ -21,8 +21,6 @@ class PersonalDataScreen extends StatefulWidget {
 
 class _PersonalDataScreenState extends State<PersonalDataScreen> {
   late final PersonalDataViewModel viewModel;
-  // Значения по индексу в массиве personalDataFields
-  final Map<int, String?> _values = {};
 
   @override
   void initState() {
@@ -39,30 +37,6 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
   }
 
   void _onVmChanged() => setState(() {});
-
-  void _onContinue() {
-    final payload = <String, String>{};
-    final fields = viewModel.personalDataFields;
-    for (var i = 0; i < fields.length; i++) {
-      final val = _values[i];
-      if (val == null || val.trim().isEmpty) continue;
-      final f = fields[i];
-      // Ключ по типу поля
-      final key = f.fieldType?.raw ?? f.caption;
-      payload[key] = val;
-    }
-    viewModel.submitProfileData(payload);
-  }
-
-  bool get _allFilled {
-    final fields = viewModel.personalDataFields;
-    if (fields.isEmpty) return false;
-    for (var i = 0; i < fields.length; i++) {
-      final v = _values[i];
-      if (v == null || v.trim().isEmpty) return false;
-    }
-    return true;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,14 +75,18 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
                     else
                       _FieldsCard(
                         fields: fields,
-                        values: _values,
-                        onChanged: (index, val) =>
-                            setState(() => _values[index] = val),
+                        onChanged: (index, val) {
+                          setState(() {
+                            fields[index].value = val;
+                          });
+                        },
                       ),
                     const SizedBox(height: 24),
                     ContinueButton(
                       text: 'Continue',
-                      onPressed: _allFilled ? _onContinue : null,
+                      onPressed: viewModel.isContinueButtonDisabled 
+                      ? null 
+                      : viewModel.submitProfileData,
                     ),
                   ],
                 ),
@@ -174,11 +152,9 @@ class _TopBar extends StatelessWidget {
 
 class _FieldsCard extends StatelessWidget {
   final List<ManualCustomFieldRepresentationModel> fields;
-  final Map<int, String?> values;
   final void Function(int index, String? value) onChanged;
   const _FieldsCard({
     required this.fields,
-    required this.values,
     required this.onChanged,
   });
 
@@ -198,17 +174,9 @@ class _FieldsCard extends StatelessWidget {
             _FieldLine(
               index: i,
               field: fields[i],
-              value: values[i],
+              value: fields[i].value,
               onChanged: onChanged,
             ),
-            if (i < fields.length - 1)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                child: Divider(
-                  height: 1,
-                  color: AppColors.lightAccent.withOpacity(.4),
-                ),
-              ),
           ],
           const SizedBox(height: 28),
 
@@ -237,9 +205,12 @@ class _FieldLine extends StatelessWidget {
     required this.onChanged,
   });
 
-  bool get isChoice =>
-      field.fieldType == ManualCustomFieldOptionType.select ||
-      (field.options?.choices.isNotEmpty == true);
+  bool get isChoice {
+    final t = field.options?.type;
+    return t == ManualCustomFieldOptionType.select ||
+           t == ManualCustomFieldOptionType.list ||
+           (field.options?.choices.isNotEmpty == true);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -284,8 +255,7 @@ class _FieldLine extends StatelessWidget {
           controller: TextEditingController.fromValue(
             TextEditingValue(
               text: value ?? '',
-              selection: TextSelection.collapsed(
-                  offset: (value ?? '').length),
+              selection: TextSelection.collapsed(offset: (value ?? '').length),
             ),
           ),
           onChanged: (v) => onChanged(index, v),

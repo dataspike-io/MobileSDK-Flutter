@@ -69,10 +69,6 @@ class PersonalDataManager {
       order: f.order ?? 0,
       options: ManualCustomFieldOptionsDomainModel(
         type: ManualCustomFieldOptionType.list,
-        choices: [
-          'Male',
-          'Female',
-        ],
       ),
       fieldType: ManualCustomFieldType.country,
     ));
@@ -115,10 +111,6 @@ class PersonalDataManager {
       order: f.order ?? 0,
       options: ManualCustomFieldOptionsDomainModel(
         type: ManualCustomFieldOptionType.list,
-        choices: [
-          'Male',
-          'Female',
-        ],
       ),
       fieldType: ManualCustomFieldType.citizenship,
     ));

@@ -1,5 +1,4 @@
 import 'manual_custom_field_type.dart';
-import 'manual_custom_field_option_type.dart';
 import 'manual_custom_field_option_domain_model.dart';
 
 abstract class ManualCustomFieldRepresentation {
@@ -17,7 +16,7 @@ class ManualCustomFieldRepresentationModel implements ManualCustomFieldRepresent
   @override
   final int order;
   @override
-  final String? value;
+  String? value;
   @override
   final String? placeholder;
   @override
