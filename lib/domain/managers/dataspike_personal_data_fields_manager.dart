@@ -1,0 +1,139 @@
+import '../models/manual_field_settings_domain_model.dart';
+// import '../models/manual_custom_field_domain_model.dart';
+import '../models/manual_custom_field_option_type.dart';
+import '../models/manual_custom_field_type.dart';
+import '../models/manual_custom_field_option_domain_model.dart';
+import '../models/manual_custom_representation_type.dart';
+
+class PersonalDataManager {
+  List<ManualCustomFieldRepresentationModel> getPersonalDataFields(
+    ManualFieldsSettingsDomainModel? manualFields,
+  ) {
+    if (manualFields == null || !manualFields.enabled) return const [];
+
+    final result = <ManualCustomFieldRepresentationModel>[];
+
+    addFullNameIfRequired(result, manualFields);
+    addEmailIfRequired(result, manualFields);
+    addPhoneIfRequired(result, manualFields);
+    addCountryIfRequired(result, manualFields);
+    addDobIfRequired(result, manualFields);
+    addGenderIfRequired(result, manualFields);
+    addCitizenshipIfRequired(result, manualFields);
+    addAddressIfRequired(result, manualFields);
+
+    result.sort((a, b) => (a.order).compareTo(b.order));
+    return result;
+  }
+
+  void addFullNameIfRequired(List<ManualCustomFieldRepresentationModel> target, ManualFieldsSettingsDomainModel fields) {
+    final f = fields.fullName;
+    if (f == null || !f.enabled || f.order == null) return;
+    target.add(ManualCustomFieldRepresentationModel(
+      caption: 'Full name',
+      order: f.order ?? 0,
+      options: ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text),
+      fieldType: ManualCustomFieldType.fullName,
+    ));
+  }
+
+  void addEmailIfRequired(List<ManualCustomFieldRepresentationModel> target, ManualFieldsSettingsDomainModel fields) {
+    final f = fields.email;
+    if (f == null || !f.enabled || f.order == null) return;
+    target.add(ManualCustomFieldRepresentationModel(
+      caption: 'Email',
+      order: f.order ?? 0,
+      options: ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text),
+      fieldType: ManualCustomFieldType.email,
+    ));
+  }
+
+  void addPhoneIfRequired(List<ManualCustomFieldRepresentationModel> target, ManualFieldsSettingsDomainModel fields) {
+    final f = fields.phone;
+    if (f == null || !f.enabled || f.order == null) return;
+    target.add(ManualCustomFieldRepresentationModel(
+      caption: 'Phone',
+      order: f.order ?? 0,
+      options: ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text), 
+      fieldType: ManualCustomFieldType.phone,
+    ));
+  }
+
+  void addCountryIfRequired(List<ManualCustomFieldRepresentationModel> target, ManualFieldsSettingsDomainModel fields) {
+    final f = fields.country;
+    if (f == null || !f.enabled || f.order == null) return;
+    target.add(ManualCustomFieldRepresentationModel(
+      caption: 'Country',
+      order: f.order ?? 0,
+      options: ManualCustomFieldOptionsDomainModel(
+        type: ManualCustomFieldOptionType.list,
+        choices: [
+          'Male',
+          'Female',
+        ],
+      ),
+      fieldType: ManualCustomFieldType.country,
+    ));
+  }
+
+  void addDobIfRequired(List<ManualCustomFieldRepresentationModel> target, ManualFieldsSettingsDomainModel fields) {
+    final f = fields.dob;
+    if (f == null || !f.enabled || f.order == null) return;
+    target.add(ManualCustomFieldRepresentationModel(
+      caption: 'Date of birth',
+      order: f.order ?? 0,
+      value: null,
+      placeholder: 'yyyy-MM-dd',
+      options: ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text),
+      fieldType: ManualCustomFieldType.dob,
+    ));
+  }
+
+  void addGenderIfRequired(List<ManualCustomFieldRepresentationModel> target, ManualFieldsSettingsDomainModel fields) {
+    final f = fields.gender;
+    if (f == null || !f.enabled || f.order == null) return;
+    target.add(ManualCustomFieldRepresentationModel(
+      caption: 'Gender',
+      order: f.order ?? 0,
+      value: null,
+      options: ManualCustomFieldOptionsDomainModel(
+        type: ManualCustomFieldOptionType.select,
+        choices: [
+          'Male',
+          'Female',
+        ],
+      ),
+      fieldType: ManualCustomFieldType.gender,
+    ));
+  }
+
+  void addCitizenshipIfRequired(List<ManualCustomFieldRepresentationModel> target, ManualFieldsSettingsDomainModel fields) {
+    final f = fields.citizenship;
+    if (f == null || !f.enabled || f.order == null) return;
+    target.add(ManualCustomFieldRepresentationModel(
+      caption: 'Citizenship',
+      order: f.order ?? 0,
+      value: null,
+      options: ManualCustomFieldOptionsDomainModel(
+        type: ManualCustomFieldOptionType.list,
+        choices: [
+          'Male',
+          'Female',
+        ],
+      ),
+      fieldType: ManualCustomFieldType.citizenship,
+    ));
+  }
+
+  void addAddressIfRequired(List<ManualCustomFieldRepresentationModel> target, ManualFieldsSettingsDomainModel fields) {
+    final f = fields.address;
+    if (f == null || !f.enabled || f.order == null) return;
+    target.add(ManualCustomFieldRepresentationModel(
+      caption: 'Address',
+      order: f.order ?? 0,
+      value: null,
+      options: ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text),
+      fieldType: ManualCustomFieldType.address,
+    ));
+  }
+}

@@ -2,11 +2,13 @@ import 'package:dataspikemobilesdk/main/models/dataspike_dependencies.dart';
 import 'dataspike_module.dart';
 import 'package:dataspikemobilesdk/data/repository/dataspike_repository.dart';
 import 'package:dataspikemobilesdk/domain/managers/dataspike_verification_manager.dart';
+import 'package:dataspikemobilesdk/domain/managers/dataspike_personal_data_fields_manager.dart';
 
 abstract class DataspikeComponent {
   String get shortId;
   IDataspikeRepository get dataspikeRepository;
   VerificationManager get verificationManager;
+  PersonalDataManager get personalDataManager;
 }
 
 class DataspikeComponentImpl implements DataspikeComponent {
@@ -23,4 +25,7 @@ class DataspikeComponentImpl implements DataspikeComponent {
 
   @override
   VerificationManager get verificationManager => _module.verificationManager;
+
+  @override
+  PersonalDataManager get personalDataManager => _module.personalDataManager;
 }

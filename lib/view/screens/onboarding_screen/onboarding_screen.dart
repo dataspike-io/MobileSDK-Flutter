@@ -7,15 +7,14 @@ import 'package:dataspikemobilesdk/view/screens/builders/screens_factory.dart';
 import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
 import 'package:dataspikemobilesdk/view/timer/timer_box.dart';
 import 'package:dataspikemobilesdk/view/screens/alarm_screen/alarm_screen.dart';
-import 'package:dataspikemobilesdk/view/screens/recommendations_screen/recommendations_screen.dart';
 import '/view_models/onboarding_view_model.dart';
 import '/view_models/factory/dataspike_view_model_factory.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({
-    Key? key,
+    super.key,
     this.onStart, 
-  }) : super(key: key);
+  });
 
   final VoidCallback? onStart;
 
@@ -286,7 +285,7 @@ class _StagesCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 26),
-          ...stages.map((s) => _StageRow(stage: s)).toList(),
+          ...stages.map((s) => _StageRow(stage: s)),
           const SizedBox(height: 46),
 
           InkWell(

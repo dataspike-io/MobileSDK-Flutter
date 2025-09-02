@@ -9,10 +9,10 @@ class DataspikeScreen extends StatefulWidget {
   final void Function(BuildContext context) onFail;
 
   const DataspikeScreen({
-    Key? key,
+    super.key,
     required this.onSuccess,
     required this.onFail,
-  }) : super(key: key);
+  });
 
   @override
   State<DataspikeScreen> createState() => _DataspikeScreenState();

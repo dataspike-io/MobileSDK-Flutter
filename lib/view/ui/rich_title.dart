@@ -5,7 +5,7 @@ import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 class RichTitle extends StatelessWidget {
   final String full;
   final String linkWord;
-  const RichTitle({required this.full, required this.linkWord});
+  const RichTitle({super.key, required this.full, required this.linkWord});
 
   @override
   Widget build(BuildContext context) {

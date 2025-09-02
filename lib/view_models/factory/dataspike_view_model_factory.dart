@@ -27,6 +27,8 @@ class DataspikeViewModelFactory {
         return PersonalDataViewModel(
           setProfileUseCase: SetProfileUseCase(
             dataspikeRepository: DataspikeInjector.component.dataspikeRepository,
+            verificationSettingsManager: DataspikeInjector.component.verificationManager,
+            personalDataManager: DataspikeInjector.component.personalDataManager,
           ),
         ) as T;
 

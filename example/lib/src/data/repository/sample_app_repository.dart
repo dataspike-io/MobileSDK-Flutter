@@ -21,7 +21,7 @@ class SampleAppRepositoryImpl implements ISampleAppRepository {
     try {
       final response = await apiService.createVerification({});
       return newVerificationResponseMapper.map(Result.success(response));
-    } catch (e, stack) {
+    } catch (e) {
       return newVerificationResponseMapper.map(Result.failure(e));
     }
   }

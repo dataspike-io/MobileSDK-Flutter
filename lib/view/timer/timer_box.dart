@@ -6,8 +6,7 @@ class TimeBox extends StatefulWidget {
   final Duration initialTime;
   final VoidCallback? onFinish;
 
-  const TimeBox({Key? key, required this.initialTime, this.onFinish})
-    : super(key: key);
+  const TimeBox({super.key, required this.initialTime, this.onFinish});
 
   @override
   State<TimeBox> createState() => _TimeLeftBoxState();

@@ -42,7 +42,7 @@ extension DataspikeEndpointPath on DataspikeEndpoint {
 extension DataspikeEndpointHeaders on DataspikeEndpoint {
   Map<String, String> headers(String apiToken) {
     return {
-      'ds-api-token': '$apiToken',
+      'ds-api-token': apiToken,
       'Content-Type': 'application/json',
     };
   }

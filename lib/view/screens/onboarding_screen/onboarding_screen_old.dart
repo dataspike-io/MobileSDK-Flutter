@@ -14,7 +14,7 @@ import '/view_models/onboarding_view_model.dart';
 import '/view_models/factory/dataspike_view_model_factory.dart';
 
 class OnboardingScreenOld extends StatefulWidget {
-  const OnboardingScreenOld({Key? key}) : super(key: key);
+  const OnboardingScreenOld({super.key});
 
   static Route route() {
     return MaterialPageRoute<void>(builder: (_) => const OnboardingScreenOld());

@@ -1,4 +1,3 @@
-import 'sample_app_module.dart';
 import 'sample_app_compoment.dart';
 import 'model/sample_app_dependencies.dart';
 

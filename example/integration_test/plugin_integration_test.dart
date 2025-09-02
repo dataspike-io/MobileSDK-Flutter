@@ -17,9 +17,9 @@ void main() {
 
   testWidgets('getPlatformVersion test', (WidgetTester tester) async {
     final Dataspikemobilesdk plugin = Dataspikemobilesdk();
-    final String? version = '12';
+    final String version = '12';
     // The version string depends on the host platform running the test, so
     // just assert that some non-empty string is returned.
-    expect(version?.isNotEmpty, true);
+    expect(version.isNotEmpty, true);
   });
 }

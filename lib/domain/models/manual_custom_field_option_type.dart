@@ -1,6 +1,7 @@
 enum ManualCustomFieldOptionType {
   select,
   file,
+  list,
   text;
 
   static ManualCustomFieldOptionType fromRaw(String? raw) {
@@ -11,6 +12,8 @@ enum ManualCustomFieldOptionType {
         return ManualCustomFieldOptionType.file;
       case 'text':
         return ManualCustomFieldOptionType.text;
+      case 'list':
+        return ManualCustomFieldOptionType.list;
       default:
         return ManualCustomFieldOptionType.text;
     }
@@ -24,6 +27,8 @@ enum ManualCustomFieldOptionType {
         return 'file';
       case ManualCustomFieldOptionType.text:
         return 'text';
+      case ManualCustomFieldOptionType.list:
+        return 'list';
     }
   }
 }

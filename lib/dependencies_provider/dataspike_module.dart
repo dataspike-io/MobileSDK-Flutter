@@ -8,10 +8,12 @@ import 'package:dataspikemobilesdk/domain/mappers/countries_response_mapper.dart
 import 'package:dataspikemobilesdk/domain/mappers/empty_response_mapper.dart';
 import 'package:dataspikemobilesdk/domain/mappers/proceed_with_verification_response_mapper.dart';
 import 'package:dataspikemobilesdk/domain/mappers/message_response_mapper.dart';
+import 'package:dataspikemobilesdk/domain/managers/dataspike_personal_data_fields_manager.dart';
 
 abstract class DataspikeModule {
   IDataspikeRepository get dataspikeRepository;
   VerificationManager get verificationManager;
+  PersonalDataManager get personalDataManager;
   String get shortId;
 }
 
@@ -19,6 +21,7 @@ class DataspikeModuleImpl implements DataspikeModule {
   final DataspikeDependencies dependencies;
   late final IDataspikeRepository _dataspikeRepository;
   late final VerificationManager _verificationManager;
+  late final PersonalDataManager _personalDataManager;
 
   DataspikeModuleImpl(this.dependencies) {
     final baseUrl = dependencies.isDebug
@@ -39,6 +42,7 @@ class DataspikeModuleImpl implements DataspikeModule {
       messageResponseMapper: MessageResponseMapper(),
     );
     _verificationManager = VerificationManager();
+    _personalDataManager = PersonalDataManager();
   }
 
   @override
@@ -49,4 +53,7 @@ class DataspikeModuleImpl implements DataspikeModule {
 
   @override
   VerificationManager get verificationManager => _verificationManager;
+
+  @override
+  PersonalDataManager get personalDataManager => _personalDataManager;
 }

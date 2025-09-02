@@ -1,7 +1,6 @@
 import '../models/verification_settings_domain_model.dart';
 import '../models/dataspike_check_domain_model.dart';
 import 'package:intl/intl.dart';
-import '../models/manual_field_settings_domain_model.dart';
 
 class VerificationManager {
   DataspikeCheckDomainModel checks = const DataspikeCheckDomainModel(

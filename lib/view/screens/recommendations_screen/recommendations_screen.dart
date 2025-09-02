@@ -6,7 +6,6 @@ import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
 import 'package:dataspikemobilesdk/view/ui/dashboard_underline_text.dart';
 import 'package:dataspikemobilesdk/view/ui/rich_title.dart';
 import 'package:dataspikemobilesdk/view/ui/tab_chip.dart';
-import 'package:dataspikemobilesdk/view/screens/camera/camera_document_screen.dart';
 import 'package:dataspikemobilesdk/view/screens/camera/camera_avatar_screen.dart';
 
 class DocumentRecomendationScreen extends StatelessWidget {
