@@ -1,13 +1,13 @@
 import 'package:dataspikemobilesdk/view_models/personal_data_view_model.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import '../../ui/top_bar.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
-import 'package:dataspikemobilesdk/view/timer/timer_box.dart';
 import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
 import '/view_models/factory/dataspike_view_model_factory.dart';
 import 'package:dataspikemobilesdk/domain/models/manual_custom_representation_type.dart';
 import 'package:dataspikemobilesdk/domain/models/manual_custom_field_type.dart';
 import 'package:dataspikemobilesdk/domain/models/manual_custom_field_option_type.dart';
+import 'package:dataspikemobilesdk/view/screens/countries_screen/countries_screen.dart';
 
 class PersonalDataScreen extends StatefulWidget {
   const PersonalDataScreen({super.key});
@@ -48,7 +48,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _TopBar(timer: timer),
+            TopBar(timer: timer),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
@@ -84,9 +84,9 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
                     const SizedBox(height: 24),
                     ContinueButton(
                       text: 'Continue',
-                      onPressed: viewModel.isContinueButtonDisabled 
-                      ? null 
-                      : viewModel.submitProfileData,
+                      onPressed: viewModel.isContinueButtonDisabled
+                          ? null
+                          : viewModel.submitProfileData,
                     ),
                   ],
                 ),
@@ -94,57 +94,6 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _TopBar extends StatelessWidget {
-  final Duration? timer;
-  const _TopBar({required this.timer});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-      child: Row(
-        children: [
-          IconButton(
-            splashRadius: 24,
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                size: 18, color: AppColors.black),
-            onPressed: () => Navigator.of(context).maybePop(),
-          ),
-          Expanded(
-            child: Center(
-              child: timer == null
-                  ? const SizedBox.shrink()
-                  : TimeBox(
-                      initialTime: timer!,
-                      onFinish: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-            ),
-          ),
-          GestureDetector(
-            onTap: () {},
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SvgPicture.asset(
-                  'packages/dataspikemobilesdk/assets/images/flags_ae.svg',
-                  height: 16,
-                  width: 22,
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(width: 2),
-                const Icon(Icons.keyboard_arrow_down_rounded,
-                    size: 20, color: AppColors.black),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -177,6 +126,8 @@ class _FieldsCard extends StatelessWidget {
               value: fields[i].value,
               onChanged: onChanged,
             ),
+            if (i < fields.length - 1)
+              SizedBox(height: 24),
           ],
           const SizedBox(height: 28),
 
@@ -205,17 +156,71 @@ class _FieldLine extends StatelessWidget {
     required this.onChanged,
   });
 
-  bool get isChoice {
-    final t = field.options?.type;
-    return t == ManualCustomFieldOptionType.select ||
-           t == ManualCustomFieldOptionType.list ||
-           (field.options?.choices.isNotEmpty == true);
-  }
+  bool get isSelectChoices => field.options.type == ManualCustomFieldOptionType.select;
+  bool get isListPicker => field.options.type == ManualCustomFieldOptionType.list;
 
   @override
   Widget build(BuildContext context) {
-    if (isChoice) {
-      final opts = field.options?.choices ?? [];
+    if (isListPicker) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _Label(text: field.caption),
+          const SizedBox(height: 8),
+          InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () async {
+              final picked = await Navigator.of(context).push<String>(
+                MaterialPageRoute(
+                  builder: (_) => CountryPickerScreen(
+                    title: 'Please, choose your ${field.caption.toLowerCase()}',
+                    onCountrySelected: (country) {
+                      onChanged(index, country);
+                    },
+                  ),
+                ),
+              );
+              if (picked != null && picked.isNotEmpty) {
+                onChanged(index, picked);
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.lightAccent),
+                borderRadius: BorderRadius.circular(14),
+                color: AppColors.white,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      value?.isNotEmpty == true
+                          ? value!
+                          : (field.placeholder ?? 'Select ${field.caption.toLowerCase()}'),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: value?.isNotEmpty == true
+                            ? AppColors.black
+                            : AppColors.lightAccent,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.keyboard_arrow_right_rounded,
+                      color: AppColors.black),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (isSelectChoices) {
+      final opts = field.options.choices ?? [];
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

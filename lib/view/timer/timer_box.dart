@@ -5,8 +5,14 @@ import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 class TimeBox extends StatefulWidget {
   final Duration initialTime;
   final VoidCallback? onFinish;
+  final bool isTitle;
 
-  const TimeBox({super.key, required this.initialTime, this.onFinish});
+  const TimeBox({
+    super.key,
+    required this.initialTime,
+    this.onFinish,
+    this.isTitle = true,
+  });
 
   @override
   State<TimeBox> createState() => _TimeLeftBoxState();
@@ -61,9 +67,7 @@ class _TimeLeftBoxState extends State<TimeBox> {
     return Text(
       'Remaining time: ${_format(_timeLeft)}',
       style: TextStyle(
-        color: AppColors.accent,
-        // fontFamily: 'Mont',
-        // package: 'dataspikemobilesdk',
+        color: widget.isTitle ? AppColors.darkGrey : AppColors.darkAccent,
         fontWeight: FontWeight.w600,
         fontSize: 14,
       ),

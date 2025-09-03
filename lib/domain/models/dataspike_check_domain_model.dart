@@ -1,3 +1,4 @@
+import 'package:dataspikemobilesdk/domain/models/country_domain_model.dart';
 import 'manual_field_settings_domain_model.dart';
 
 class DataspikeCheckDomainModel {
@@ -5,6 +6,7 @@ class DataspikeCheckDomainModel {
   final bool livenessIsRequired;
   final bool poaIsRequired;
   final bool personalDataRequired;
+  final List<CountryDomainModel> countries;
   final ManualFieldsSettingsDomainModel? manualFields;
 
   const DataspikeCheckDomainModel({
@@ -12,6 +14,7 @@ class DataspikeCheckDomainModel {
     required this.livenessIsRequired,
     required this.poaIsRequired,
     required this.personalDataRequired,
+    required this.countries,
     required this.manualFields,
   });
 }

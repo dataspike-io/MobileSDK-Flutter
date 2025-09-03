@@ -72,7 +72,7 @@ class PersonalDataViewModel extends ChangeNotifier {
           phone = '+381643510879';
           break;
         case ManualCustomFieldType.country:
-          country = 'Serbia';
+          country = raw;
           break;
         case ManualCustomFieldType.dob:
           dob = '1993-11-16';
@@ -81,7 +81,7 @@ class PersonalDataViewModel extends ChangeNotifier {
           gender = _normalizeGender(raw);
           break;
         case ManualCustomFieldType.citizenship:
-          citizenship = 'Serbia';
+          citizenship = raw;
           break;
         case ManualCustomFieldType.address:
           address = raw;

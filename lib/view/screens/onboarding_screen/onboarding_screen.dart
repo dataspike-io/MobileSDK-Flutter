@@ -9,6 +9,7 @@ import 'package:dataspikemobilesdk/view/timer/timer_box.dart';
 import 'package:dataspikemobilesdk/view/screens/alarm_screen/alarm_screen.dart';
 import '/view_models/onboarding_view_model.dart';
 import '/view_models/factory/dataspike_view_model_factory.dart';
+import 'package:dataspikemobilesdk/view/ui/top_bar.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({
@@ -51,18 +52,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  void _onRequirementsTap() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) =>
-            RequirementScreenFactory.documentRequirementsScreen(
-              context: context,
-              onContinue: () {},
-            ),
-      ),
-    );
-  }
-
   void _onStart() {
     // Локальная логика перед стартом (если нужна)
     widget.onStart?.call();
@@ -86,39 +75,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        SvgPicture.asset(
-                          'packages/dataspikemobilesdk/assets/images/dataspike_logo.svg',
-                          height: 16,
-                          width: 80,
-                          fit: BoxFit.contain,
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          child: Row(
-                            children: [
-                              SvgPicture.asset(
-                                'packages/dataspikemobilesdk/assets/images/flags_ae.svg',
-                                height: 15,
-                                width: 20,
-                                fit: BoxFit.contain,
-                              ),
-                              const SizedBox(width: 4),
-                              const Icon(
-                                Icons.keyboard_arrow_down_rounded,
-                                size: 18,
-                                color: AppColors.accent,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                    TopBar(timer: null, isBackButtonHidden: true),
                     const SizedBox(height: 20),
                     Container(
                       height: 1,
@@ -144,6 +101,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         children: [
                           TimeBox(
                             initialTime: timer,
+                            isTitle: false,
                             onFinish: () {
                               Navigator.of(context).pushAndRemoveUntil(
                                 MaterialPageRoute(
@@ -175,7 +133,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         viewModel.setDataAccepted(v);
                       },
                       onStartPressed: accepted ? _onStart : null, // изменено
-                      onRequirementsTap: _onRequirementsTap,
                       openTerms: () =>
                           _openUrl("https://dataspike.io/terms?lang=en"),
                       openPrivacy: () =>
@@ -242,7 +199,6 @@ class _StagesCard extends StatelessWidget {
   final bool accepted;
   final ValueChanged<bool> onAcceptChanged;
   final VoidCallback? onStartPressed;
-  final VoidCallback onRequirementsTap;
   final VoidCallback openTerms;
   final VoidCallback openPrivacy;
 
@@ -252,7 +208,6 @@ class _StagesCard extends StatelessWidget {
     required this.accepted,
     required this.onAcceptChanged,
     required this.onStartPressed,
-    required this.onRequirementsTap,
     required this.openTerms,
     required this.openPrivacy,
   });

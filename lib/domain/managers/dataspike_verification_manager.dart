@@ -1,3 +1,5 @@
+import 'package:dataspikemobilesdk/domain/models/country_domain_model.dart';
+
 import '../models/verification_settings_domain_model.dart';
 import '../models/dataspike_check_domain_model.dart';
 import 'package:intl/intl.dart';
@@ -8,6 +10,7 @@ class VerificationManager {
     livenessIsRequired: false,
     poaIsRequired: false,
     personalDataRequired: false,
+    countries: [],
     manualFields: null
   );
 
@@ -18,6 +21,7 @@ class VerificationManager {
 
   void setChecksAndExpiration(
     VerificationSettingsDomainModel settings,
+    List<CountryDomainModel> countries,
     String status,
     String expiresAt,
   ) {
@@ -26,6 +30,7 @@ class VerificationManager {
       livenessIsRequired: settings.faceComparisonRequired,
       poaIsRequired: settings.poaRequired,
       personalDataRequired: settings.manualFields.enabled,
+      countries: countries,
       manualFields: settings.manualFields,
     );
     _status = status;
