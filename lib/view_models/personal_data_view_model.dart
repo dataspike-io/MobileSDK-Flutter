@@ -21,7 +21,7 @@ class PersonalDataViewModel extends ChangeNotifier {
   bool get isContinueButtonDisabled {
     if (personalDataFields.isEmpty) return true;
     return personalDataFields.any(
-      (f) => f.value == null || f.value!.trim().isEmpty,
+      (f) => f.value == null || f.value!.trim().isEmpty || !f.isValid,
     );
   }
 
@@ -66,16 +66,16 @@ class PersonalDataViewModel extends ChangeNotifier {
           fullName = raw;
           break;
         case ManualCustomFieldType.email:
-          email = 'trikota@example.com';
+          email = raw;
           break;
         case ManualCustomFieldType.phone:
-          phone = '+381643510879';
+          phone = raw;
           break;
         case ManualCustomFieldType.country:
           country = raw;
           break;
         case ManualCustomFieldType.dob:
-          dob = '1993-11-16';
+          dob = raw;
           break;
         case ManualCustomFieldType.gender:
           gender = _normalizeGender(raw);

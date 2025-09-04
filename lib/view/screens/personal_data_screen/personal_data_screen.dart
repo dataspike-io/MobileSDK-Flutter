@@ -124,6 +124,7 @@ class _FieldsCard extends StatelessWidget {
               index: i,
               field: fields[i],
               value: fields[i].value,
+              valid: fields[i].value == null ? true : fields[i].isValid,
               onChanged: onChanged,
             ),
             if (i < fields.length - 1)
@@ -148,11 +149,14 @@ class _FieldLine extends StatelessWidget {
   final int index;
   final ManualCustomFieldRepresentationModel field;
   final String? value;
+  final bool valid;
   final void Function(int, String?) onChanged;
+
   const _FieldLine({
     required this.index,
     required this.field,
     required this.value,
+    required this.valid,
     required this.onChanged,
   });
 
@@ -161,6 +165,8 @@ class _FieldLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final borderColor = valid ? AppColors.lightAccent : Colors.red;
+
     if (isListPicker) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,7 +193,7 @@ class _FieldLine extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               decoration: BoxDecoration(
-                border: Border.all(color: AppColors.lightAccent),
+                border: Border.all(color: borderColor, width: 1.4),
                 borderRadius: BorderRadius.circular(14),
                 color: AppColors.white,
               ),
@@ -234,6 +240,7 @@ class _FieldLine extends StatelessWidget {
         ],
       );
     }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -241,15 +248,27 @@ class _FieldLine extends StatelessWidget {
         const SizedBox(height: 8),
         TextField(
           keyboardType: _keyboardTypeFor(field.fieldType),
-          decoration: InputDecoration(
-            isDense: true,
-            hintText: field.placeholder,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: field.placeholder,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: borderColor, width: 1.4),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: borderColor, width: 1.4),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(
+                  color: borderColor,
+                  width: 1.6,
+                ),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          ),
           controller: TextEditingController.fromValue(
             TextEditingValue(
               text: value ?? '',
@@ -287,45 +306,6 @@ class _Label extends StatelessWidget {
         fontSize: 15,
         fontWeight: FontWeight.w600,
         color: AppColors.black,
-      ),
-    );
-  }
-}
-
-class _ChipChoice extends StatelessWidget {
-  final String text;
-  final bool selected;
-  final VoidCallback onTap;
-  const _ChipChoice({
-    required this.text,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(40),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(40),
-            color: selected
-                ? AppColors.accent.withOpacity(.12)
-                : AppColors.lightAccent.withOpacity(.15),
-          border: Border.all(
-            color: selected ? AppColors.accent : AppColors.lightAccent,
-          ),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: selected ? AppColors.accent : AppColors.black,
-          ),
-        ),
       ),
     );
   }

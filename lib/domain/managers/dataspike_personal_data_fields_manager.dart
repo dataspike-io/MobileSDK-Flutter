@@ -45,6 +45,7 @@ class PersonalDataManager {
     target.add(ManualCustomFieldRepresentationModel(
       caption: 'Email',
       order: f.order ?? 0,
+      validation: r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',
       options: ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text),
       fieldType: ManualCustomFieldType.email,
     ));
@@ -56,7 +57,8 @@ class PersonalDataManager {
     target.add(ManualCustomFieldRepresentationModel(
       caption: 'Phone',
       order: f.order ?? 0,
-      options: ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text), 
+      validation: r'^\+?[0-9\s\-()]{7,15}$',
+      options: ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text),
       fieldType: ManualCustomFieldType.phone,
     ));
   }
@@ -80,6 +82,7 @@ class PersonalDataManager {
     target.add(ManualCustomFieldRepresentationModel(
       caption: 'Date of birth',
       order: f.order ?? 0,
+      validation: r'^\d{4}-\d{2}-\d{2}$',
       placeholder: 'yyyy-MM-dd',
       options: ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text),
       fieldType: ManualCustomFieldType.dob,
