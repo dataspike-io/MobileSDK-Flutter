@@ -4,7 +4,7 @@ import '/dependencies_provider/dataspike_injector.dart';
 import 'package:dataspikemobilesdk/data/use_cases/set_profile_use_case.dart';
 import 'package:dataspikemobilesdk/data/models/request/profile_fields_request_body.dart';
 import 'package:dataspikemobilesdk/domain/models/manual_custom_representation_type.dart';
-import 'package:dataspikemobilesdk/domain/models/manual_custom_field_type.dart'; // NEW
+import 'package:dataspikemobilesdk/domain/models/manual_custom_field_type.dart';
 
 class PersonalDataViewModel extends ChangeNotifier {
   Duration? timerDuration;
