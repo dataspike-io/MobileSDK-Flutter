@@ -85,7 +85,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     const SizedBox(height: 16),
 
                     Text(
-                      'Get verified for\nJP Morgan application',
+                      'Verify your identity for J.P. Morgan',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w600,
@@ -118,6 +118,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                     _InfoCard(),
                     const SizedBox(height: 16),
+
+                    // Spacer(),
 
                     _StagesCard(
                       stages: viewModel.stages
