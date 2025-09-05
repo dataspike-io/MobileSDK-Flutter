@@ -115,7 +115,7 @@ class _FieldsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
       decoration: BoxDecoration(
         border: Border.all(color: AppColors.alternativeDivider),
         borderRadius: BorderRadius.circular(28),
@@ -133,7 +133,7 @@ class _FieldsCard extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 26),
           ],
           for (var i = 0; i < fields.length; i++) ...[
             _FieldLine(
@@ -365,7 +365,7 @@ class _FieldLine extends StatelessWidget {
           maxLines: 1,
           textAlignVertical: TextAlignVertical.center,
           style: const TextStyle(
-            color: AppColors.black,
+            color: AppColors.darkGrey,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
@@ -429,7 +429,7 @@ class _Label extends StatelessWidget {
     return Text(
       text,
       style: const TextStyle(
-        fontSize: 15,
+        fontSize: 16,
         fontWeight: FontWeight.w600,
         color: AppColors.black,
       ),

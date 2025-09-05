@@ -65,12 +65,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (ctx, c) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 26),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: c.maxHeight - 48),
+        child: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+              sliver: SliverToBoxAdapter(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -89,8 +88,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         fontSize: 28,
                         fontWeight: FontWeight.w600,
                         color: AppColors.black,
-                        // fontFamily: 'Mont',
-                        // package: 'dataspikemobilesdk',
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -116,36 +113,46 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     const SizedBox(height: 12),
 
                     _InfoCard(),
-                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
 
-                    // Spacer(),
-
-                    _StagesCard(
-                      stages: viewModel.stages
-                          .map(
-                            (s) => _Stage(title: s.title, subtitle: s.subtitle),
-                          )
-                          .toList(),
-                      placeholderAsset:
-                          'packages/dataspikemobilesdk/assets/images/dinosaur.svg',
-                      accepted: accepted,
-                      onAcceptChanged: (v) {
-                        viewModel.setTermsAccepted(v);
-                        viewModel.setDataAccepted(v);
-                      },
-                      onStartPressed: accepted ? _onStart : null, // изменено
-                      openTerms: () =>
-                          _openUrl("https://dataspike.io/terms?lang=en"),
-                      openPrivacy: () =>
-                          _openUrl("https://dataspike.io/privacy?lang=en"),
+            // Эта часть заполнит остаток экрана.
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 26),
+              sliver: SliverFillRemaining(
+                hasScrollBody: false, // растягиваем до низа экрана
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _StagesCard(
+                        stages: viewModel.stages
+                            .map(
+                              (s) => _Stage(title: s.title, subtitle: s.subtitle),
+                            )
+                            .toList(),
+                        placeholderAsset:
+                            'packages/dataspikemobilesdk/assets/images/dinosaur.svg',
+                        accepted: accepted,
+                        onAcceptChanged: (v) {
+                          viewModel.setTermsAccepted(v);
+                          viewModel.setDataAccepted(v);
+                        },
+                        onStartPressed: accepted ? _onStart : null,
+                        openTerms: () =>
+                            _openUrl("https://dataspike.io/terms?lang=en"),
+                        openPrivacy: () =>
+                            _openUrl("https://dataspike.io/privacy?lang=en"),
+                      ),
                     ),
-
                     const SizedBox(height: 32),
                   ],
                 ),
               ),
-            );
-          },
+            ),
+          ],
         ),
       ),
     );
@@ -242,7 +249,9 @@ class _StagesCard extends StatelessWidget {
           ),
           const SizedBox(height: 26),
           ...stages.map((s) => _StageRow(stage: s)),
-          const SizedBox(height: 46),
+          // const SizedBox(height: 46),
+
+          const Spacer(),
 
           InkWell(
             onTap: () => onAcceptChanged(!accepted),
@@ -323,9 +332,9 @@ class _StagesCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ContinueButton(
-              onPressed: onStartPressed,
-              text: "Start verification",
-            ),
+            onPressed: onStartPressed,
+            text: "Start verification",
+          ),
         ],
       ),
     );
@@ -339,13 +348,13 @@ class _StageRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.only(bottom: 20),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 24,
+            height: 24.0,
             decoration: BoxDecoration(
               color: AppColors.secondaryLightBackground,
               shape: BoxShape.circle,
@@ -354,7 +363,8 @@ class _StageRow extends StatelessWidget {
             child: SvgPicture.asset('packages/dataspikemobilesdk/assets/images/onboarding_unchecked.svg')
           ),
           const SizedBox(width: 10),
-          Expanded(
+          SizedBox(
+            height: 40,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
