@@ -18,7 +18,7 @@ class ContinueButton extends StatelessWidget {
       height: 60,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.accent,
+          backgroundColor: AppColors.darkAccent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),

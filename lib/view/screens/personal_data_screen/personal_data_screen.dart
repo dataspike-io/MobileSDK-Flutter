@@ -106,14 +106,18 @@ class _FieldsCard extends StatelessWidget {
   final List<ManualCustomFieldRepresentationModel> fields;
   final String? description;
   final void Function(int index, String? value) onChanged;
-  const _FieldsCard({required this.fields, required this.onChanged, this.description});
+  const _FieldsCard({
+    required this.fields,
+    required this.onChanged,
+    this.description,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.lightAccent.withOpacity(.6)),
+        border: Border.all(color: AppColors.alternativeDivider),
         borderRadius: BorderRadius.circular(28),
         color: AppColors.white,
       ),
@@ -126,6 +130,7 @@ class _FieldsCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 16,
                 color: AppColors.black,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 12),
@@ -179,7 +184,7 @@ class _FieldLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = valid ? AppColors.lightAccent : Colors.red;
+    final borderColor = valid ? AppColors.alternativeDivider : AppColors.red;
 
     if (isFileUpload) {
       final hasFile = (value ?? '').isNotEmpty;
@@ -218,12 +223,14 @@ class _FieldLine extends StatelessWidget {
             },
             borderRadius: BorderRadius.circular(14),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              height: 44,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
                 border: Border.all(color: borderColor, width: 1.4),
                 borderRadius: BorderRadius.circular(14),
                 color: AppColors.white,
               ),
+              alignment: Alignment.center,
               child: Row(
                 children: [
                   Expanded(
@@ -232,9 +239,7 @@ class _FieldLine extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: hasFile
-                            ? AppColors.black
-                            : AppColors.lightAccent,
+                        color: hasFile ? AppColors.black : AppColors.darkGrey,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -247,12 +252,15 @@ class _FieldLine extends StatelessWidget {
                         child: Icon(
                           Icons.close_rounded,
                           size: 20,
-                          color: AppColors.lightAccent,
+                          color: AppColors.darkGrey,
                         ),
                       ),
                     ),
                   ],
-                  const Icon(Icons.upload_file_rounded, color: AppColors.black),
+                  const Icon(
+                    Icons.upload_file_rounded,
+                    color: AppColors.darkGrey,
+                  ),
                 ],
               ),
             ),
@@ -261,10 +269,7 @@ class _FieldLine extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               'Selected: $fileName',
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.lightAccent,
-              ),
+              style: const TextStyle(fontSize: 12, color: AppColors.darkAccent),
             ),
           ],
         ],
@@ -295,12 +300,14 @@ class _FieldLine extends StatelessWidget {
               }
             },
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              height: 44,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
                 border: Border.all(color: borderColor, width: 1.4),
                 borderRadius: BorderRadius.circular(14),
                 color: AppColors.white,
               ),
+              alignment: Alignment.center,
               child: Row(
                 children: [
                   Expanded(
@@ -314,7 +321,7 @@ class _FieldLine extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                         color: value?.isNotEmpty == true
                             ? AppColors.black
-                            : AppColors.lightAccent,
+                            : AppColors.darkGrey,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -322,7 +329,7 @@ class _FieldLine extends StatelessWidget {
                   const SizedBox(width: 8),
                   const Icon(
                     Icons.keyboard_arrow_right_rounded,
-                    color: AppColors.black,
+                    color: AppColors.darkGrey,
                   ),
                 ],
               ),
@@ -355,9 +362,22 @@ class _FieldLine extends StatelessWidget {
         const SizedBox(height: 8),
         TextField(
           keyboardType: _keyboardTypeFor(field.fieldType),
+          maxLines: 1,
+          textAlignVertical: TextAlignVertical.center,
+          style: const TextStyle(
+            color: AppColors.black,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+          cursorColor: AppColors.darkAccent,
           decoration: InputDecoration(
             isDense: true,
             hintText: field.placeholder,
+            hintStyle: const TextStyle(
+              fontSize: 14,
+              color: AppColors.darkGrey,
+              fontWeight: FontWeight.w400,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(color: borderColor, width: 1.4),
@@ -372,7 +392,7 @@ class _FieldLine extends StatelessWidget {
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
-              vertical: 10,
+              vertical: 12,
             ),
           ),
           controller: TextEditingController.fromValue(
@@ -442,7 +462,7 @@ class _RadioChoices extends StatelessWidget {
               Divider(
                 height: 1,
                 thickness: 1,
-                color: AppColors.lightAccent.withOpacity(.25),
+                color: AppColors.lightBackground,
               ),
           ],
         ],
@@ -502,7 +522,7 @@ class _CustomRadio extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: selected ? AppColors.accent : AppColors.lightAccent,
+          color: selected ? AppColors.darkAccent : AppColors.darkAccent,
           width: 2,
         ),
       ),
@@ -513,7 +533,7 @@ class _CustomRadio extends StatelessWidget {
         height: 12,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: selected ? AppColors.accent : Colors.transparent,
+          color: selected ? AppColors.darkAccent : Colors.transparent,
         ),
       ),
     );

@@ -51,7 +51,7 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
       ..sort((a, b) => (a.name).compareTo(b.name));
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -78,7 +78,7 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'No countries loaded',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                    style: TextStyle(fontSize: 14, color: AppColors.black),
                   ),
                 ),
               )
@@ -130,14 +130,14 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
                                       fontSize: 20,
                                       fontWeight: FontWeight.w600,
                                       color: selected
-                                          ? AppColors.accent
+                                          ? AppColors.darkAccent
                                           : AppColors.darkGrey,
                                     ),
                                   ),
                                 ),
                                 if (selected)
                                   const Icon(Icons.check,
-                                      color: AppColors.accent, size: 20),
+                                      color: AppColors.darkAccent, size: 20),
                               ],
                             ),
                           ),

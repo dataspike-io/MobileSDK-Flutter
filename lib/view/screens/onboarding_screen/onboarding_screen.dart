@@ -79,7 +79,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     Container(
                       height: 1,
                       width: double.infinity,
-                      color: AppColors.lightAccent.withOpacity(.1),
+                      color: AppColors.dividerSecondary,
                     ),
                     const SizedBox(height: 16),
 
@@ -164,11 +164,11 @@ class _InfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.lightAccent.withOpacity(.25),
+        color: AppColors.lightBackground,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
-        children: [
+        children: [ 
           Image.asset(
             'packages/dataspikemobilesdk/assets/images/jp_logo.png',
             width: 48,
@@ -181,7 +181,7 @@ class _InfoCard extends StatelessWidget {
               'JP Morgan requests proof of address verification and documents check to complete bank account opening.',
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textGrey,
+                color: AppColors.darkGrey,
                 // fontFamily: 'Mont',
                 fontWeight: FontWeight.w500,
                 // package: 'dataspikemobilesdk',
@@ -220,7 +220,7 @@ class _StagesCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: AppColors.lightAccent),
+        border: Border.all(color: AppColors.alternativeDivider),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,13 +257,13 @@ class _StagesCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(5),
                     border: Border.all(
-                      color: accepted ? AppColors.accent : AppColors.accent,
+                      color: AppColors.secondaryDarkAccent,
                       width: 1.4,
                     ),
-                    color: accepted ? AppColors.accent : Colors.transparent,
+                    color: accepted ? AppColors.secondaryDarkAccent : Colors.transparent,
                   ),
                   child: accepted
-                      ? const Icon(Icons.check, size: 14, color: Colors.white)
+                      ? const Icon(Icons.check, size: 14, color: AppColors.white)
                       : null,
                 ),
                 const SizedBox(width: 12),
@@ -347,7 +347,7 @@ class _StageRow extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: AppColors.lightAccent.withOpacity(.55),
+              color: AppColors.secondaryLightBackground,
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
@@ -375,7 +375,7 @@ class _StageRow extends StatelessWidget {
                     // height: 1.3,
                     // fontFamily: 'Mont',
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textGrey,
+                    color: AppColors.darkGrey,
                     // package: 'dataspikemobilesdk',
                   ),
                 ),
@@ -410,7 +410,7 @@ class _SectionHeader extends StatelessWidget {
             fontSize: 12,
             // fontFamily: 'Mont',
             fontWeight: FontWeight.w500,
-            color: AppColors.textGrey,
+            color: AppColors.darkGrey,
             // package: 'dataspikemobilesdk',
           ),
         ),
