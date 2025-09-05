@@ -4,6 +4,7 @@ import 'manual_custom_field_domain_model.dart';
 class ManualFieldsSettingsDomainModel {
   final bool enabled;
 
+  final String? description;
   final ManualFieldDomainModel? fullName;
   final ManualFieldDomainModel? email;
   final ManualFieldDomainModel? phone;
@@ -17,6 +18,7 @@ class ManualFieldsSettingsDomainModel {
 
   const ManualFieldsSettingsDomainModel({
     required this.enabled,
+    this.description,
     this.fullName,
     this.email,
     this.phone,

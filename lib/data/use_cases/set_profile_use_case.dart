@@ -25,4 +25,8 @@ class SetProfileUseCase {
       verificationSettingsManager.checks.manualFields,
     );
   }
+
+  String? get description {
+    return verificationSettingsManager.checks.manualFields?.description;
+  }
 }

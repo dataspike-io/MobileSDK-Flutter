@@ -9,7 +9,7 @@ class CountryPickerScreen extends StatefulWidget {
   final String? initialAlphaTwo;
   final ValueChanged<String>? onCountrySelected; 
 
-  const CountryPickerScreen({
+  const CountryPickerScreen({super.key, 
     required this.title,
     this.initialAlphaTwo,
     this.onCountrySelected,

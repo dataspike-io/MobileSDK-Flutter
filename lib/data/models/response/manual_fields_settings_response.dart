@@ -4,6 +4,7 @@ import 'manual_custom_field_settings_response.dart';
 class ManualFieldsSettingsResponse {
   final bool? enabled;
 
+  final String? description;
   final ManualFieldResponse? fullName;
   final ManualFieldResponse? email;
   final ManualFieldResponse? phone;
@@ -17,6 +18,7 @@ class ManualFieldsSettingsResponse {
 
   const ManualFieldsSettingsResponse({
     this.enabled,
+    this.description,
     this.fullName,
     this.email,
     this.phone,
@@ -43,6 +45,7 @@ class ManualFieldsSettingsResponse {
 
     return ManualFieldsSettingsResponse(
       enabled: json?['enabled'] as bool?,
+      description: json?['description'] as String?,
       fullName: field(json?['full_name']),
       email: field(json?['email']),
       phone: field(json?['phone']),
@@ -57,6 +60,7 @@ class ManualFieldsSettingsResponse {
 
   Map<String, dynamic> toJson() => {
     'enabled': enabled,
+    'description': description,
     'full_name': fullName?.toJson(),
     'email': email?.toJson(),
     'phone': phone?.toJson(),

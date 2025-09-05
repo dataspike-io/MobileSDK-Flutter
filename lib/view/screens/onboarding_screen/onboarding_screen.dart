@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
-import 'package:dataspikemobilesdk/view/screens/builders/screens_factory.dart';
 import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
 import 'package:dataspikemobilesdk/view/timer/timer_box.dart';
 import 'package:dataspikemobilesdk/view/screens/alarm_screen/alarm_screen.dart';

@@ -27,6 +27,7 @@ class VerificationResponseMapper {
       ManualFieldsSettingsDomainModel settingsField(f) =>
           ManualFieldsSettingsDomainModel(
             enabled: f?.enabled ?? false,
+            description: f?.description,
             fullName: field(f?.fullName),
             email: field(f?.email),
             phone: field(f?.phone),

@@ -8,6 +8,7 @@ import 'package:dataspikemobilesdk/domain/models/manual_custom_representation_ty
 import 'package:dataspikemobilesdk/domain/models/manual_custom_field_type.dart';
 import 'package:dataspikemobilesdk/domain/models/manual_custom_field_option_type.dart';
 import 'package:dataspikemobilesdk/view/screens/countries_screen/countries_screen.dart';
+import 'package:file_picker/file_picker.dart';
 
 class PersonalDataScreen extends StatefulWidget {
   const PersonalDataScreen({super.key});
@@ -42,6 +43,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
   Widget build(BuildContext context) {
     final timer = viewModel.timerDuration;
     final fields = viewModel.personalDataFields;
+    final description = viewModel.description;
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -80,6 +82,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
                             fields[index].value = val;
                           });
                         },
+                        description: description,
                       ),
                     const SizedBox(height: 24),
                     ContinueButton(
@@ -101,11 +104,9 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
 
 class _FieldsCard extends StatelessWidget {
   final List<ManualCustomFieldRepresentationModel> fields;
+  final String? description;
   final void Function(int index, String? value) onChanged;
-  const _FieldsCard({
-    required this.fields,
-    required this.onChanged,
-  });
+  const _FieldsCard({required this.fields, required this.onChanged, this.description});
 
   @override
   Widget build(BuildContext context) {
@@ -119,6 +120,16 @@ class _FieldsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (description != null) ...[
+            Text(
+              description!,
+              style: const TextStyle(
+                fontSize: 16,
+                color: AppColors.black,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           for (var i = 0; i < fields.length; i++) ...[
             _FieldLine(
               index: i,
@@ -127,8 +138,7 @@ class _FieldsCard extends StatelessWidget {
               valid: fields[i].value == null ? true : fields[i].isValid,
               onChanged: onChanged,
             ),
-            if (i < fields.length - 1)
-              SizedBox(height: 24),
+            if (i < fields.length - 1) SizedBox(height: 24),
           ],
           const SizedBox(height: 28),
 
@@ -160,12 +170,106 @@ class _FieldLine extends StatelessWidget {
     required this.onChanged,
   });
 
-  bool get isSelectChoices => field.options.type == ManualCustomFieldOptionType.select;
-  bool get isListPicker => field.options.type == ManualCustomFieldOptionType.list;
+  bool get isSelectChoices =>
+      field.options.type == ManualCustomFieldOptionType.select;
+  bool get isListPicker =>
+      field.options.type == ManualCustomFieldOptionType.list;
+  bool get isFileUpload =>
+      field.options.type == ManualCustomFieldOptionType.file;
 
   @override
   Widget build(BuildContext context) {
     final borderColor = valid ? AppColors.lightAccent : Colors.red;
+
+    if (isFileUpload) {
+      final hasFile = (value ?? '').isNotEmpty;
+      final fileName = hasFile
+          ? value!.split(RegExp(r'[\/\\]')).last
+          : (field.placeholder ?? 'Select ${field.caption.toLowerCase()}');
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _Label(text: field.caption),
+          const SizedBox(height: 8),
+          InkWell(
+            onTap: () async {
+              final type = field.options.attachmentTypePreset;
+              FileType pickerType = FileType.any;
+              List<String>? allowed;
+
+              if (type == 'image') {
+                pickerType = FileType.image;
+              } else if (type == 'video') {
+                pickerType = FileType.video;
+              } else if (type == 'document' || type == 'file') {
+                pickerType = FileType.custom;
+                allowed = ['pdf'];
+              }
+
+              final res = await FilePicker.platform.pickFiles(
+                type: pickerType,
+                allowMultiple: false,
+                allowedExtensions: allowed,
+              );
+              final path = res?.files.single.path;
+              if (path != null) {
+                onChanged(index, path);
+              }
+            },
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              decoration: BoxDecoration(
+                border: Border.all(color: borderColor, width: 1.4),
+                borderRadius: BorderRadius.circular(14),
+                color: AppColors.white,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      fileName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: hasFile
+                            ? AppColors.black
+                            : AppColors.lightAccent,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (hasFile) ...[
+                    GestureDetector(
+                      onTap: () => onChanged(index, null),
+                      child: const Padding(
+                        padding: EdgeInsets.only(right: 8),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 20,
+                          color: AppColors.lightAccent,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const Icon(Icons.upload_file_rounded, color: AppColors.black),
+                ],
+              ),
+            ),
+          ),
+          if (hasFile) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Selected: $fileName',
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.lightAccent,
+              ),
+            ),
+          ],
+        ],
+      );
+    }
 
     if (isListPicker) {
       return Column(
@@ -203,7 +307,8 @@ class _FieldLine extends StatelessWidget {
                     child: Text(
                       value?.isNotEmpty == true
                           ? value!
-                          : (field.placeholder ?? 'Select ${field.caption.toLowerCase()}'),
+                          : (field.placeholder ??
+                                'Select ${field.caption.toLowerCase()}'),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -215,8 +320,10 @@ class _FieldLine extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(Icons.keyboard_arrow_right_rounded,
-                      color: AppColors.black),
+                  const Icon(
+                    Icons.keyboard_arrow_right_rounded,
+                    color: AppColors.black,
+                  ),
                 ],
               ),
             ),
@@ -248,27 +355,26 @@ class _FieldLine extends StatelessWidget {
         const SizedBox(height: 8),
         TextField(
           keyboardType: _keyboardTypeFor(field.fieldType),
-            decoration: InputDecoration(
-              isDense: true,
-              hintText: field.placeholder,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: borderColor, width: 1.4),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: borderColor, width: 1.4),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(
-                  color: borderColor,
-                  width: 1.6,
-                ),
-              ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: InputDecoration(
+            isDense: true,
+            hintText: field.placeholder,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: borderColor, width: 1.4),
             ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: borderColor, width: 1.4),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: borderColor, width: 1.6),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+          ),
           controller: TextEditingController.fromValue(
             TextEditingValue(
               text: value ?? '',

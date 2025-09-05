@@ -1,9 +1,6 @@
 enum ManualCustomFieldOptionType {
   select,
   file,
-  image,
-  video,
-  document,
   list,
   text;
 
@@ -17,12 +14,6 @@ enum ManualCustomFieldOptionType {
         return ManualCustomFieldOptionType.text;
       case 'list':
         return ManualCustomFieldOptionType.list;
-      case 'image':
-        return ManualCustomFieldOptionType.image;
-      case 'video':
-        return ManualCustomFieldOptionType.video;
-      case 'document':
-        return ManualCustomFieldOptionType.document;
       default:
         return ManualCustomFieldOptionType.text;
     }
@@ -38,12 +29,6 @@ enum ManualCustomFieldOptionType {
         return 'text';
       case ManualCustomFieldOptionType.list:
         return 'list';
-      case ManualCustomFieldOptionType.image:
-        return 'image';
-      case ManualCustomFieldOptionType.video:
-        return 'video';
-      case ManualCustomFieldOptionType.document:
-        return 'document';
     }
   }
 }
