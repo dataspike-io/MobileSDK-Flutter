@@ -78,7 +78,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     Container(
                       height: 1,
                       width: double.infinity,
-                      color: AppColors.dividerSecondary,
+                      color: AppColors.snowyLilac,
                     ),
                     const SizedBox(height: 16),
 
@@ -171,7 +171,7 @@ class _InfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.lightBackground,
+        color: AppColors.mistyLilac,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -188,7 +188,7 @@ class _InfoCard extends StatelessWidget {
               'JP Morgan requests proof of address verification and documents check to complete bank account opening.',
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.darkGrey,
+                color: AppColors.darkIndigo,
                 // fontFamily: 'Mont',
                 fontWeight: FontWeight.w500,
                 // package: 'dataspikemobilesdk',
@@ -227,7 +227,7 @@ class _StagesCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: AppColors.alternativeDivider),
+        border: Border.all(color: AppColors.palePeriwinkle),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,10 +266,10 @@ class _StagesCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(5),
                     border: Border.all(
-                      color: AppColors.secondaryDarkAccent,
+                      color: AppColors.deepViolet,
                       width: 1.4,
                     ),
-                    color: accepted ? AppColors.secondaryDarkAccent : Colors.transparent,
+                    color: accepted ? AppColors.deepViolet : Colors.transparent,
                   ),
                   child: accepted
                       ? const Icon(Icons.check, size: 14, color: AppColors.white)
@@ -356,7 +356,7 @@ class _StageRow extends StatelessWidget {
             width: 24,
             height: 24.0,
             decoration: BoxDecoration(
-              color: AppColors.secondaryLightBackground,
+              color: AppColors.softLavender,
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
@@ -385,7 +385,7 @@ class _StageRow extends StatelessWidget {
                     // height: 1.3,
                     // fontFamily: 'Mont',
                     fontWeight: FontWeight.w500,
-                    color: AppColors.darkGrey,
+                    color: AppColors.darkIndigo,
                     // package: 'dataspikemobilesdk',
                   ),
                 ),
@@ -420,7 +420,7 @@ class _SectionHeader extends StatelessWidget {
             fontSize: 12,
             // fontFamily: 'Mont',
             fontWeight: FontWeight.w500,
-            color: AppColors.darkGrey,
+            color: AppColors.darkIndigo,
             // package: 'dataspikemobilesdk',
           ),
         ),

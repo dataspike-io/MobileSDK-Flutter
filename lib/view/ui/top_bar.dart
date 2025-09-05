@@ -29,7 +29,7 @@ class TopBar extends StatelessWidget {
                   icon: const Icon(
                     Icons.arrow_back_ios_new_rounded,
                     size: 18,
-                    color: AppColors.darkGrey,
+                    color: AppColors.darkIndigo,
                   ),
                   onPressed: () => Navigator.of(context).maybePop(),
                 ),
@@ -61,7 +61,7 @@ class TopBar extends StatelessWidget {
                 const Icon(
                   Icons.keyboard_arrow_down_rounded,
                   size: 18,
-                  color: AppColors.darkGrey,
+                  color: AppColors.darkIndigo,
                 ),
               ],
             ),

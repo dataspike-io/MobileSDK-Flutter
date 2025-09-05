@@ -113,7 +113,7 @@ class _FieldsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.alternativeDivider),
+        border: Border.all(color: AppColors.palePeriwinkle),
         borderRadius: BorderRadius.circular(28),
         color: AppColors.white,
       ),
@@ -169,7 +169,7 @@ class _FieldLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = valid ? AppColors.alternativeDivider : AppColors.red;
+    final borderColor = valid ? AppColors.palePeriwinkle : AppColors.red;
 
     if (isFileUpload) {
       final hasFile = (value ?? '').isNotEmpty;
@@ -227,7 +227,7 @@ class _FieldLine extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: hasFile ? AppColors.black : AppColors.darkGrey,
+                        color: hasFile ? AppColors.black : AppColors.darkIndigo,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -240,14 +240,14 @@ class _FieldLine extends StatelessWidget {
                         child: Icon(
                           Icons.close_rounded,
                           size: 20,
-                          color: AppColors.darkGrey,
+                          color: AppColors.darkIndigo,
                         ),
                       ),
                     ),
                   ],
                   const Icon(
                     Icons.upload_file_rounded,
-                    color: AppColors.darkGrey,
+                    color: AppColors.darkIndigo,
                   ),
                 ],
               ),
@@ -257,7 +257,7 @@ class _FieldLine extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               'Selected: $fileName',
-              style: const TextStyle(fontSize: 12, color: AppColors.darkAccent),
+              style: const TextStyle(fontSize: 12, color: AppColors.royalPurple),
             ),
           ],
         ],
@@ -312,7 +312,7 @@ class _FieldLine extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                         color: value?.isNotEmpty == true
                             ? AppColors.black
-                            : AppColors.darkGrey,
+                            : AppColors.darkIndigo,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -320,7 +320,7 @@ class _FieldLine extends StatelessWidget {
                   const SizedBox(width: 8),
                   const Icon(
                     Icons.keyboard_arrow_right_rounded,
-                    color: AppColors.darkGrey,
+                    color: AppColors.darkIndigo,
                   ),
                 ],
               ),
@@ -362,17 +362,17 @@ class _FieldLine extends StatelessWidget {
           maxLines: 1,
           textAlignVertical: TextAlignVertical.center,
           style: const TextStyle(
-            color: AppColors.darkGrey,
+            color: AppColors.darkIndigo,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
-          cursorColor: AppColors.darkAccent,
+          cursorColor: AppColors.royalPurple,
           decoration: InputDecoration(
             isDense: true,
             hintText: field.placeholder,
             hintStyle: const TextStyle(
               fontSize: 14,
-              color: AppColors.darkGrey,
+              color: AppColors.darkIndigo,
               fontWeight: FontWeight.w400,
             ),
             border: OutlineInputBorder(
@@ -459,7 +459,7 @@ class _RadioChoices extends StatelessWidget {
               Divider(
                 height: 1,
                 thickness: 1,
-                color: AppColors.lightBackground,
+                color: AppColors.mistyLilac,
               ),
           ],
         ],
@@ -519,7 +519,7 @@ class _CustomRadio extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: selected ? AppColors.darkAccent : AppColors.darkAccent,
+          color: AppColors.royalPurple,
           width: 2,
         ),
       ),
@@ -530,7 +530,7 @@ class _CustomRadio extends StatelessWidget {
         height: 12,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: selected ? AppColors.darkAccent : Colors.transparent,
+          color: selected ? AppColors.royalPurple : Colors.transparent,
         ),
       ),
     );
@@ -548,7 +548,7 @@ class _Caption extends StatelessWidget {
       style: const TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w500,
-        color: AppColors.darkGrey,
+        color: AppColors.darkIndigo,
       ),
     );
   }

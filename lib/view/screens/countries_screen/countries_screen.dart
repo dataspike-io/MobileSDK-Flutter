@@ -130,14 +130,14 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
                                       fontSize: 20,
                                       fontWeight: FontWeight.w600,
                                       color: selected
-                                          ? AppColors.darkAccent
-                                          : AppColors.darkGrey,
+                                          ? AppColors.royalPurple
+                                          : AppColors.darkIndigo,
                                     ),
                                   ),
                                 ),
                                 if (selected)
                                   const Icon(Icons.check,
-                                      color: AppColors.darkAccent, size: 20),
+                                      color: AppColors.royalPurple, size: 20),
                               ],
                             ),
                           ),

@@ -67,7 +67,7 @@ class _TimeLeftBoxState extends State<TimeBox> {
     return Text(
       'Remaining time: ${_format(_timeLeft)}',
       style: TextStyle(
-        color: widget.isTitle ? AppColors.darkGrey : AppColors.darkAccent,
+        color: widget.isTitle ? AppColors.darkIndigo : AppColors.royalPurple,
         fontWeight: FontWeight.w600,
         fontSize: 14,
       ),
