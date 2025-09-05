@@ -31,16 +31,17 @@ class OnboardingViewModel extends ChangeNotifier {
     final requiresSelfie = vm.livenessIsRequired;
     final requiresAddress = vm.poaIsRequired;
     final personalData = vm.personalDataRequired;
+    final personalDataDescription = vm.manualFields?.description;
 
     final list = <StageItem>[
       if (personalData)
-      const StageItem(
-        id: 'personal',
-        title: 'Complete your personal data',
-        subtitle: 'No special needed',
-        required: true,
-        completed: true,
-      ),
+        StageItem(
+          id: 'personal',
+          title: 'Complete your personal data',
+          subtitle: personalDataDescription ?? 'No special needed',
+          required: true,
+          completed: true,
+        ),
       if (requiresDocument)
         const StageItem(
           id: 'document',

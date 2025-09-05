@@ -10,7 +10,6 @@ class PersonalDataViewModel extends ChangeNotifier {
   Duration? timerDuration;
   
   List<ManualCustomFieldRepresentationModel> personalDataFields = [];
-  String? description;
   final SetProfileUseCase _setProfileUseCase;
 
   PersonalDataViewModel({required SetProfileUseCase setProfileUseCase})
@@ -39,7 +38,6 @@ class PersonalDataViewModel extends ChangeNotifier {
   void setStages() {
     personalDataFields.clear();
     personalDataFields = _setProfileUseCase.getFields();
-    description = _setProfileUseCase.description;
     notifyListeners();
   }
 
@@ -89,8 +87,8 @@ class PersonalDataViewModel extends ChangeNotifier {
           address = raw;
           break;
         case ManualCustomFieldType.custom:
-          final key = f.caption.isNotEmpty == true
-              ? f.caption
+          final key = f.label.isNotEmpty == true
+              ? f.label
               : 'custom_${f.order}';
           custom[key] = raw;
           break;

@@ -43,7 +43,6 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
   Widget build(BuildContext context) {
     final timer = viewModel.timerDuration;
     final fields = viewModel.personalDataFields;
-    final description = viewModel.description;
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -82,7 +81,6 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
                             fields[index].value = val;
                           });
                         },
-                        description: description,
                       ),
                     const SizedBox(height: 24),
                     ContinueButton(
@@ -104,12 +102,10 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
 
 class _FieldsCard extends StatelessWidget {
   final List<ManualCustomFieldRepresentationModel> fields;
-  final String? description;
   final void Function(int index, String? value) onChanged;
   const _FieldsCard({
     required this.fields,
-    required this.onChanged,
-    this.description,
+    required this.onChanged
   });
 
   @override
@@ -124,17 +120,6 @@ class _FieldsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (description != null) ...[
-            Text(
-              description!,
-              style: const TextStyle(
-                fontSize: 16,
-                color: AppColors.black,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 26),
-          ],
           for (var i = 0; i < fields.length; i++) ...[
             _FieldLine(
               index: i,
@@ -190,11 +175,14 @@ class _FieldLine extends StatelessWidget {
       final hasFile = (value ?? '').isNotEmpty;
       final fileName = hasFile
           ? value!.split(RegExp(r'[\/\\]')).last
-          : (field.placeholder ?? 'Select ${field.caption.toLowerCase()}');
+          : (field.placeholder ?? 'Select ${field.label.toLowerCase()}');
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _Label(text: field.caption),
+          _Label(text: field.label),
+          if (field.caption?.isNotEmpty == true) ...[
+            _Caption(text: field.caption!),
+          ],
           const SizedBox(height: 8),
           InkWell(
             onTap: () async {
@@ -280,7 +268,10 @@ class _FieldLine extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _Label(text: field.caption),
+          _Label(text: field.label),
+          if (field.caption?.isNotEmpty == true) ...[
+            _Caption(text: field.caption!),
+          ],
           const SizedBox(height: 8),
           InkWell(
             borderRadius: BorderRadius.circular(14),
@@ -288,7 +279,7 @@ class _FieldLine extends StatelessWidget {
               final picked = await Navigator.of(context).push<String>(
                 MaterialPageRoute(
                   builder: (_) => CountryPickerScreen(
-                    title: 'Please, choose your ${field.caption.toLowerCase()}',
+                    title: 'Please, choose your ${field.label.toLowerCase()}',
                     onCountrySelected: (country) {
                       onChanged(index, country);
                     },
@@ -315,7 +306,7 @@ class _FieldLine extends StatelessWidget {
                       value?.isNotEmpty == true
                           ? value!
                           : (field.placeholder ??
-                                'Select ${field.caption.toLowerCase()}'),
+                                'Select ${field.label.toLowerCase()}'),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -344,7 +335,10 @@ class _FieldLine extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _Label(text: field.caption),
+          _Label(text: field.label),
+          if (field.caption?.isNotEmpty == true) ...[
+            _Caption(text: field.caption!),
+          ],
           const SizedBox(height: 8),
           _RadioChoices(
             options: opts,
@@ -358,7 +352,10 @@ class _FieldLine extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _Label(text: field.caption),
+        _Label(text: field.label),
+        if (field.caption?.isNotEmpty == true) ...[
+          _Caption(text: field.caption!),
+        ],
         const SizedBox(height: 8),
         TextField(
           keyboardType: _keyboardTypeFor(field.fieldType),
@@ -535,6 +532,23 @@ class _CustomRadio extends StatelessWidget {
           shape: BoxShape.circle,
           color: selected ? AppColors.darkAccent : Colors.transparent,
         ),
+      ),
+    );
+  }
+}
+
+class _Caption extends StatelessWidget {
+  final String text;
+  const _Caption({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: AppColors.darkGrey,
       ),
     );
   }

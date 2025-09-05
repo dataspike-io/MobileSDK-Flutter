@@ -32,7 +32,7 @@ class PersonalDataManager {
     final f = fields.fullName;
     if (f == null || !f.enabled || f.order == null) return;
     target.add(ManualCustomFieldRepresentationModel(
-      caption: 'Full name',
+      label: 'Full name',
       order: f.order ?? 0,
       options: ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text),
       fieldType: ManualCustomFieldType.fullName,
@@ -43,7 +43,7 @@ class PersonalDataManager {
     final f = fields.email;
     if (f == null || !f.enabled || f.order == null) return;
     target.add(ManualCustomFieldRepresentationModel(
-      caption: 'Email',
+      label: 'Email',
       order: f.order ?? 0,
       validation: r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',
       options: ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text),
@@ -55,7 +55,7 @@ class PersonalDataManager {
     final f = fields.phone;
     if (f == null || !f.enabled || f.order == null) return;
     target.add(ManualCustomFieldRepresentationModel(
-      caption: 'Phone',
+      label: 'Phone',
       order: f.order ?? 0,
       validation: r'^\+?[0-9\s\-()]{7,15}$',
       options: ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text),
@@ -67,7 +67,7 @@ class PersonalDataManager {
     final f = fields.country;
     if (f == null || !f.enabled || f.order == null) return;
     target.add(ManualCustomFieldRepresentationModel(
-      caption: 'Country',
+      label: 'Country',
       order: f.order ?? 0,
       options: ManualCustomFieldOptionsDomainModel(
         type: ManualCustomFieldOptionType.list,
@@ -80,7 +80,7 @@ class PersonalDataManager {
     final f = fields.dob;
     if (f == null || !f.enabled || f.order == null) return;
     target.add(ManualCustomFieldRepresentationModel(
-      caption: 'Date of birth',
+      label: 'Date of birth',
       order: f.order ?? 0,
       validation: r'^\d{4}-\d{2}-\d{2}$',
       placeholder: 'yyyy-MM-dd',
@@ -93,7 +93,8 @@ class PersonalDataManager {
     final f = fields.gender;
     if (f == null || !f.enabled || f.order == null) return;
     target.add(ManualCustomFieldRepresentationModel(
-      caption: 'Gender',
+      label: 'Choose your gender',
+      caption: 'Like in passport or ID',
       order: f.order ?? 0,
       options: ManualCustomFieldOptionsDomainModel(
         type: ManualCustomFieldOptionType.select,
@@ -110,7 +111,7 @@ class PersonalDataManager {
     final f = fields.citizenship;
     if (f == null || !f.enabled || f.order == null) return;
     target.add(ManualCustomFieldRepresentationModel(
-      caption: 'Citizenship',
+      label: 'Citizenship',
       order: f.order ?? 0,
       options: ManualCustomFieldOptionsDomainModel(
         type: ManualCustomFieldOptionType.list,
@@ -123,7 +124,7 @@ class PersonalDataManager {
     final f = fields.address;
     if (f == null || !f.enabled || f.order == null) return;
     target.add(ManualCustomFieldRepresentationModel(
-      caption: 'Address',
+      label: 'Address',
       order: f.order ?? 0,
       options: ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text),
       fieldType: ManualCustomFieldType.address,
@@ -141,7 +142,8 @@ class PersonalDataManager {
 
       target.add(
         ManualCustomFieldRepresentationModel(
-          caption: customField.label ?? 'Custom field',
+          label: customField.label ?? 'Custom field',
+          caption: customField.caption,
           order: customField.order ?? 0,
           options: customField.options ?? ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text),
           fieldType: ManualCustomFieldType.custom,

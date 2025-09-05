@@ -2,9 +2,10 @@ import 'manual_custom_field_type.dart';
 import 'manual_custom_field_option_domain_model.dart';
 
 abstract class ManualCustomFieldRepresentation {
-  String get caption;
+  String get label;
   int get order;
   String? get value;
+  String? get caption;
   String? get validation;
   String? get placeholder;
   ManualCustomFieldOptionsDomainModel get options;
@@ -14,11 +15,13 @@ abstract class ManualCustomFieldRepresentation {
 
 class ManualCustomFieldRepresentationModel implements ManualCustomFieldRepresentation {
   @override
-  final String caption;
+  final String label;
   @override
   final int order;
   @override
   String? value;
+  @override
+  String? caption;
   @override
   String? validation;
   @override
@@ -29,9 +32,10 @@ class ManualCustomFieldRepresentationModel implements ManualCustomFieldRepresent
   final ManualCustomFieldType fieldType;
 
   ManualCustomFieldRepresentationModel({
-    required this.caption,
+    required this.label,
     required this.order,
     this.value,
+    this.caption,
     this.validation,
     this.placeholder,
     required this.options,
