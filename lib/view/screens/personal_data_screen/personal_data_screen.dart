@@ -5,6 +5,7 @@ import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
 import '/view_models/factory/dataspike_view_model_factory.dart';
 import 'package:dataspikemobilesdk/view/ui/personal_data/field_card.dart';
+import 'package:dataspikemobilesdk/main/coordinator/coordinator.dart';
 
 class PersonalDataScreen extends StatefulWidget {
   const PersonalDataScreen({super.key});
@@ -34,6 +35,12 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
   }
 
   void _onVmChanged() => setState(() {});
+
+  Future<void> _onContinue() async {
+    await Future.sync(() => viewModel.submitProfileData());
+    if (!mounted) return;
+    DataspikeCoordinator.proceedNext(context, after: DataspikeStep.personalData);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +92,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
                       text: 'Continue',
                       onPressed: viewModel.isContinueButtonDisabled
                           ? null
-                          : viewModel.submitProfileData,
+                          : _onContinue,
                     ),
                   ],
                 ),

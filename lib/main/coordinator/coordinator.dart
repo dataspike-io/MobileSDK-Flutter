@@ -4,12 +4,14 @@ import 'package:dataspikemobilesdk/view/screens/onboarding_screen/onboarding_scr
 import 'package:dataspikemobilesdk/view/screens/camera/camera_avatar_screen.dart';
 import 'package:dataspikemobilesdk/view/screens/camera/camera_document_screen.dart';
 import 'package:dataspikemobilesdk/view/screens/personal_data_screen/personal_data_screen.dart';
+import '/dependencies_provider/dataspike_injector.dart';
 
 enum DataspikeStep {
   onboarding,
   personalData,
-  selfieCamera,
   documentCamera,
+  selfieCamera,
+  address,
 }
 
 class DataspikeCoordinator {
@@ -34,7 +36,7 @@ class DataspikeCoordinator {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => OnboardingScreen(
-              onStart: () => showNextStep(context, DataspikeStep.personalData),
+              onStart: () => proceedNext(context),
             ),
           ),
         );
@@ -44,32 +46,77 @@ class DataspikeCoordinator {
           MaterialPageRoute(builder: (_) => const PersonalDataScreen()),
         );
         break;
-      case DataspikeStep.selfieCamera:
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => LiveAvatarCamera(onCropped: (value) {}),
-          ),
-        );
-        break;
       case DataspikeStep.documentCamera:
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => LiveCropCamera(onCropped: (value) {}),
+            builder: (_) => LiveCropCamera(onCropped: (value) {
+              proceedNext(context, after: DataspikeStep.documentCamera);
+            }),
+          ),
+        );
+        break;
+      case DataspikeStep.selfieCamera:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => LiveAvatarCamera(onCropped: (value) {
+              proceedNext(context, after: DataspikeStep.selfieCamera);
+            }),
+          ),
+        );
+        break;
+      case DataspikeStep.address:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => LiveCropCamera(onCropped: (value) {
+              proceedNext(context, after: DataspikeStep.documentCamera);
+            }),
           ),
         );
         break;
     }
   }
 
+  static List<DataspikeStep> _requiredSteps() {
+    final vm = DataspikeInjector.component.verificationManager.checks;
+
+    final requiresDocument = vm.poiIsRequired;
+    final requiresSelfie = vm.livenessIsRequired;
+    final requiresAddress = vm.poaIsRequired;
+    final personalData = vm.personalDataRequired;
+
+    final steps = <DataspikeStep>[];
+    if (personalData) steps.add(DataspikeStep.personalData);
+    if (requiresDocument) steps.add(DataspikeStep.documentCamera);
+    if (requiresSelfie) steps.add(DataspikeStep.selfieCamera);
+    if (requiresAddress) steps.add(DataspikeStep.address);
+    return steps;
+  }
+
+  static void proceedNext(BuildContext context, {DataspikeStep? after}) {
+    final steps = _requiredSteps();
+    if (steps.isEmpty) return;
+
+    DataspikeStep? next;
+    if (after == null) {
+      next = steps.first; 
+    } else {
+      final idx = steps.indexOf(after);
+      if (idx >= 0 && idx + 1 < steps.length) {
+        next = steps[idx + 1];
+      }
+    }
+
+    if (next != null) {
+      showNextStep(context, next);
+    } else {  }
+  }
+
   static void _showOnboarding(BuildContext context) =>
       showNextStep(context, DataspikeStep.onboarding);
-
   static void showSelfieCamera(BuildContext context) =>
       showNextStep(context, DataspikeStep.selfieCamera);
-
   static void showDocumentCamera(BuildContext context) =>
       showNextStep(context, DataspikeStep.documentCamera);
-
   static void showPersonalData(BuildContext context) =>
       showNextStep(context, DataspikeStep.personalData);
 }
