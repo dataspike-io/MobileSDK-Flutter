@@ -6,11 +6,13 @@ import '../timer/timer_box.dart';
 class TopBar extends StatelessWidget {
   final Duration? timer;
   final bool isBackButtonHidden;
+  final bool popToRoot;
 
   const TopBar({
     super.key,
     required this.timer,
     this.isBackButtonHidden = false,
+    this.popToRoot = true,
   });
 
   @override
@@ -31,7 +33,13 @@ class TopBar extends StatelessWidget {
                     size: 18,
                     color: AppColors.darkIndigo,
                   ),
-                  onPressed: () => Navigator.of(context).maybePop(),
+                  onPressed: () {
+                    if (popToRoot) {
+                      Navigator.of(context, rootNavigator: true).popUntil((r) => r.isFirst);
+                    } else {
+                      Navigator.of(context).maybePop();
+                    }
+                  },
                 ),
           Expanded(
             child: Center(
