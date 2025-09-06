@@ -7,9 +7,10 @@ import '/dependencies_provider/dataspike_injector.dart';
 class CountryPickerScreen extends StatefulWidget {
   final String title;
   final String? initialAlphaTwo;
-  final ValueChanged<String>? onCountrySelected; 
+  final ValueChanged<String>? onCountrySelected;
 
-  const CountryPickerScreen({super.key, 
+  const CountryPickerScreen({
+    super.key,
     required this.title,
     this.initialAlphaTwo,
     this.onCountrySelected,
@@ -47,8 +48,7 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
       if (_query.isEmpty) return true;
       final name = (c.name).toLowerCase();
       return name.contains(_query);
-    }).toList()
-      ..sort((a, b) => (a.name).compareTo(b.name));
+    }).toList()..sort((a, b) => (a.name).compareTo(b.name));
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -84,21 +84,46 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
               )
             else
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 10,
+                ),
                 child: TextField(
+                  style: const TextStyle(
+                    color: AppColors.darkIndigo,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
                   controller: _searchCtrl,
                   decoration: InputDecoration(
                     hintText: 'Search by country name',
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 14),
+                      horizontal: 14,
+                      vertical: 14,
+                    ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(
+                        color: AppColors.palePeriwinkle,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(
+                        color: AppColors.palePeriwinkle,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(
+                        color: AppColors.palePeriwinkle,
+                      ),
                     ),
                   ),
                 ),
               ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
             Expanded(
               child: _all.isEmpty
                   ? const Center(child: CircularProgressIndicator())
@@ -114,7 +139,7 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
                           onTap: name.isEmpty
                               ? null
                               : () {
-                                  widget.onCountrySelected?.call(name); 
+                                  widget.onCountrySelected?.call(name);
                                   Navigator.of(context).pop(name);
                                 },
                           child: Padding(
@@ -136,18 +161,18 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
                                   ),
                                 ),
                                 if (selected)
-                                  const Icon(Icons.check,
-                                      color: AppColors.royalPurple, size: 20),
+                                  const Icon(
+                                    Icons.check,
+                                    color: AppColors.royalPurple,
+                                    size: 20,
+                                  ),
                               ],
                             ),
                           ),
                         );
                       },
-                      separatorBuilder: (_, __) => const Divider(
-                        height: 1,
-                        indent: 24,
-                        endIndent: 24,
-                      ),
+                      separatorBuilder: (_, __) =>
+                          const Divider(height: 1, indent: 24, endIndent: 24),
                       itemCount: filtered.length,
                     ),
             ),
@@ -175,8 +200,7 @@ class _FlagNetwork extends StatelessWidget {
         width: 24,
         height: 18,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) =>
-            const SizedBox(width: 26, height: 18),
+        errorBuilder: (_, __, ___) => const SizedBox(width: 26, height: 18),
       ),
     );
   }
