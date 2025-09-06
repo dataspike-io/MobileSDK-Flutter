@@ -9,15 +9,10 @@ import 'package:dataspikemobilesdk/view/ui/top_bar.dart';
 import '../../ui/onboarding/stages_card.dart';
 import '../../ui/onboarding/info_card.dart';
 import '../../ui/onboarding/stage_row.dart';
+import 'package:dataspikemobilesdk/main/coordinator/coordinator.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key, this.onStart});
-
-  final VoidCallback? onStart;
-
-  static Route route({VoidCallback? onStart}) => MaterialPageRoute<void>(
-    builder: (_) => OnboardingScreen(onStart: onStart),
-  );
+  const OnboardingScreen({super.key});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -50,7 +45,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _onStart() {
-    widget.onStart?.call();
+    DataspikeCoordinator.proceedNext(context);
   }
 
   @override

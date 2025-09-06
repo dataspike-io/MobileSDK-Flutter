@@ -34,11 +34,7 @@ class DataspikeCoordinator {
     switch (step) {
       case DataspikeStep.onboarding:
         Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => OnboardingScreen(
-              onStart: () => proceedNext(context),
-            ),
-          ),
+          MaterialPageRoute(builder: (_) => const OnboardingScreen()),
         );
         break;
       case DataspikeStep.personalData:
