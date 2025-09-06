@@ -68,8 +68,10 @@ class _TimeLeftBoxState extends State<TimeBox> {
       'Remaining time: ${_format(_timeLeft)}',
       style: TextStyle(
         color: widget.isTitle ? AppColors.darkIndigo : AppColors.royalPurple,
+        fontFamily: 'Figtree',
         fontWeight: FontWeight.w600,
         fontSize: 14,
+        package: 'dataspikemobilesdk',
       ),
     );
   }

@@ -39,6 +39,13 @@ class _DataspikeScreenState extends State<DataspikeScreen> {
               SnackBar(
                 content: Text(
                   '${verificationState.details}: ${verificationState.error}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontFamily: 'FunnelDisplay',
+                    fontWeight: FontWeight.w600,
+                    package: 'dataspikemobilesdk',
+                  ),
                 ),
                 duration: const Duration(seconds: 4),
               ),

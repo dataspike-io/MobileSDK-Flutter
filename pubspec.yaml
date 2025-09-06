@@ -46,12 +46,24 @@ flutter:
     - assets/images/
   
   fonts:
-    - family: Mont
+    - family: Figtree
       fonts:
-        - asset: assets/fonts/Mont_Regular.ttf
-        - asset: assets/fonts/Mont_Semibold.ttf
+        - asset: assets/fonts/Figtree-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Figtree-Medium.ttf
           weight: 500
+        - asset: assets/fonts/Figtree-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Figtree-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Figtree-Black.ttf
+          weight: 900
 
+    - family: FunnelDisplay
+      fonts:
+        - asset: assets/fonts/FunnelDisplay-SemiBold.ttf
+          weight: 600
+          
   plugin:
     platforms:
       android:

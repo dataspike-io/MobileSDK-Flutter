@@ -61,8 +61,10 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 20,
+                        fontFamily: 'FunnelDisplay',
                         fontWeight: FontWeight.w600,
                         color: AppColors.black,
+                        package: 'dataspikemobilesdk',
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -103,10 +105,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
 class _FieldsCard extends StatelessWidget {
   final List<ManualCustomFieldRepresentationModel> fields;
   final void Function(int index, String? value) onChanged;
-  const _FieldsCard({
-    required this.fields,
-    required this.onChanged
-  });
+  const _FieldsCard({required this.fields, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -226,8 +225,10 @@ class _FieldLine extends StatelessWidget {
                       fileName,
                       style: TextStyle(
                         fontSize: 14,
+                        fontFamily: 'Figtree',
                         fontWeight: FontWeight.w500,
                         color: hasFile ? AppColors.black : AppColors.darkIndigo,
+                        package: 'dataspikemobilesdk',
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -257,7 +258,12 @@ class _FieldLine extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               'Selected: $fileName',
-              style: const TextStyle(fontSize: 12, color: AppColors.royalPurple),
+              style: const TextStyle(
+                fontFamily: 'Figtree',
+                fontSize: 14,
+                color: AppColors.royalPurple,
+                package: 'dataspikemobilesdk',
+              ),
             ),
           ],
         ],
@@ -309,6 +315,8 @@ class _FieldLine extends StatelessWidget {
                                 'Select ${field.label.toLowerCase()}'),
                       style: TextStyle(
                         fontSize: 14,
+                        fontFamily: 'Figtree',
+                        package: 'dataspikemobilesdk',
                         fontWeight: FontWeight.w500,
                         color: value?.isNotEmpty == true
                             ? AppColors.black
@@ -364,7 +372,9 @@ class _FieldLine extends StatelessWidget {
           style: const TextStyle(
             color: AppColors.darkIndigo,
             fontSize: 14,
+            fontFamily: 'Figtree',
             fontWeight: FontWeight.w500,
+            package: 'dataspikemobilesdk',
           ),
           cursorColor: AppColors.royalPurple,
           decoration: InputDecoration(
@@ -427,6 +437,8 @@ class _Label extends StatelessWidget {
       text,
       style: const TextStyle(
         fontSize: 16,
+        fontFamily: 'Figtree',
+        package: 'dataspikemobilesdk',
         fontWeight: FontWeight.w600,
         color: AppColors.black,
       ),
@@ -456,11 +468,7 @@ class _RadioChoices extends StatelessWidget {
               onTap: () => onChanged(options[i]),
             ),
             if (i < options.length - 1)
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: AppColors.mistyLilac,
-              ),
+              Divider(height: 1, thickness: 1, color: AppColors.mistyLilac),
           ],
         ],
       ),
@@ -493,8 +501,10 @@ class _RadioRow extends StatelessWidget {
               child: Text(
                 text,
                 style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                  fontFamily: 'Figtree',
+                  package: 'dataspikemobilesdk',
+                  fontWeight: FontWeight.w400,
                   color: AppColors.black,
                 ),
               ),
@@ -518,10 +528,7 @@ class _CustomRadio extends StatelessWidget {
       height: 26,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(
-          color: AppColors.royalPurple,
-          width: 2,
-        ),
+        border: Border.all(color: AppColors.royalPurple, width: 2),
       ),
       alignment: Alignment.center,
       child: AnimatedContainer(
@@ -547,6 +554,8 @@ class _Caption extends StatelessWidget {
       text,
       style: const TextStyle(
         fontSize: 12,
+        fontFamily: 'Figtree',
+        package: 'dataspikemobilesdk',
         fontWeight: FontWeight.w500,
         color: AppColors.darkIndigo,
       ),

@@ -11,15 +11,13 @@ import '/view_models/factory/dataspike_view_model_factory.dart';
 import 'package:dataspikemobilesdk/view/ui/top_bar.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({
-    super.key,
-    this.onStart, 
-  });
+  const OnboardingScreen({super.key, this.onStart});
 
   final VoidCallback? onStart;
 
-  static Route route({VoidCallback? onStart}) =>
-      MaterialPageRoute<void>(builder: (_) => OnboardingScreen(onStart: onStart));
+  static Route route({VoidCallback? onStart}) => MaterialPageRoute<void>(
+    builder: (_) => OnboardingScreen(onStart: onStart),
+  );
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -88,6 +86,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         fontSize: 28,
                         fontWeight: FontWeight.w600,
                         color: AppColors.black,
+                        fontFamily: 'FunnelDisplay',
+                        package: 'dataspikemobilesdk',
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -130,7 +130,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: _StagesCard(
                         stages: viewModel.stages
                             .map(
-                              (s) => _Stage(title: s.title, subtitle: s.subtitle),
+                              (s) =>
+                                  _Stage(title: s.title, subtitle: s.subtitle),
                             )
                             .toList(),
                         placeholderAsset:
@@ -175,7 +176,7 @@ class _InfoCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
-        children: [ 
+        children: [
           Image.asset(
             'packages/dataspikemobilesdk/assets/images/jp_logo.png',
             width: 48,
@@ -189,9 +190,9 @@ class _InfoCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.darkIndigo,
-                // fontFamily: 'Mont',
+                fontFamily: 'Figtree',
+                package: 'dataspikemobilesdk',
                 fontWeight: FontWeight.w500,
-                // package: 'dataspikemobilesdk',
               ),
             ),
           ),
@@ -240,17 +241,14 @@ class _StagesCard extends StatelessWidget {
               SizedBox(
                 width: 65,
                 height: 65,
-                child: SvgPicture.asset(
-                  placeholderAsset,
-                  fit: BoxFit.contain,
-                ),
+                child: SvgPicture.asset(placeholderAsset, fit: BoxFit.contain),
               ),
             ],
           ),
           const SizedBox(height: 26),
           ...stages.map((s) => _StageRow(stage: s)),
-          // const SizedBox(height: 46),
 
+          // const SizedBox(height: 46),
           const Spacer(),
 
           InkWell(
@@ -265,14 +263,15 @@ class _StagesCard extends StatelessWidget {
                   height: 22,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(5),
-                    border: Border.all(
-                      color: AppColors.deepViolet,
-                      width: 1.4,
-                    ),
+                    border: Border.all(color: AppColors.deepViolet, width: 1.4),
                     color: accepted ? AppColors.deepViolet : Colors.transparent,
                   ),
                   child: accepted
-                      ? const Icon(Icons.check, size: 14, color: AppColors.white)
+                      ? const Icon(
+                          Icons.check,
+                          size: 14,
+                          color: AppColors.white,
+                        )
                       : null,
                 ),
                 const SizedBox(width: 12),
@@ -331,10 +330,7 @@ class _StagesCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          ContinueButton(
-            onPressed: onStartPressed,
-            text: "Start verification",
-          ),
+          ContinueButton(onPressed: onStartPressed, text: "Start verification"),
         ],
       ),
     );
@@ -360,7 +356,9 @@ class _StageRow extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child: SvgPicture.asset('packages/dataspikemobilesdk/assets/images/onboarding_unchecked.svg')
+            child: SvgPicture.asset(
+              'packages/dataspikemobilesdk/assets/images/onboarding_unchecked.svg',
+            ),
           ),
           const SizedBox(width: 10),
           SizedBox(
@@ -372,21 +370,20 @@ class _StageRow extends StatelessWidget {
                   stage.title,
                   style: TextStyle(
                     fontSize: 14,
-                    // fontFamily: 'Mont',
                     fontWeight: FontWeight.w600,
                     color: AppColors.black,
-                    // package: 'dataspikemobilesdk',
+                    fontFamily: 'Figtree',
+                    package: 'dataspikemobilesdk',
                   ),
                 ),
                 Text(
                   stage.subtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    // height: 1.3,
-                    // fontFamily: 'Mont',
                     fontWeight: FontWeight.w500,
                     color: AppColors.darkIndigo,
-                    // package: 'dataspikemobilesdk',
+                    fontFamily: 'Figtree',
+                    package: 'dataspikemobilesdk',
                   ),
                 ),
               ],
@@ -408,20 +405,20 @@ class _SectionHeader extends StatelessWidget {
           'Follow this stages',
           style: TextStyle(
             fontSize: 20,
-            // fontFamily: 'Mont',
             fontWeight: FontWeight.w600,
             color: AppColors.black,
-            // package: 'dataspikemobilesdk',
+            fontFamily: 'FunnelDisplay',
+            package: 'dataspikemobilesdk',
           ),
         ),
         Text(
           'Check what documents you’ll needed',
           style: TextStyle(
             fontSize: 12,
-            // fontFamily: 'Mont',
+            fontFamily: 'Figtree',
+            package: 'dataspikemobilesdk',
             fontWeight: FontWeight.w500,
             color: AppColors.darkIndigo,
-            // package: 'dataspikemobilesdk',
           ),
         ),
       ],

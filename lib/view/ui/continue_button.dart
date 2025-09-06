@@ -28,8 +28,8 @@ class ContinueButton extends StatelessWidget {
         child: Text(
           text,
           style: const TextStyle(
-            // fontFamily: 'Mont',
-            // package: 'dataspikemobilesdk',
+            fontFamily: 'Figtree',
+            package: 'dataspikemobilesdk',
             fontWeight: FontWeight.w700,
             fontSize: 16,
             color: AppColors.white,

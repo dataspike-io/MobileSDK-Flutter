@@ -64,9 +64,10 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
                   widget.title,
                   style: const TextStyle(
                     fontSize: 28,
-                    height: 1.1,
+                    fontFamily: 'FunnelDisplay',
                     fontWeight: FontWeight.w600,
                     color: AppColors.black,
+                    package: 'dataspikemobilesdk',
                   ),
                 ),
               ),
@@ -78,7 +79,13 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'No countries loaded',
-                    style: TextStyle(fontSize: 14, color: AppColors.black),
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontFamily: 'FunnelDisplay',
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.black,
+                      package: 'dataspikemobilesdk',
+                    ),
                   ),
                 ),
               )
@@ -92,7 +99,9 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
                   style: const TextStyle(
                     color: AppColors.darkIndigo,
                     fontSize: 14,
+                    fontFamily: 'Figtree',
                     fontWeight: FontWeight.w500,
+                    package: 'dataspikemobilesdk',
                   ),
                   controller: _searchCtrl,
                   decoration: InputDecoration(
@@ -104,21 +113,15 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(
-                        color: AppColors.palePeriwinkle,
-                      ),
+                      borderSide: BorderSide(color: AppColors.palePeriwinkle),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(
-                        color: AppColors.palePeriwinkle,
-                      ),
+                      borderSide: BorderSide(color: AppColors.palePeriwinkle),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(
-                        color: AppColors.palePeriwinkle,
-                      ),
+                      borderSide: BorderSide(color: AppColors.palePeriwinkle),
                     ),
                   ),
                 ),
@@ -152,11 +155,13 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
                                   child: Text(
                                     name,
                                     style: TextStyle(
-                                      fontSize: 20,
+                                      fontSize: 28,
                                       fontWeight: FontWeight.w600,
                                       color: selected
                                           ? AppColors.royalPurple
                                           : AppColors.darkIndigo,
+                                      fontFamily: 'FunnelDisplay',
+                                      package: 'dataspikemobilesdk',
                                     ),
                                   ),
                                 ),
