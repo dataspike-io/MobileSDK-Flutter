@@ -8,6 +8,7 @@ import 'package:file_picker/file_picker.dart';
 import '/view/ui/personal_data/radio_view.dart';
 import '/view/ui/personal_data/label.dart';
 import '/view/ui/personal_data/caption_view.dart';
+import 'package:dataspikemobilesdk/view/ui/loader.dart';
 
 class FieldLine extends StatelessWidget {
   final int index;
@@ -65,12 +66,24 @@ class FieldLine extends StatelessWidget {
                 allowed = ['pdf'];
               }
 
+              final rootNav = Navigator.of(context, rootNavigator: true);
+
+              showDialog(
+                context: context,
+                useRootNavigator: true,
+                barrierDismissible: false,
+                barrierColor: AppColors.blackTransparent,
+                builder: (_) => const Center(child: Loader()),
+              );
+
               final res = await FilePicker.platform.pickFiles(
                 type: pickerType,
                 allowMultiple: false,
                 allowedExtensions: allowed,
                 withData: true,
               );
+
+              rootNav.pop();
 
               final picked = res?.files.single;
 
@@ -148,9 +161,9 @@ class FieldLine extends StatelessWidget {
                   color: AppColors.red,
                   package: 'dataspikemobilesdk',
                 ),
-              )
+              ),
           ],
-        ]
+        ],
       );
     }
 

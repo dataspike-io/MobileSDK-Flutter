@@ -7,6 +7,7 @@ import 'package:dataspikemobilesdk/domain/models/manual_custom_representation_ty
 import 'package:dataspikemobilesdk/domain/models/manual_custom_field_type.dart';
 import 'package:dataspikemobilesdk/domain/models/manual_custom_field_option_type.dart';
 import 'dart:convert';
+import 'package:dataspikemobilesdk/domain/models/states/message_state.dart';
 
 class PersonalDataViewModel extends ChangeNotifier {
   Duration? timerDuration;
@@ -23,7 +24,11 @@ class PersonalDataViewModel extends ChangeNotifier {
   bool get isContinueButtonDisabled {
     if (personalDataFields.isEmpty) return true;
     return personalDataFields.any(
-      (f) => f.value == null || f.value!.trim().isEmpty || !f.isValid || !f.isValidData,
+      (f) =>
+          f.value == null ||
+          f.value!.trim().isEmpty ||
+          !f.isValid ||
+          !f.isValidData,
     );
   }
 
@@ -46,7 +51,10 @@ class PersonalDataViewModel extends ChangeNotifier {
   void submitProfileData() async {
     if (isContinueButtonDisabled) return;
     final body = _buildRequestBody();
-    await _setProfileUseCase.call(body);
+    final result = await _setProfileUseCase.call(body);
+    if (result is! MessageStateSuccess) {
+      throw Exception('Failed to submit profile data');
+    }
   }
 
   ProfileFieldsRequestBody _buildRequestBody() {
@@ -97,7 +105,8 @@ class PersonalDataViewModel extends ChangeNotifier {
             if (f.file?.bytes != null) {
               final mime = _mimeFromExt(f.file!.extension);
               final b64 = base64Encode(f.file!.bytes!);
-              custom[key] = 'data:$mime;base64,$b64'; // TODO: CHANGE IF WILL BE NEEDED
+              custom[key] =
+                  'data:$mime;base64,$b64'; // TODO: CHANGE IF WILL BE NEEDED
             }
           } else {
             custom[key] = raw;
@@ -124,6 +133,8 @@ class PersonalDataViewModel extends ChangeNotifier {
       case 'jpg':
       case 'jpeg':
         return 'image/jpeg'; // FROM SERVER
+      case 'heif':
+        return 'image/heif';
       case 'png':
         return 'image/png'; // FROM SERVER
       case 'mp4':
