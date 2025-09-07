@@ -5,10 +5,12 @@ import 'package:dataspikemobilesdk/data/use_cases/set_profile_use_case.dart';
 import 'package:dataspikemobilesdk/data/models/request/profile_fields_request_body.dart';
 import 'package:dataspikemobilesdk/domain/models/manual_custom_representation_type.dart';
 import 'package:dataspikemobilesdk/domain/models/manual_custom_field_type.dart';
+import 'package:dataspikemobilesdk/domain/models/manual_custom_field_option_type.dart';
+import 'dart:convert';
 
 class PersonalDataViewModel extends ChangeNotifier {
   Duration? timerDuration;
-  
+
   List<ManualCustomFieldRepresentationModel> personalDataFields = [];
   final SetProfileUseCase _setProfileUseCase;
 
@@ -21,7 +23,7 @@ class PersonalDataViewModel extends ChangeNotifier {
   bool get isContinueButtonDisabled {
     if (personalDataFields.isEmpty) return true;
     return personalDataFields.any(
-      (f) => f.value == null || f.value!.trim().isEmpty || !f.isValid,
+      (f) => f.value == null || f.value!.trim().isEmpty || !f.isValid || !f.isValidData,
     );
   }
 
@@ -90,7 +92,16 @@ class PersonalDataViewModel extends ChangeNotifier {
           final key = f.label.isNotEmpty == true
               ? f.label
               : 'custom_${f.order}';
-          custom[key] = raw;
+
+          if (f.options.type == ManualCustomFieldOptionType.file) {
+            if (f.file?.bytes != null) {
+              final mime = _mimeFromExt(f.file!.extension);
+              final b64 = base64Encode(f.file!.bytes!);
+              custom[key] = 'data:$mime;base64,$b64'; // TODO: CHANGE IF WILL BE NEEDED
+            }
+          } else {
+            custom[key] = raw;
+          }
           break;
       }
     }
@@ -106,6 +117,24 @@ class PersonalDataViewModel extends ChangeNotifier {
       address: address,
       customFields: custom.isEmpty ? null : custom,
     );
+  }
+
+  String _mimeFromExt(String? ext) {
+    switch ((ext ?? '').toLowerCase()) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg'; // FROM SERVER
+      case 'png':
+        return 'image/png'; // FROM SERVER
+      case 'mp4':
+        return 'video/mp4'; // FROM SERVER
+      case 'mpeg':
+        return 'video/mpeg'; // FROM SERVER
+      case 'pdf':
+        return 'application/pdf'; // FROM SERVER
+      default:
+        return 'application/octet-stream'; // generic binary data
+    }
   }
 
   String _normalizeGender(String g) {

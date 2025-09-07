@@ -1,5 +1,7 @@
 import 'manual_custom_field_type.dart';
 import 'manual_custom_field_option_domain_model.dart';
+import 'package:file_picker/file_picker.dart';
+import 'manual_custom_field_option_type.dart';
 
 abstract class ManualCustomFieldRepresentation {
   String get label;
@@ -11,9 +13,12 @@ abstract class ManualCustomFieldRepresentation {
   ManualCustomFieldOptionsDomainModel get options;
   ManualCustomFieldType get fieldType;
   bool get isValid;
+  bool get isValidData;
+  PlatformFile? get file;
 }
 
-class ManualCustomFieldRepresentationModel implements ManualCustomFieldRepresentation {
+class ManualCustomFieldRepresentationModel
+    implements ManualCustomFieldRepresentation {
   @override
   final String label;
   @override
@@ -30,6 +35,8 @@ class ManualCustomFieldRepresentationModel implements ManualCustomFieldRepresent
   final ManualCustomFieldOptionsDomainModel options;
   @override
   final ManualCustomFieldType fieldType;
+  @override
+  PlatformFile? file;
 
   ManualCustomFieldRepresentationModel({
     required this.label,
@@ -40,6 +47,7 @@ class ManualCustomFieldRepresentationModel implements ManualCustomFieldRepresent
     this.placeholder,
     required this.options,
     required this.fieldType,
+    this.file,
   });
 
   @override
@@ -53,5 +61,18 @@ class ManualCustomFieldRepresentationModel implements ManualCustomFieldRepresent
     final reg = RegExp(validation!);
     final ok = reg.hasMatch(v);
     return ok;
+  }
+
+  @override
+  bool get isValidData {
+    if (options.type == ManualCustomFieldOptionType.file) {
+      if (file?.size != null) {
+        return file!.size <= (options.maxSize ?? 8388608);
+      } else {
+        return false;
+      }
+    }
+
+    return true;
   }
 }

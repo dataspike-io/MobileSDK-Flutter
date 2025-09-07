@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:dataspikemobilesdk/domain/models/manual_custom_representation_type.dart';
 import 'field_line.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:dataspikemobilesdk/domain/models/manual_custom_field_option_type.dart';
 
 class FieldsCard extends StatelessWidget {
   final List<ManualCustomFieldRepresentationModel> fields;
   final void Function(int index, String? value) onChanged;
-  const FieldsCard({required this.fields, required this.onChanged});
+  final void Function(int index, PlatformFile file)? uploadFile;
+  const FieldsCard({required this.fields, required this.onChanged, this.uploadFile});
 
   @override
   Widget build(BuildContext context) {
@@ -25,8 +28,11 @@ class FieldsCard extends StatelessWidget {
               index: i,
               field: fields[i],
               value: fields[i].value,
-              valid: fields[i].value == null ? true : fields[i].isValid,
+              valid: fields[i].options.type == ManualCustomFieldOptionType.file
+                ? fields[i].file == null ? true : fields[i].isValidData
+                : fields[i].value == null ? true : fields[i].isValid,
               onChanged: onChanged,
+              uploadFile: uploadFile,
             ),
             if (i < fields.length - 1) SizedBox(height: 24),
           ],

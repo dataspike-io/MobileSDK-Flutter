@@ -15,6 +15,7 @@ class FieldLine extends StatelessWidget {
   final String? value;
   final bool valid;
   final void Function(int, String?) onChanged;
+  final void Function(int index, PlatformFile file)? uploadFile;
 
   const FieldLine({
     required this.index,
@@ -22,6 +23,7 @@ class FieldLine extends StatelessWidget {
     required this.value,
     required this.valid,
     required this.onChanged,
+    this.uploadFile,
   });
 
   bool get isSelectChoices =>
@@ -67,10 +69,16 @@ class FieldLine extends StatelessWidget {
                 type: pickerType,
                 allowMultiple: false,
                 allowedExtensions: allowed,
+                withData: true,
               );
-              final path = res?.files.single.path;
-              if (path != null) {
-                onChanged(index, path);
+
+              final picked = res?.files.single;
+
+              if (picked != null) {
+                if (uploadFile != null) {
+                  uploadFile!(index, picked);
+                }
+                onChanged(index, picked.path ?? '');
               }
             },
             borderRadius: BorderRadius.circular(14),
@@ -121,17 +129,28 @@ class FieldLine extends StatelessWidget {
           ),
           if (hasFile) ...[
             const SizedBox(height: 6),
-            Text(
-              'Selected: $fileName',
-              style: const TextStyle(
-                fontFamily: 'Figtree',
-                fontSize: 14,
-                color: AppColors.royalPurple,
-                package: 'dataspikemobilesdk',
-              ),
-            ),
+            if (valid)
+              Text(
+                'Selected: $fileName',
+                style: const TextStyle(
+                  fontFamily: 'Figtree',
+                  fontSize: 14,
+                  color: AppColors.royalPurple,
+                  package: 'dataspikemobilesdk',
+                ),
+              )
+            else
+              Text(
+                'File size should be less than ${field.options.maxSize} bytes',
+                style: const TextStyle(
+                  fontFamily: 'Figtree',
+                  fontSize: 14,
+                  color: AppColors.red,
+                  package: 'dataspikemobilesdk',
+                ),
+              )
           ],
-        ],
+        ]
       );
     }
 

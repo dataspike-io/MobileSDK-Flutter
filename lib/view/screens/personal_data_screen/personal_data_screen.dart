@@ -86,6 +86,11 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
                             fields[index].value = val;
                           });
                         },
+                        uploadFile: (index, file) {
+                          setState(() {
+                            fields[index].file = file;
+                          });
+                        },
                       ),
                     const SizedBox(height: 24),
                     ContinueButton(
