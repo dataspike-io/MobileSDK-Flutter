@@ -5,6 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
+import 'package:dataspikemobilesdk/view/ui/camera/two_arcs_painter.dart';
+import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
+import 'package:dataspikemobilesdk/view/ui/loader.dart';
+import 'package:dataspikemobilesdk/view/ui/top_bar.dart';
+import '/view_models/factory/dataspike_view_model_factory.dart';
+import 'package:dataspikemobilesdk/view_models/camera_avatar_view_model.dart';
 
 class LiveAvatarCamera extends StatefulWidget {
   final ValueChanged<Uint8List> onCropped;
@@ -28,6 +34,8 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
   static const double _ctrlXpx = 80;
   static const double _strokeWidth = 3;
 
+  late final CameraAvatarViewModel viewModel;
+
   Rect _computeCropRect(Size size) {
     final w = size.width;
     final h = size.height;
@@ -45,7 +53,9 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
   @override
   void initState() {
     super.initState();
+    viewModel = DataspikeViewModelFactory().create<CameraAvatarViewModel>();
     _init = _setup();
+    viewModel.setVerificationTimer();
   }
 
   Future<void> _setup() async {
@@ -143,186 +153,91 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
     final camWidth = screenSize.width;
     final camHeight = screenSize.height * 0.65;
 
+    final timer = viewModel.timerDuration;
+
     return FutureBuilder(
       future: _init,
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
+          return Scaffold(
+            backgroundColor: AppColors.white,
+            body: const Center(child: Loader()),
+          );
         }
 
-        return Container(
-          color: Colors.white,
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              SizedBox(height: 128),
+        return Scaffold(
+          backgroundColor: AppColors.white,
+          body: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                TopBar(timer: timer),
+                Center(
+                  child: SizedBox(
+                    key: previewKey,
+                    width: camWidth,
+                    height: camHeight,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(32),
+                      child: LayoutBuilder(
+                        builder: (context, c) {
+                          final ps = _ctrl!.value.previewSize!;
+                          final previewAR = ps.height / ps.width;
+                          final containerAR = c.maxWidth / c.maxHeight;
+                          final coverScale = previewAR / containerAR;
 
-              Center(
-                child: SizedBox(
-                  key: previewKey,
-                  width: camWidth,
-                  height: camHeight,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(32),
-                    child: LayoutBuilder(
-                      builder: (context, c) {
-                        final ps = _ctrl!.value.previewSize!;
-                        final previewAR = ps.height / ps.width;
-                        final containerAR = c.maxWidth / c.maxHeight;
-                        final coverScale = previewAR / containerAR;
-
-                        return Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Transform.scale(
-                              scale: coverScale,
-                              child: Center(
-                                child: AspectRatio(
-                                  aspectRatio: previewAR,
-                                  child: CameraPreview(_ctrl!),
+                          return Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Transform.scale(
+                                scale: coverScale,
+                                child: Center(
+                                  child: AspectRatio(
+                                    aspectRatio: previewAR,
+                                    child: CameraPreview(_ctrl!),
+                                  ),
                                 ),
                               ),
-                            ),
 
-                            CustomPaint(
-                              size: Size(c.maxWidth, c.maxHeight),
-                              painter: TwoArcsPainter(
-                                color: Colors.white,
-                                strokeWidth: _strokeWidth,
-                                sideInsetPct: _sideInsetPct,
-                                topApexPct: _topApexPct,
-                                bottomApexFromBottomPct:
-                                    _bottomApexFromBottomPct,
-                                topRisePx: _topRisePx,
-                                bottomRisePx: _bottomRisePx,
-                                ctrlXpx: _ctrlXpx,
+                              CustomPaint(
+                                size: Size(c.maxWidth, c.maxHeight),
+                                painter: TwoArcsPainter(
+                                  color: Colors.white,
+                                  strokeWidth: _strokeWidth,
+                                  sideInsetPct: _sideInsetPct,
+                                  topApexPct: _topApexPct,
+                                  bottomApexFromBottomPct:
+                                      _bottomApexFromBottomPct,
+                                  topRisePx: _topRisePx,
+                                  bottomRisePx: _bottomRisePx,
+                                  ctrlXpx: _ctrlXpx,
+                                ),
                               ),
-                            ),
-                          ],
-                        );
-                      },
+                            ],
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 32),
+                const SizedBox(height: 32),
 
-              SizedBox(
-                width: double.infinity,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: ContinueButton(
-                    text: 'Take a photo',
-                    onPressed: () => _shootAndCrop(previewKey),
+                SizedBox(
+                  width: double.infinity,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: ContinueButton(
+                      text: 'Take a photo',
+                      onPressed: () => _shootAndCrop(previewKey),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 10),
-            ],
+                const SizedBox(height: 10),
+              ],
+            ),
           ),
         );
       },
     );
   }
-}
-
-class TwoArcsPainter extends CustomPainter {
-  const TwoArcsPainter({
-    this.color = Colors.white,
-    this.strokeWidth = 3,
-    this.sideInsetPct = 0.10,
-    this.topApexPct = 0.10,
-    this.bottomApexFromBottomPct = 0.2,
-    this.topRisePx = 100,
-    this.bottomRisePx = 100,
-    this.ctrlXpx = 100,
-  });
-
-  final Color color;
-  final double strokeWidth;
-  final double sideInsetPct;
-  final double topApexPct;
-  final double bottomApexFromBottomPct;
-  final double topRisePx;
-  final double bottomRisePx;
-  final double ctrlXpx;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final margin = strokeWidth / 2 + 0.5;
-
-    final leftX = (w * sideInsetPct).clamp(margin, w - margin);
-    final rightX = (w * (1 - sideInsetPct)).clamp(margin, w - margin);
-    final midX = (leftX + rightX) / 2;
-
-    final topApexY = (h * topApexPct) + margin;
-    final maxTopRise = ((h - margin) - topApexY).clamp(0, double.infinity);
-    final topRise = topRisePx.clamp(0, maxTopRise);
-    final topLineY = topApexY + topRise;
-
-    final bottomApexY = (h * (1 - bottomApexFromBottomPct)) - margin;
-    final maxBottomRise = (bottomApexY - margin).clamp(0, double.infinity);
-    final bottomRise = bottomRisePx.clamp(0, maxBottomRise);
-    final bottomLineY = bottomApexY - bottomRise;
-
-    final paintLine = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
-
-    final topPath = Path()
-      ..moveTo(leftX, topLineY)
-      ..cubicTo(
-        leftX,
-        topLineY - topRise * 0.6,
-        midX - ctrlXpx,
-        topApexY,
-        midX,
-        topApexY,
-      )
-      ..cubicTo(
-        midX + ctrlXpx,
-        topApexY,
-        rightX,
-        topLineY - topRise * 0.6,
-        rightX,
-        topLineY,
-      );
-
-    final bottomPath = Path()
-      ..moveTo(rightX, bottomLineY)
-      ..cubicTo(
-        rightX,
-        bottomLineY + bottomRise * 0.6,
-        midX + ctrlXpx,
-        bottomApexY,
-        midX,
-        bottomApexY,
-      )
-      ..cubicTo(
-        midX - ctrlXpx,
-        bottomApexY,
-        leftX,
-        bottomLineY + bottomRise * 0.6,
-        leftX,
-        bottomLineY,
-      );
-
-    canvas.drawPath(topPath, paintLine);
-    canvas.drawPath(bottomPath, paintLine);
-  }
-
-  @override
-  bool shouldRepaint(covariant TwoArcsPainter old) =>
-      color != old.color ||
-      strokeWidth != old.strokeWidth ||
-      sideInsetPct != old.sideInsetPct ||
-      topApexPct != old.topApexPct ||
-      bottomApexFromBottomPct != old.bottomApexFromBottomPct ||
-      topRisePx != old.topRisePx ||
-      bottomRisePx != old.bottomRisePx ||
-      ctrlXpx != old.ctrlXpx;
 }
