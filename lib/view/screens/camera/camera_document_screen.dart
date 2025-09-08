@@ -12,6 +12,8 @@ import '/view_models/factory/dataspike_view_model_factory.dart';
 import 'package:dataspikemobilesdk/view_models/camera_document_view_model.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/grey_corner_painter.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/dim_overlay_painter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:dataspikemobilesdk/view/ui/loader.dart';
 
 class LiveCropCamera extends StatefulWidget {
   final ValueChanged<Uint8List> onCropped;
@@ -184,7 +186,10 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
       future: _init,
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
+          return Scaffold(
+            backgroundColor: AppColors.white,
+            body: const Center(child: Loader()),
+          );
         }
 
         return Scaffold(
@@ -194,7 +199,6 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
               mainAxisSize: MainAxisSize.max,
               children: [
                 TopBar(timer: timer),
-                const SizedBox(height: 10),
                 Center(
                   child: SizedBox(
                     key: previewKey,
@@ -250,8 +254,8 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                                 ),
                               ),
                               Positioned(
-                                top: 10,
-                                right: 16,
+                                top: 24,
+                                right: 24,
                                 child: (_frontCam != null || _backCam != null)
                                     ? Builder(
                                         builder: (context) {
@@ -260,20 +264,20 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                                               _backCam != null;
                                           return Opacity(
                                             opacity: canSwitch ? 1 : 0.4,
-                                            child: Material(
-                                              color: AppColors.black,
-                                              shape: const CircleBorder(),
-                                              child: IconButton(
-                                                icon: const Icon(
-                                                  Icons.cameraswitch,
-                                                  color: AppColors.white,
-                                                ),
-                                                onPressed: canSwitch
-                                                    ? _toggleCamera
-                                                    : null,
-                                                tooltip: _useFront
-                                                    ? 'Switch to back camera'
-                                                    : 'Switch to front camera',
+                                            child: GestureDetector(
+                                              onTap: canSwitch
+                                                  ? _toggleCamera
+                                                  : null,
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  SvgPicture.asset(
+                                                    'packages/dataspikemobilesdk/assets/images/camera.svg',
+                                                    height: 24,
+                                                    width: 24,
+                                                    fit: BoxFit.contain,
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           );
@@ -317,7 +321,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                   ),
                 ),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 2),
                 SizedBox(
                   height: 60.0,
                   width: double.infinity,
