@@ -4,7 +4,9 @@ import '../dataspike_activity_view_model.dart';
 import '../templates/base_view_model.dart';
 import '../onboarding_view_model.dart';
 import '../personal_data_view_model.dart';
+import '../camera_document_view_model.dart';
 import 'package:dataspikemobilesdk/data/use_cases/set_profile_use_case.dart';
+import 'package:dataspikemobilesdk/data/use_cases/uploading_image_use_case.dart';
 
 class DataspikeViewModelFactory {
   T create<T extends Object>() {
@@ -32,6 +34,12 @@ class DataspikeViewModelFactory {
           ),
         ) as T;
 
+      case CameraDocumentViewModel:
+        return CameraDocumentViewModel(
+          setUseCase: UploadImageUseCase(
+            dataspikeRepository: DataspikeInjector.component.dataspikeRepository
+          ),
+        ) as T;
       default:
         throw Exception("Unknown ViewModel Type");
     }

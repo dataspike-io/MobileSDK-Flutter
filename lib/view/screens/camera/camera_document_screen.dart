@@ -5,14 +5,18 @@ import 'package:flutter/services.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
+import 'package:dataspikemobilesdk/view/ui/top_bar.dart';
+import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
+import '/view_models/factory/dataspike_view_model_factory.dart';
+import 'package:dataspikemobilesdk/view_models/camera_document_view_model.dart';
+import 'package:dataspikemobilesdk/view/ui/camera/grey_corner_painter.dart';
+import 'package:dataspikemobilesdk/view/ui/camera/dim_overlay_painter.dart';
 
 class LiveCropCamera extends StatefulWidget {
   final ValueChanged<Uint8List> onCropped;
 
-  const LiveCropCamera({
-    super.key,
-    required this.onCropped,
-  });
+  const LiveCropCamera({super.key, required this.onCropped});
 
   @override
   State<LiveCropCamera> createState() => _LiveCropCameraState();
@@ -25,10 +29,14 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
   CameraDescription? _frontCam;
   bool _useFront = false;
 
+  late final CameraDocumentViewModel viewModel;
+
   @override
   void initState() {
     super.initState();
+    viewModel = DataspikeViewModelFactory().create<CameraDocumentViewModel>();
     _init = _setup();
+    viewModel.setVerificationTimer();
   }
 
   Future<void> _setup() async {
@@ -42,11 +50,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
       }
     }
     final initial = _backCam ?? _frontCam ?? cams.first;
-    _ctrl = CameraController(
-      initial,
-      ResolutionPreset.max,
-      enableAudio: false,
-    );
+    _ctrl = CameraController(initial, ResolutionPreset.max, enableAudio: false);
     await _ctrl!.initialize();
     await _ctrl!.lockCaptureOrientation(DeviceOrientation.portraitUp);
   }
@@ -78,9 +82,9 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
     final containerH = rb.size.height;
 
     final ps = _ctrl!.value.previewSize!;
-    final previewAR = ps.height / ps.width; 
+    final previewAR = ps.height / ps.width;
     final containerAR = containerW / containerH;
-    final coverScale = previewAR / containerAR; 
+    final coverScale = previewAR / containerAR;
 
     double childW, childH;
     if (containerAR > previewAR) {
@@ -146,15 +150,13 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
 
   Future<void> _toggleCamera() async {
     if (_frontCam == null && _backCam == null) return;
-    final newDesc = _useFront ? (_backCam ?? _ctrl!.description) : (_frontCam ?? _ctrl!.description);
+    final newDesc = _useFront
+        ? (_backCam ?? _ctrl!.description)
+        : (_frontCam ?? _ctrl!.description);
     if (newDesc == _ctrl!.description) return; // nothing to change
     _useFront = !_useFront;
     await _ctrl?.dispose();
-    _ctrl = CameraController(
-      newDesc,
-      ResolutionPreset.max,
-      enableAudio: false,
-    );
+    _ctrl = CameraController(newDesc, ResolutionPreset.max, enableAudio: false);
     try {
       await _ctrl!.initialize();
       await _ctrl!.lockCaptureOrientation(DeviceOrientation.portraitUp);
@@ -173,8 +175,10 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
     final cropWidth = screenSize.width * 0.85;
     final cropHeight = screenSize.height * 0.3;
 
-    final camWidth = screenSize.width - 10;
+    final camWidth = screenSize.width;
     final camHeight = screenSize.height * 0.65;
+
+    final timer = viewModel.timerDuration;
 
     return FutureBuilder(
       future: _init,
@@ -183,261 +187,159 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
           return const Center(child: CircularProgressIndicator());
         }
 
-        return Container(
-          color: Colors.white,
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              SizedBox(height: 128),
+        return Scaffold(
+          backgroundColor: AppColors.white,
+          body: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                TopBar(timer: timer),
+                const SizedBox(height: 10),
+                Center(
+                  child: SizedBox(
+                    key: previewKey,
+                    width: camWidth,
+                    height: camHeight,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(32),
+                      child: LayoutBuilder(
+                        builder: (context, c) {
+                          final ps = _ctrl!.value.previewSize!;
+                          final previewAR = ps.height / ps.width;
+                          final containerAR = c.maxWidth / c.maxHeight;
+                          final coverScale = previewAR / containerAR;
 
-              Center(
-                child: SizedBox(
-                  key: previewKey,
-                  width: camWidth,
-                  height: camHeight,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(32),
-                    child: LayoutBuilder(
-                      builder: (context, c) {
-                        final ps = _ctrl!.value.previewSize!;
-                        final previewAR = ps.height / ps.width; 
-                        final containerAR = c.maxWidth / c.maxHeight;
-                        final coverScale = previewAR / containerAR; 
-
-                        return Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Transform.scale(
-                              scale: coverScale,
-                              child: Center(
-                                child: AspectRatio(
-                                  aspectRatio: previewAR,
-                                  child: CameraPreview(_ctrl!),
-                                ),
-                              ),
-                            ),
-
-                            Positioned.fill(
-                              child: CustomPaint(
-                                painter: DimOverlayPainter(
-                                  holeRect: Rect.fromCenter(
-                                    center: Offset(c.maxWidth / 2, c.maxHeight / 2),
-                                    width: cropWidth,
-                                    height: cropHeight,
+                          return Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Transform.scale(
+                                scale: coverScale,
+                                child: Center(
+                                  child: AspectRatio(
+                                    aspectRatio: previewAR,
+                                    child: CameraPreview(_ctrl!),
                                   ),
                                 ),
                               ),
-                            ),
-                            Center(
-                              child: CustomPaint(
-                                size: Size(cropWidth, cropHeight),
-                                painter: GreyCornersPainter(
-                                  rect: Rect.fromLTWH(0, 0, cropWidth, cropHeight),
+
+                              Positioned.fill(
+                                child: CustomPaint(
+                                  painter: DimOverlayPainter(
+                                    holeRect: Rect.fromCenter(
+                                      center: Offset(
+                                        c.maxWidth / 2,
+                                        c.maxHeight / 2,
+                                      ),
+                                      width: cropWidth,
+                                      height: cropHeight,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                            Positioned(
-                              top: 10,
-                              right: 16,
-                              child: (_frontCam != null || _backCam != null)
-                                  ? Builder(
-                                      builder: (context) {
-                                        final canSwitch = _frontCam != null && _backCam != null;
-                                        return Opacity(
-                                          opacity: canSwitch ? 1 : 0.4,
-                                          child: Material(
-                                            color: Colors.black45,
-                                            shape: const CircleBorder(),
-                                            child: IconButton(
-                                              icon: const Icon(
-                                                Icons.cameraswitch,
-                                                color: Colors.white,
-                                              ),
-                                              onPressed: canSwitch ? _toggleCamera : null,
-                                              tooltip: _useFront
-                                                  ? 'Switch to back camera'
-                                                  : 'Switch to front camera',
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    )
-                                  : const SizedBox.shrink(),
-                            ),
-                            Positioned(
-                              top: 100,
-                              left: 0,
-                              right: 0,
-                              child: Center(
-                                child: Text('Please make a photo of front-side of ID',
-                                  style: const TextStyle(color: Colors.white, fontSize: 14, decoration: TextDecoration.none),
-                                  textAlign: TextAlign.center,)
+                              Center(
+                                child: CustomPaint(
+                                  size: Size(cropWidth, cropHeight),
+                                  painter: GreyCornersPainter(
+                                    rect: Rect.fromLTWH(
+                                      0,
+                                      0,
+                                      cropWidth,
+                                      cropHeight,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              SizedBox(
-                width: double.infinity,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF6C63FF),
-                      foregroundColor: Colors.white,
-                      shape: StadiumBorder(),
-                      padding: EdgeInsets.symmetric(vertical: 20),
-                    ),
-                    onPressed: () => _shootAndCrop(previewKey),
-                    child: Text(
-                      'Take a photo',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                              Positioned(
+                                top: 10,
+                                right: 16,
+                                child: (_frontCam != null || _backCam != null)
+                                    ? Builder(
+                                        builder: (context) {
+                                          final canSwitch =
+                                              _frontCam != null &&
+                                              _backCam != null;
+                                          return Opacity(
+                                            opacity: canSwitch ? 1 : 0.4,
+                                            child: Material(
+                                              color: Colors.black45,
+                                              shape: const CircleBorder(),
+                                              child: IconButton(
+                                                icon: const Icon(
+                                                  Icons.cameraswitch,
+                                                  color: Colors.white,
+                                                ),
+                                                onPressed: canSwitch
+                                                    ? _toggleCamera
+                                                    : null,
+                                                tooltip: _useFront
+                                                    ? 'Switch to back camera'
+                                                    : 'Switch to front camera',
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      )
+                                    : const SizedBox.shrink(),
+                              ),
+                              Positioned(
+                                top: 100,
+                                left: 0,
+                                right: 0,
+                                child: Center(
+                                  child: Text(
+                                    'Please make a photo of front-side of ID',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      decoration: TextDecoration.none,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 10),
+                const SizedBox(height: 32),
 
-              SizedBox(
-                width: double.infinity,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: TextButton(
-                    onPressed: _pickAndUploadDocument,
-                    child: Text(
-                      'Upload document',
-                      style: TextStyle(
-                        color: Colors.black87,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                SizedBox(
+                  width: double.infinity,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: ContinueButton(
+                      text: 'Take a photo',
+                      onPressed: () => _shootAndCrop(previewKey),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: TextButton(
+                      onPressed: _pickAndUploadDocument,
+                      child: Text(
+                        'Upload document',
+                        style: TextStyle(
+                          color: Colors.black87,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
     );
   }
-}
-
-class DimOverlayPainter extends CustomPainter {
-  final Rect holeRect;
-  final double borderRadius;
-  final Color overlayColor;
-
-  DimOverlayPainter({
-    required this.holeRect,
-    this.borderRadius = 20,
-    this.overlayColor = const Color.fromRGBO(0, 0, 0, 0.55),
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = Path()
-      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..addRRect(RRect.fromRectXY(holeRect, borderRadius, borderRadius));
-    path.fillType = PathFillType.evenOdd;
-    final paint = Paint()..color = overlayColor;
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class GreyCornersPainter extends CustomPainter {
-  final Rect rect;
-
-  GreyCornersPainter({required this.rect});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cornerLen = 40.0;
-    final radius = 20.0;
-    final stroke = 5.0;
-    final color = Colors.grey.shade400;
-
-    final corners = [
-      rect.topLeft,
-      rect.topRight,
-      rect.bottomRight,
-      rect.bottomLeft,
-    ];
-
-    for (int i = 0; i < 4; i++) {
-      final paint = Paint()
-        ..color = color
-        ..strokeWidth = stroke
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
-
-      final path = Path();
-      switch (i) {
-        case 0:
-          path.moveTo(corners[i].dx + radius, corners[i].dy);
-          path.lineTo(corners[i].dx + cornerLen, corners[i].dy);
-          path.moveTo(corners[i].dx, corners[i].dy + radius);
-          path.lineTo(corners[i].dx, corners[i].dy + cornerLen);
-          path.moveTo(corners[i].dx + radius, corners[i].dy);
-          path.arcToPoint(
-            Offset(corners[i].dx, corners[i].dy + radius),
-            radius: Radius.circular(radius),
-            clockwise: false,
-          );
-          break;
-        case 1:
-          path.moveTo(corners[i].dx - radius, corners[i].dy);
-          path.lineTo(corners[i].dx - cornerLen, corners[i].dy);
-          path.moveTo(corners[i].dx, corners[i].dy + radius);
-          path.lineTo(corners[i].dx, corners[i].dy + cornerLen);
-          path.moveTo(corners[i].dx - radius, corners[i].dy);
-          path.arcToPoint(
-            Offset(corners[i].dx, corners[i].dy + radius),
-            radius: Radius.circular(radius),
-            clockwise: true,
-          );
-          break;
-        case 2:
-          path.moveTo(corners[i].dx - radius, corners[i].dy);
-          path.lineTo(corners[i].dx - cornerLen, corners[i].dy);
-          path.moveTo(corners[i].dx, corners[i].dy - radius);
-          path.lineTo(corners[i].dx, corners[i].dy - cornerLen);
-          path.moveTo(corners[i].dx - radius, corners[i].dy);
-          path.arcToPoint(
-            Offset(corners[i].dx, corners[i].dy - radius),
-            radius: Radius.circular(radius),
-            clockwise: false,
-          );
-          break;
-        case 3:
-          path.moveTo(corners[i].dx + radius, corners[i].dy);
-          path.lineTo(corners[i].dx + cornerLen, corners[i].dy);
-          path.moveTo(corners[i].dx, corners[i].dy - radius);
-          path.lineTo(corners[i].dx, corners[i].dy - cornerLen);
-          path.moveTo(corners[i].dx + radius, corners[i].dy);
-          path.arcToPoint(
-            Offset(corners[i].dx, corners[i].dy - radius),
-            radius: Radius.circular(radius),
-            clockwise: true,
-          );
-          break;
-      }
-      canvas.drawPath(path, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -4,6 +4,7 @@ import 'package:image/image.dart' as img;
 import 'package:flutter/services.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
 
 class LiveAvatarCamera extends StatefulWidget {
   final ValueChanged<Uint8List> onCropped;
@@ -210,21 +211,9 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
                 width: double.infinity,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF6C63FF),
-                      foregroundColor: Colors.white,
-                      shape: StadiumBorder(),
-                      padding: EdgeInsets.symmetric(vertical: 20),
-                    ),
+                  child: ContinueButton(
+                    text: 'Take a photo',
                     onPressed: () => _shootAndCrop(previewKey),
-                    child: Text(
-                      'Take a photo',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                   ),
                 ),
               ),
