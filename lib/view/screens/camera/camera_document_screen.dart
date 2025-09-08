@@ -261,12 +261,12 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                                           return Opacity(
                                             opacity: canSwitch ? 1 : 0.4,
                                             child: Material(
-                                              color: Colors.black45,
+                                              color: AppColors.black,
                                               shape: const CircleBorder(),
                                               child: IconButton(
                                                 icon: const Icon(
                                                   Icons.cameraswitch,
-                                                  color: Colors.white,
+                                                  color: AppColors.white,
                                                 ),
                                                 onPressed: canSwitch
                                                     ? _toggleCamera
@@ -289,7 +289,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                                   child: Text(
                                     'Please make a photo of front-side of ID',
                                     style: const TextStyle(
-                                      color: Colors.white,
+                                      color: AppColors.white,
                                       fontSize: 14,
                                       decoration: TextDecoration.none,
                                     ),
@@ -319,6 +319,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
 
                 const SizedBox(height: 10),
                 SizedBox(
+                  height: 60.0,
                   width: double.infinity,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -327,9 +328,11 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                       child: Text(
                         'Upload document',
                         style: TextStyle(
-                          color: Colors.black87,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                          color: AppColors.black,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Figtree',
+                          package: 'dataspikemobilesdk',
                         ),
                       ),
                     ),

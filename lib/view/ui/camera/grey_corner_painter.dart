@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 
 class GreyCornersPainter extends CustomPainter {
   final Rect rect;
@@ -10,7 +11,7 @@ class GreyCornersPainter extends CustomPainter {
     final cornerLen = 40.0;
     final radius = 20.0;
     final stroke = 5.0;
-    final color = Colors.grey.shade400;
+    final color = AppColors.palePeriwinkle;
 
     final corners = [
       rect.topLeft,

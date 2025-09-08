@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 
 class DimOverlayPainter extends CustomPainter {
   final Rect holeRect;
@@ -8,7 +9,7 @@ class DimOverlayPainter extends CustomPainter {
   DimOverlayPainter({
     required this.holeRect,
     this.borderRadius = 20,
-    this.overlayColor = const Color.fromRGBO(0, 0, 0, 0.55),
+    this.overlayColor = AppColors.blackTransparent,
   });
 
   @override
