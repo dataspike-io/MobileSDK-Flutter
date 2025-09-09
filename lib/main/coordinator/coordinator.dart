@@ -45,11 +45,7 @@ class DataspikeCoordinator {
         break;
       case DataspikeStep.documentCamera:
         Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => LiveCropCamera(onCropped: (value) {
-              proceedNext(context, after: DataspikeStep.documentCamera);
-            }),
-          ),
+          MaterialPageRoute(builder: (_) => const LiveCropCamera()),
         );
         break;
       case DataspikeStep.selfieCamera:
@@ -63,11 +59,7 @@ class DataspikeCoordinator {
         break;
       case DataspikeStep.address:
         Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => LiveCropCamera(onCropped: (value) {
-              proceedNext(context, after: DataspikeStep.documentCamera);
-            }),
-          ),
+          MaterialPageRoute(builder: (_) => const LiveCropCamera()),
         );
         break;
     }
@@ -108,7 +100,7 @@ class DataspikeCoordinator {
     } else {  }
   }
 
-  static void _showOnboarding(BuildContext context) =>
+  static void showOnboarding(BuildContext context) =>
       showNextStep(context, DataspikeStep.onboarding);
   static void showSelfieCamera(BuildContext context) =>
       showNextStep(context, DataspikeStep.selfieCamera);
