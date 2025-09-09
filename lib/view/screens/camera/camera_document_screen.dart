@@ -41,8 +41,16 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
   }
 
   void shootAndCrop(GlobalKey previewKey) async {
-    await viewModel.shootAndCrop(previewKey, MediaQuery.of(context).size);
-    proceedNext();
+    try {
+      final result = await viewModel.shootAndCrop(previewKey, MediaQuery.of(context).size);
+      if (!mounted) return;
+      proceedNext();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Upload error: $e')));
+    }
   }
 
   void pickAndUploadDocument() async {

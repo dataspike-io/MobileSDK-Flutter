@@ -2,12 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '/dependencies_provider/dataspike_injector.dart';
 import 'package:dataspikemobilesdk/data/use_cases/uploading_image_use_case.dart';
-import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
+import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart';
 
 class CameraDocumentViewModel extends ChangeNotifier {
   Duration? timerDuration;
@@ -138,13 +138,17 @@ class CameraDocumentViewModel extends ChangeNotifier {
     int h = ((cropH / scale).round()).clamp(1, imgH.toInt() - y);
 
     final cropped = img.copyCrop(original, x: x, y: y, width: w, height: h);
-    final out = img.encodeJpg(cropped, quality: 50);
+    final out = img.encodeJpg(cropped);
 
-    await _setUseCase.call(
-      documentType: 'POI',
+    final result = await _setUseCase.call(
+      documentType: 'poi',
       imageBytes: out,
       fileName: 'document.jpg'
     );
+
+    if (result is! UploadImageSuccess) {
+      throw Exception();
+    }
   }
 
   Future<void> pickAndUploadDocument() async {
@@ -154,7 +158,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
     final Uint8List raw = await picked.readAsBytes();
 
     await _setUseCase.call(
-      documentType: 'POI',
+      documentType: 'poi',
       imageBytes: raw,
       fileName: 'document.jpg'
     );

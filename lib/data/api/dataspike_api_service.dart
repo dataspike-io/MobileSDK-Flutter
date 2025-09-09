@@ -10,6 +10,7 @@ import 'package:dataspikemobilesdk/data/api/dataspike_endpoint.dart';
 import 'package:dataspikemobilesdk/data/models/response/upload_image_error_response.dart';
 import 'package:dataspikemobilesdk/data/models/response/dataspike_profile_fields_response.dart';
 import 'package:dataspikemobilesdk/data/models/request/profile_fields_request_body.dart';
+import 'package:http_parser/http_parser.dart';
 
 abstract class IDataspikeApiService {
   Future<VerificationResponse> getVerification(String shortId);
@@ -74,6 +75,7 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
         http.MultipartFile.fromBytes(
           'file',
           fileBytes,
+          contentType: MediaType('image', 'jpeg'),
           filename: fileName,
         ),
       );
