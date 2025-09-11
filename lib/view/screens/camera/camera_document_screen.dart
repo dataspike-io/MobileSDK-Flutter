@@ -10,6 +10,8 @@ import 'package:dataspikemobilesdk/view/ui/camera/dim_overlay_painter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:dataspikemobilesdk/view/ui/loader.dart';
 import '/main/coordinator/coordinator.dart';
+import 'package:dataspikemobilesdk/view/ui/camera/instruction_pill.dart';
+import 'package:dataspikemobilesdk/view/ui/camera/side_toggle_pill.dart';
 
 class LiveCropCamera extends StatefulWidget {
   const LiveCropCamera({super.key});
@@ -42,7 +44,11 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
 
   void shootAndCrop(GlobalKey previewKey) async {
     try {
-      final result = await viewModel.shootAndCrop(previewKey, MediaQuery.of(context).size);
+      final result = await viewModel.shootAndCrop(
+        previewKey,
+        MediaQuery.of(context).size,
+      );
+      
       if (!mounted) return;
       proceedNext();
     } catch (e) {
@@ -212,16 +218,48 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                                     right: 0,
                                     child: Center(
                                       child: Text(
-                                        'Please make a photo of front-side of ID',
+                                        viewModel.side == DocumentSide.front
+                                            ? 'Please make a photo of front side of ID'
+                                            : 'Please make a photo of back side of ID',
                                         style: const TextStyle(
                                           color: AppColors.white,
                                           fontSize: 14,
+                                          fontFamily: 'Figtree',
+                                          package: 'dataspikemobilesdk',
+                                          fontWeight: FontWeight.w600,
                                           decoration: TextDecoration.none,
                                         ),
                                         textAlign: TextAlign.center,
                                       ),
                                     ),
                                   ),
+
+                                  if (viewModel.side == DocumentSide.back)
+                                    Positioned(
+                                      bottom: 24,
+                                      left: 0,
+                                      right: 0,
+                                      child: Center(
+                                        child: SideTogglePill(
+                                          value: viewModel.side,
+                                          onChanged: (v) =>
+                                              setState(() => viewModel.side = v),
+                                        ),
+                                      ),
+                                    ),
+
+                                  if (viewModel.side == DocumentSide.front)
+                                    Positioned(
+                                      bottom: 80,
+                                      left: 0,
+                                      right: 0,
+                                      child: Center(
+                                        child: InstructionPill(
+                                          text:
+                                              'Place right edge of the card to frame boundaries',
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               );
                             },
@@ -261,6 +299,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),

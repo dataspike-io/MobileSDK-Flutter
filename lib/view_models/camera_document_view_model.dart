@@ -8,9 +8,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart';
+import 'package:dataspikemobilesdk/view/ui/camera/side_toggle_pill.dart';
 
 class CameraDocumentViewModel extends ChangeNotifier {
   Duration? timerDuration;
+
+  DocumentSide side = DocumentSide.front;
 
   final UploadImageUseCase _setUseCase;
 
@@ -148,7 +151,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
 
     if (result is! UploadImageSuccess) {
       throw Exception();
-    }
+    } 
   }
 
   Future<void> pickAndUploadDocument() async {
