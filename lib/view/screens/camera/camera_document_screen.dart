@@ -26,6 +26,12 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
   @override
   void initState() {
     viewModel = DataspikeViewModelFactory().create<CameraDocumentViewModel>();
+    viewModel.attachCallbacks(
+      onProceed: () => proceedNext(),
+      showLoader: showLoader,
+      hideLoader: hideLoader,
+      showError: (msg) => showError(msg),
+    );
     super.initState();
   }
 
@@ -36,6 +42,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
   }
 
   void proceedNext() {
+    if (!mounted) return;
     DataspikeCoordinator.proceedNext(
       context,
       after: DataspikeStep.documentCamera,
@@ -43,36 +50,35 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
   }
 
   void shootAndCrop(GlobalKey previewKey) async {
-    try {
-      final result = await viewModel.shootAndCrop(
-        previewKey,
-        MediaQuery.of(context).size,
-      );
-      
-      if (!mounted) return;
-      proceedNext();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Upload error: $e')));
-    }
+    await viewModel.shootAndCrop(previewKey, MediaQuery.of(context).size);
   }
 
   void pickAndUploadDocument() async {
-    try {
-      await viewModel.pickAndUploadDocument();
-      proceedNext();
+    await viewModel.pickAndUploadDocument();
+  }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Upload failed')));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Upload error: $e')));
-    }
+  void showLoader() async {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      useRootNavigator: true,
+      barrierDismissible: false,
+      barrierColor: AppColors.blackTransparent,
+      builder: (_) => const Center(child: Loader()),
+    );
+  }
+
+  void hideLoader() {
+    if (!mounted) return;
+    final rootNav = Navigator.of(context, rootNavigator: true);
+    rootNav.pop();
+  }
+
+  void showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Upload error: $message')));
   }
 
   @override
@@ -242,8 +248,9 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                                       child: Center(
                                         child: SideTogglePill(
                                           value: viewModel.side,
-                                          onChanged: (v) =>
-                                              setState(() => viewModel.side = v),
+                                          onChanged: (v) => setState(
+                                            () => viewModel.side = v,
+                                          ),
                                         ),
                                       ),
                                     ),

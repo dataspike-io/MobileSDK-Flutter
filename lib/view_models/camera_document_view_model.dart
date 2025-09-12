@@ -23,6 +23,23 @@ class CameraDocumentViewModel extends ChangeNotifier {
   CameraDescription? frontCam;
   bool _useFront = false;
 
+  VoidCallback? onProceed;
+  VoidCallback? showLoader;
+  VoidCallback? hideLoader;
+  void Function(String message)? showError;
+  
+  void attachCallbacks({
+    VoidCallback? onProceed,
+    VoidCallback? showLoader,
+    VoidCallback? hideLoader,
+    void Function(String message)? showError,
+  }) {
+    this.onProceed = onProceed;
+    this.showLoader = showLoader;
+    this.hideLoader = hideLoader;
+    this.showError = showError;
+  }
+
   CameraDocumentViewModel({required UploadImageUseCase setUseCase})
     : _setUseCase = setUseCase {
     init = _setup();
@@ -85,13 +102,19 @@ class CameraDocumentViewModel extends ChangeNotifier {
   Future<void> shootAndCrop(GlobalKey previewKey, Size screenSize) async {
     if (!(ctrl?.value.isInitialized ?? false)) return;
 
+    showLoader?.call();
+    notifyListeners();
     await Permission.photos.request();
 
     final file = await ctrl!.takePicture();
     final bytes = await file.readAsBytes();
 
     img.Image? original = img.decodeImage(bytes);
-    if (original == null) return;
+    if (original == null) {
+      hideLoader?.call();
+      notifyListeners();
+      return;
+    }
 
     original = img.bakeOrientation(original);
 
@@ -146,24 +169,59 @@ class CameraDocumentViewModel extends ChangeNotifier {
     final result = await _setUseCase.call(
       documentType: 'poi',
       imageBytes: out,
-      fileName: 'document.jpg'
+      fileName: 'document.jpg',
     );
+    hideLoader?.call();
+    notifyListeners();
 
     if (result is! UploadImageSuccess) {
-      throw Exception();
-    } 
+      showError?.call('Upload failed: ${result is UploadImageError ? result.message : ''}');
+    } else {
+      if (
+        result.detectedTwoSideDocument &&
+        side == DocumentSide.front
+      ) {
+        side = DocumentSide.back;
+        notifyListeners();
+      } else {
+        onProceed?.call();
+      }
+    }
   }
 
   Future<void> pickAndUploadDocument() async {
     final picker = ImagePicker();
+    showLoader?.call();
+    notifyListeners();
     final XFile? picked = await picker.pickImage(source: ImageSource.gallery);
-    if (picked == null) return;
+    if (picked == null) {
+      hideLoader?.call();
+      notifyListeners();
+      return;
+    }
     final Uint8List raw = await picked.readAsBytes();
 
-    await _setUseCase.call(
+    final result = await _setUseCase.call(
       documentType: 'poi',
       imageBytes: raw,
-      fileName: 'document.jpg'
+      fileName: 'document.jpg',
     );
+
+    hideLoader?.call();
+    notifyListeners();
+
+    if (result is! UploadImageSuccess) {
+      showError?.call('Upload failed: ${result is UploadImageError ? result.message : ''}');
+    } else {
+      if (
+        result.detectedTwoSideDocument &&
+        side == DocumentSide.front
+      ) {
+        side = DocumentSide.back;
+        notifyListeners();
+      } else {
+        onProceed?.call();
+      }
+    }
   }
 }
