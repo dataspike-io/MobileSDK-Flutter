@@ -50,11 +50,7 @@ class DataspikeCoordinator {
         break;
       case DataspikeStep.selfieCamera:
         Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => LiveAvatarCamera(onCropped: (value) {
-              proceedNext(context, after: DataspikeStep.selfieCamera);
-            }),
-          ),
+          MaterialPageRoute(builder: (_) => const LiveAvatarCamera()),
         );
         break;
       case DataspikeStep.address:
