@@ -1,11 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '/dependencies_provider/dataspike_injector.dart';
 import 'package:dataspikemobilesdk/data/use_cases/uploading_image_use_case.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
-import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart';
 
@@ -15,7 +13,7 @@ class CameraAvatarViewModel extends ChangeNotifier {
   CameraController? ctrl;
   late Future<void> init;
   CameraDescription? frontCam;
-  final UploadImageUseCase setUseCase;
+  final UploadImageUseCase _setUseCase;
 
   VoidCallback? onProceed;
   VoidCallback? showLoader;
@@ -43,7 +41,7 @@ class CameraAvatarViewModel extends ChangeNotifier {
   }
 
   CameraAvatarViewModel({required UploadImageUseCase setUseCase})
-    : setUseCase = setUseCase {
+    : _setUseCase = setUseCase {
     init = _setup();
     setVerificationTimer();
   }
@@ -164,7 +162,7 @@ class CameraAvatarViewModel extends ChangeNotifier {
     final cropped = img.copyCrop(original, x: x, y: y, width: w, height: h);
     final out = img.encodeJpg(cropped, quality: 100);
 
-    final result = await setUseCase.call(
+    final result = await _setUseCase.call(
       documentType: 'liveness_photo',
       imageBytes: out,
       fileName: 'selfie.jpg',

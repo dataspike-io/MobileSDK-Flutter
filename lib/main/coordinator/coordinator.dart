@@ -63,7 +63,7 @@ class DataspikeCoordinator {
 
   static List<DataspikeStep> _requiredSteps() {
     final vm = DataspikeInjector.component.verificationManager.checks;
-
+ 
     final requiresDocument = vm.poiIsRequired;
     final requiresSelfie = vm.livenessIsRequired;
     final requiresAddress = vm.poaIsRequired;
