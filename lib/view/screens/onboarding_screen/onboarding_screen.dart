@@ -1,6 +1,5 @@
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:dataspikemobilesdk/view/timer/timer_box.dart';
 import 'package:dataspikemobilesdk/view/screens/alarm_screen/alarm_screen.dart';
 import '/view_models/onboarding_view_model.dart';
@@ -37,13 +36,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void _onVmChanged() => setState(() {});
 
-  Future<void> _openUrl(String urlStr) async {
-    final url = Uri.parse(urlStr);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    }
-  }
-
   void _onStart() {
     DataspikeCoordinator.proceedNext(context);
   }
@@ -73,7 +65,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       color: AppColors.snowyLilac,
                     ),
                     const SizedBox(height: 16),
-
                     Text(
                       'Verify your identity for J.P. Morgan',
                       style: TextStyle(
@@ -85,7 +76,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-
                     if (timer != null)
                       Row(
                         children: [
@@ -105,17 +95,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ],
                       ),
                     const SizedBox(height: 12),
-
                     InfoCard(),
                   ],
                 ),
               ),
             ),
-
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 26),
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
               sliver: SliverFillRemaining(
-                hasScrollBody: false, 
+                hasScrollBody: false,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -123,7 +111,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: StagesCard(
                         stages: viewModel.stages
                             .map(
-                              (s) => Stage(title: s.title, subtitle: s.subtitle),
+                              (s) =>
+                                  Stage(title: s.title, subtitle: s.subtitle),
                             )
                             .toList(),
                         placeholderAsset:
@@ -134,13 +123,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           viewModel.setDataAccepted(v);
                         },
                         onStartPressed: accepted ? _onStart : null,
-                        openTerms: () =>
-                            _openUrl("https://dataspike.io/terms?lang=en"),
-                        openPrivacy: () =>
-                            _openUrl("https://dataspike.io/privacy?lang=en"),
+                        openTerms: () => viewModel.openTermsUrl(),
+                        openPrivacy: () => viewModel.openPrivacyUrl(),
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: SizedBox(
+                        height: 40,
+                        child: TextButton(
+                          onPressed: viewModel.openVerificationUrl,
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.deepViolet,
+                            padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 0),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text(
+                          'Continue verification on a desktop',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Figtree',
+                            package: 'dataspikemobilesdk',
+                          ),
+                        ),
+                      ),
+                      )
+                    ),
                   ],
                 ),
               ),

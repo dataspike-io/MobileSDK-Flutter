@@ -6,7 +6,7 @@ class AppColors {
   static const Color blackTransparent = Color(0x4D000000);
 
   // RED
-  static const Color red = Colors.red;
+  static const Color lightRed = Color(0xFFFF5050);
 
   // GREY
   static const Color darkIndigo = Color(0xFF737390);
@@ -21,4 +21,7 @@ class AppColors {
   static const Color mistyLilac = Color(0xFFF0F0FD);
   static const Color palePeriwinkle = Color(0xFFD3D8F8);
   static const Color snowyLilac = Color(0xFFF6F8FE);
+
+  // Clear
+  static const Color clear = Colors.transparent;
 }

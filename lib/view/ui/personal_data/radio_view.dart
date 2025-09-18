@@ -92,7 +92,7 @@ class _CustomRadio extends StatelessWidget {
         height: 12,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: selected ? AppColors.royalPurple : Colors.transparent,
+          color: selected ? AppColors.royalPurple : AppColors.clear,
         ),
       ),
     );

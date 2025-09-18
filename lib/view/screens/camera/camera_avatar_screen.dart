@@ -150,7 +150,7 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
                                   CustomPaint(
                                     size: Size(c.maxWidth, c.maxHeight),
                                     painter: TwoArcsPainter(
-                                      color: Colors.white,
+                                      color: AppColors.white,
                                       strokeWidth: _strokeWidth,
                                       sideInsetPct: _sideInsetPct,
                                       topApexPct: _topApexPct,

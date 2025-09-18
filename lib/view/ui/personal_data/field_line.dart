@@ -36,7 +36,7 @@ class FieldLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = valid ? AppColors.palePeriwinkle : AppColors.red;
+    final borderColor = valid ? AppColors.palePeriwinkle : AppColors.lightRed;
 
     if (isFileUpload) {
       final hasFile = (value ?? '').isNotEmpty;
@@ -158,7 +158,7 @@ class FieldLine extends StatelessWidget {
                 style: const TextStyle(
                   fontFamily: 'Figtree',
                   fontSize: 14,
-                  color: AppColors.red,
+                  color: AppColors.lightRed,
                   package: 'dataspikemobilesdk',
                 ),
               ),

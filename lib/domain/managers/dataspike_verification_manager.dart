@@ -11,7 +11,8 @@ class VerificationManager {
     poaIsRequired: false,
     personalDataRequired: false,
     countries: [],
-    manualFields: null
+    manualFields: null,
+    verificationUrl: '',
   );
 
   String _expiresAt = '';
@@ -24,6 +25,7 @@ class VerificationManager {
     List<CountryDomainModel> countries,
     String status,
     String expiresAt,
+    String verificationUrl,
   ) {
     checks = DataspikeCheckDomainModel(
       poiIsRequired: settings.poiRequired,
@@ -32,6 +34,7 @@ class VerificationManager {
       personalDataRequired: settings.manualFields.enabled,
       countries: countries,
       manualFields: settings.manualFields,
+      verificationUrl: verificationUrl,
     );
     _status = status;
     _expiresAt = expiresAt;

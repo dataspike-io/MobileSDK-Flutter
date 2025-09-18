@@ -23,7 +23,8 @@ class VerificationUseCase {
         state.settings,
         countriesState is CountriesSuccess ? countriesState.countries : [],
         state.status,
-        state.expiresAt
+        state.expiresAt,
+        state.verificationUrl,
       );
     }
 

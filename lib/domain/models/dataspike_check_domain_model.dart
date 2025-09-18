@@ -8,6 +8,7 @@ class DataspikeCheckDomainModel {
   final bool personalDataRequired;
   final List<CountryDomainModel> countries;
   final ManualFieldsSettingsDomainModel? manualFields;
+  final String verificationUrl;
 
   const DataspikeCheckDomainModel({
     required this.poiIsRequired,
@@ -16,5 +17,6 @@ class DataspikeCheckDomainModel {
     required this.personalDataRequired,
     required this.countries,
     required this.manualFields,
+    required this.verificationUrl,
   });
 }

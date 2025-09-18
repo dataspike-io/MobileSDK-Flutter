@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/view_models/dataspike_activity_view_model.dart';
 import 'package:dataspikemobilesdk/view_models/factory/dataspike_view_model_factory.dart';
 import 'package:dataspikemobilesdk/domain/models/states/verification_state.dart';
+import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 
 class DataspikeScreen extends StatefulWidget {
   final void Function(BuildContext context) onSuccess;
@@ -40,7 +41,7 @@ class _DataspikeScreenState extends State<DataspikeScreen> {
                 content: Text(
                   '${verificationState.details}: ${verificationState.error}',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.white,
                     fontSize: 28,
                     fontFamily: 'FunnelDisplay',
                     fontWeight: FontWeight.w600,
@@ -59,7 +60,7 @@ class _DataspikeScreenState extends State<DataspikeScreen> {
 
     viewModel.getVerification(
       false,
-    ); // Assuming darkModeIsEnabled is false for prefetch
+    ); 
   }
 
   @override

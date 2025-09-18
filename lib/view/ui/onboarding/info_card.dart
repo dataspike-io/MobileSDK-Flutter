@@ -21,7 +21,7 @@ class InfoCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'JP Morgan requests proof of address verification and documents check to complete bank account opening.',
+              'JP Morgan requests proof of address, proof of identity and liveness verifications.',
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.darkIndigo,
