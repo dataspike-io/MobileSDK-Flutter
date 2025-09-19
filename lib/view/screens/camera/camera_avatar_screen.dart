@@ -8,6 +8,7 @@ import 'package:dataspikemobilesdk/view/ui/top_bar.dart';
 import '/view_models/factory/dataspike_view_model_factory.dart';
 import 'package:dataspikemobilesdk/view_models/camera_avatar_view_model.dart';
 import '/main/coordinator/coordinator.dart';
+import 'package:dataspikemobilesdk/view/ui/camera/error_bottom_sheet.dart';
 
 class LiveAvatarCamera extends StatefulWidget {
   const LiveAvatarCamera({super.key});
@@ -74,11 +75,18 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
     rootNav.pop();
   }
 
-  void showError(String title,String message) {
+  void showError(String title, String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Upload error: $message')));
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: AppColors.clear,
+      barrierColor: AppColors.clear,
+      builder: (_) => ErrorBottomSheet(title: title, message: message),
+    );
   }
 
   @override

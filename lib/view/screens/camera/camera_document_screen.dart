@@ -12,6 +12,7 @@ import 'package:dataspikemobilesdk/view/ui/loader.dart';
 import '/main/coordinator/coordinator.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/instruction_pill.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/side_toggle_pill.dart';
+import 'package:dataspikemobilesdk/view/ui/camera/error_bottom_sheet.dart';
 
 class LiveCropCamera extends StatefulWidget {
   const LiveCropCamera({super.key});
@@ -74,11 +75,18 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
     rootNav.pop();
   }
 
-   void showError(String title,String message) {
+  void showError(String title, String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Upload error: $message')));
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: AppColors.clear,
+      barrierColor: AppColors.clear,
+      builder: (_) => ErrorBottomSheet(title: title, message: message),
+    );
   }
 
   @override
