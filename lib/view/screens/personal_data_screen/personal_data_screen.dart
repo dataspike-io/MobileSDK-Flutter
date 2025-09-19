@@ -44,7 +44,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
       context: context,
       useRootNavigator: true,
       barrierDismissible: false,
-      barrierColor: AppColors.blackTransparent,
+      barrierColor: AppColors.slateGray,
       builder: (_) => const Center(child: Loader()),
     );
 
