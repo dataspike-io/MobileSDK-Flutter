@@ -1,6 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
+import 'package:dataspikemobilesdk/view/ui/continue_circle_button.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/two_arcs_painter.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:dataspikemobilesdk/view/ui/loader.dart';
@@ -170,15 +170,8 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
                     ),
                     const SizedBox(height: 32),
 
-                    SizedBox(
-                      width: double.infinity,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: ContinueButton(
-                          text: 'Take a photo',
-                          onPressed: () => shootAndCrop(previewKey),
-                        ),
-                      ),
+                    CircularContinueButton(
+                      onPressed: () => shootAndCrop(previewKey),
                     ),
                     const SizedBox(height: 10),
                   ],

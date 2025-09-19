@@ -55,7 +55,7 @@ class SideTogglePill extends StatelessWidget {
           ),
           SizedBox(width: 8.0),
           segment(
-            'Reverse side',
+            'Back side',
             value == DocumentSide.back,
             () => onChanged(DocumentSide.back),
           ),

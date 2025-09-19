@@ -1,6 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
+import 'package:dataspikemobilesdk/view/ui/continue_circle_button.dart';
 import 'package:dataspikemobilesdk/view/ui/top_bar.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import '/view_models/factory/dataspike_view_model_factory.dart';
@@ -226,7 +226,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                                       child: Text(
                                         viewModel.side == DocumentSide.front
                                             ? 'Please make a photo of front side of ID'
-                                            : 'Please make a photo of back side of ID',
+                                            : '', //'Please make a photo of back side of ID',
                                         style: const TextStyle(
                                           color: AppColors.white,
                                           fontSize: 14,
@@ -275,15 +275,8 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    SizedBox(
-                      width: double.infinity,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: ContinueButton(
-                          text: 'Take a photo',
-                          onPressed: () => shootAndCrop(previewKey),
-                        ),
-                      ),
+                    CircularContinueButton(
+                      onPressed: () => shootAndCrop(previewKey),
                     ),
                     const SizedBox(height: 2),
                     SizedBox(
