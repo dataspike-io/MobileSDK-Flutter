@@ -34,7 +34,7 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
       onProceed: () => proceedNext(),
       showLoader: showLoader,
       hideLoader: hideLoader,
-      showError: (msg) => showError(msg),
+      showError: (title, msg) => showError(title, msg),
     );
     super.initState();
   }
@@ -74,7 +74,7 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
     rootNav.pop();
   }
 
-  void showError(String message) {
+  void showError(String title,String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,

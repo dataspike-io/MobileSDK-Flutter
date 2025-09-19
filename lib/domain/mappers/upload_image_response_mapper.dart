@@ -4,9 +4,6 @@ import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart'
 import 'package:dataspikemobilesdk/domain/models/dataspike_error_domain_model.dart';
 import 'package:dataspikemobilesdk/data/models/response/dataspike_error_response.dart';
 
-const int ERROR_CODE_EXPIRED = 8000;
-const int ERROR_TOO_MANY_ATTEMPTS = 9000;
-
 class UploadImageResponseMapper {
   UploadImageState map({
     UploadImageResponse? response,

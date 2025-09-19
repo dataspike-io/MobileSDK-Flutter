@@ -18,7 +18,7 @@ class CameraAvatarViewModel extends ChangeNotifier {
   VoidCallback? onProceed;
   VoidCallback? showLoader;
   VoidCallback? hideLoader;
-  void Function(String message)? showError;
+  void Function(String title, String message)? showError;
 
   static const double sideInsetPct = 0.10;
   static const double topApexPct = 0.10;
@@ -32,7 +32,7 @@ class CameraAvatarViewModel extends ChangeNotifier {
     VoidCallback? onProceed,
     VoidCallback? showLoader,
     VoidCallback? hideLoader,
-    void Function(String message)? showError,
+    void Function(String title, String message)? showError,
   }) {
     this.onProceed = onProceed;
     this.showLoader = showLoader;
@@ -171,10 +171,10 @@ class CameraAvatarViewModel extends ChangeNotifier {
     hideLoader?.call();
     notifyListeners();
 
-    if (result is! UploadImageSuccess) {
-      showError?.call('Upload failed: ${result is UploadImageError ? result.message : ''}');
+    if (result is UploadImageError) {
+      showError?.call(result.title, result.message);
     } else {
-      showError?.call('SUCCESS');
+      showError?.call('SUCCESS', '');
       // onProceed?.call();
     }
   }

@@ -26,13 +26,13 @@ class CameraDocumentViewModel extends ChangeNotifier {
   VoidCallback? onProceed;
   VoidCallback? showLoader;
   VoidCallback? hideLoader;
-  void Function(String message)? showError;
+  void Function(String title, String message)? showError;
   
   void attachCallbacks({
     VoidCallback? onProceed,
     VoidCallback? showLoader,
     VoidCallback? hideLoader,
-    void Function(String message)? showError,
+    void Function(String title, String message)? showError,
   }) {
     this.onProceed = onProceed;
     this.showLoader = showLoader;
@@ -174,9 +174,9 @@ class CameraDocumentViewModel extends ChangeNotifier {
     hideLoader?.call();
     notifyListeners();
 
-    if (result is! UploadImageSuccess) {
-      showError?.call('Upload failed: ${result is UploadImageError ? result.message : ''}');
-    } else {
+    if (result is UploadImageError) {
+      showError?.call(result.title, result.message);
+    } else if (result is UploadImageSuccess) {
       if (
         result.detectedTwoSideDocument &&
         side == DocumentSide.front
@@ -210,9 +210,9 @@ class CameraDocumentViewModel extends ChangeNotifier {
     hideLoader?.call();
     notifyListeners();
 
-    if (result is! UploadImageSuccess) {
-      showError?.call('Upload failed: ${result is UploadImageError ? result.message : ''}');
-    } else {
+    if (result is UploadImageError) {
+      showError?.call(result.title, result.message);
+    } else if (result is UploadImageSuccess) {
       if (
         result.detectedTwoSideDocument &&
         side == DocumentSide.front

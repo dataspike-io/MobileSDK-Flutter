@@ -28,4 +28,29 @@ class UploadImageError extends UploadImageState {
     required this.code,
     required this.message,
   });
+
+  String get title {
+    switch (code) {
+      case ERROR_CODE_EXPIRED:
+        return 'Uploaded document is outdated';
+      case ERROR_TOO_MANY_ATTEMPTS:
+        return 'Too many attempts to proceed liveness check';
+      default:
+        return 'We are experiencing problems with photo';
+    }
+  }
+
+  String get subtitle {
+    switch (code) {
+      case ERROR_CODE_EXPIRED:
+        return 'Please, upload actual document to proceed verifications.';
+      case ERROR_TOO_MANY_ATTEMPTS:
+        return 'Please, try to proceed verification later';
+      default:
+        return message;
+    }
+  }
 }
+
+const int ERROR_CODE_EXPIRED = 8000;
+const int ERROR_TOO_MANY_ATTEMPTS = 9000;

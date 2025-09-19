@@ -30,7 +30,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
       onProceed: () => proceedNext(),
       showLoader: showLoader,
       hideLoader: hideLoader,
-      showError: (msg) => showError(msg),
+      showError: (title, msg) => showError(title, msg),
     );
     super.initState();
   }
@@ -74,7 +74,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
     rootNav.pop();
   }
 
-  void showError(String message) {
+   void showError(String title,String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
