@@ -1,3 +1,4 @@
+import 'package:dataspikemobilesdk/view/ui/loader.dart';
 import 'package:dataspikemobilesdk/view/ui/top_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
@@ -129,7 +130,7 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
             const SizedBox(height: 6),
             Expanded(
               child: _all.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(child: Loader(color: AppColors.slateGray))
                   : ListView.separated(
                       padding: const EdgeInsets.only(bottom: 24),
                       itemBuilder: (_, i) {

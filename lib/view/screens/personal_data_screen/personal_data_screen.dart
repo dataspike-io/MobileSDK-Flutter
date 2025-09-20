@@ -148,7 +148,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
                       const Center(
                         child: Padding(
                           padding: EdgeInsets.symmetric(vertical: 40),
-                          child: CircularProgressIndicator(),
+                          child: const Center(child: Loader(color: AppColors.slateGray)),
                         ),
                       )
                     else

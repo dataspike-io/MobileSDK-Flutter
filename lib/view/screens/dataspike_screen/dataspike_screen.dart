@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dataspikemobilesdk/view/ui/loader.dart';
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/view_models/dataspike_activity_view_model.dart';
 import 'package:dataspikemobilesdk/view_models/factory/dataspike_view_model_factory.dart';
@@ -76,7 +77,7 @@ class _DataspikeScreenState extends State<DataspikeScreen> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [const CircularProgressIndicator()],
+          children: [const Center(child: Loader(color: AppColors.slateGray))],
         ),
       ),
     );

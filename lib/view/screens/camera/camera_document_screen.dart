@@ -13,13 +13,10 @@ import '/main/coordinator/coordinator.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/instruction_pill.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/side_toggle_pill.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/error_bottom_sheet.dart';
-import 'package:dataspikemobilesdk/domain/models/document_type.dart'; 
+import 'package:dataspikemobilesdk/domain/models/document_type.dart';
 
 class LiveCropCamera extends StatefulWidget {
-  const LiveCropCamera({
-    super.key,
-    required this.docType,
-  });
+  const LiveCropCamera({super.key, required this.docType});
 
   final DocumentType docType;
 
@@ -60,10 +57,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
           after: DataspikeStep.documentCamera,
         );
       case DocumentType.address:
-        DataspikeCoordinator.proceedNext(
-          context,
-          after: DataspikeStep.address,
-        );
+        DataspikeCoordinator.proceedNext(context, after: DataspikeStep.address);
     }
   }
 
@@ -125,7 +119,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
         if (snap.connectionState != ConnectionState.done) {
           return Scaffold(
             backgroundColor: AppColors.white,
-            body: const Center(child: Loader()),
+            body: const Center(child: Loader(color: AppColors.slateGray)),
           );
         }
 
@@ -138,7 +132,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
             if (!isReady) {
               return Scaffold(
                 backgroundColor: AppColors.white,
-                body: const Center(child: Loader()),
+                body: const Center(child: Loader(color: AppColors.slateGray)),
               );
             }
 

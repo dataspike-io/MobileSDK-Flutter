@@ -4,26 +4,32 @@ import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/view_models/factory/dataspike_view_model_factory.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:dataspikemobilesdk/domain/models/states/proceed_with_verification_state.dart';
+import 'package:dataspikemobilesdk/view/ui/loader.dart';
 
 class VerificationCompletedScreen extends StatefulWidget {
   const VerificationCompletedScreen({super.key});
 
   @override
-  State<VerificationCompletedScreen> createState() => _VerificationCompletedScreenState();
+  State<VerificationCompletedScreen> createState() =>
+      _VerificationCompletedScreenState();
 }
 
-class _VerificationCompletedScreenState extends State<VerificationCompletedScreen> {
+class _VerificationCompletedScreenState
+    extends State<VerificationCompletedScreen> {
   late final VerificationCompletedViewModel viewModel;
 
   StreamSubscription? _verificationSubscription;
-  Object? _state; 
+  Object? _state;
 
   @override
   void initState() {
     super.initState();
-    viewModel = DataspikeViewModelFactory().create<VerificationCompletedViewModel>();
+    viewModel = DataspikeViewModelFactory()
+        .create<VerificationCompletedViewModel>();
 
-    _verificationSubscription = viewModel.verificationFlow.listen((verificationState) {
+    _verificationSubscription = viewModel.verificationFlow.listen((
+      verificationState,
+    ) {
       setState(() {
         _state = verificationState;
       });
@@ -45,7 +51,7 @@ class _VerificationCompletedScreenState extends State<VerificationCompletedScree
 
     if (state == null) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: const Center(child: Loader(color: AppColors.slateGray)),
       );
     }
 
@@ -80,7 +86,7 @@ class _VerificationCompletedScreenState extends State<VerificationCompletedScree
               Expanded(
                 child: SingleChildScrollView(
                   child: Text(
-                    state.toString(), 
+                    state.toString(),
                     style: const TextStyle(
                       fontSize: 14,
                       package: 'dataspikemobilesdk',

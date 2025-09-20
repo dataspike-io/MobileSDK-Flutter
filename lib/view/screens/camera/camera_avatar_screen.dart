@@ -105,7 +105,7 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
         if (snap.connectionState != ConnectionState.done) {
           return Scaffold(
             backgroundColor: AppColors.white,
-            body: const Center(child: Loader()),
+            body: const Center(child: Loader(color: AppColors.slateGray)),
           );
         }
 
@@ -118,7 +118,7 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
             if (!isReady) {
               return Scaffold(
                 backgroundColor: AppColors.white,
-                body: const Center(child: Loader()),
+                body: const Center(child: Loader(color: AppColors.slateGray)),
               );
             }
             return Scaffold(
