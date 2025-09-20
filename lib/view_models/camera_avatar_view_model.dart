@@ -3,9 +3,10 @@ import '/dependencies_provider/dataspike_injector.dart';
 import 'package:dataspikemobilesdk/data/use_cases/uploading_image_use_case.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
-import 'package:image/image.dart' as img;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart';
+import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
+import 'package:flutter/foundation.dart';
 
 class CameraAvatarViewModel extends ChangeNotifier {
   Duration? timerDuration;
@@ -81,21 +82,6 @@ class CameraAvatarViewModel extends ChangeNotifier {
     super.dispose();
   }
 
-  Rect _computeCropRect(Size size) {
-    final w = size.width;
-    final h = size.height;
-
-    final margin = strokeWidth / 2 + 0.5;
-
-    final leftX = (w * sideInsetPct).clamp(margin, w - margin);
-    final rightX = (w * (1 - sideInsetPct)).clamp(margin, w - margin);
-
-    final topApexY = (h * topApexPct) + margin;
-    final bottomApexY = (h * (1 - bottomApexFromBottomPct)) - margin;
-
-    return Rect.fromLTRB(leftX, topApexY, rightX, bottomApexY);
-  }
-
   Future<void> shootAndCrop(GlobalKey previewKey, Size screenSize) async {
     if (!(ctrl?.value.isInitialized ?? false)) return;
 
@@ -103,78 +89,52 @@ class CameraAvatarViewModel extends ChangeNotifier {
     notifyListeners();
     await Permission.photos.request();
 
-    final file = await ctrl!.takePicture();
-    final bytes = await file.readAsBytes();
-    img.Image? original = img.decodeImage(bytes);
-    if (original == null) {
+    try {
+      final file = await ctrl!.takePicture();
+      final bytes = await file.readAsBytes();
+
+      final rb = previewKey.currentContext!.findRenderObject() as RenderBox;
+      final containerW = rb.size.width;
+      final containerH = rb.size.height;
+
+      final ps = ctrl!.value.previewSize!;
+      final previewW = ps.width;
+      final previewH = ps.height;
+
+      // Тяжелое в изолят
+      final processed = await compute<AvatarCropParams, Uint8List>(
+        processAvatarShotInIsolate,
+        AvatarCropParams(
+          imageBytes: bytes,
+          containerW: containerW,
+          containerH: containerH,
+          previewW: previewW,
+          previewH: previewH,
+          sideInsetPct: sideInsetPct,
+          topApexPct: topApexPct,
+          bottomApexFromBottomPct: bottomApexFromBottomPct,
+          strokeWidth: strokeWidth,
+        ),
+      );
+
+      final result = await _setUseCase.call(
+        documentType: 'liveness_photo',
+        imageBytes: processed,
+        fileName: 'selfie.jpg',
+      );
+
       hideLoader?.call();
       notifyListeners();
-      return;
-    }
-    original = img.bakeOrientation(original);
 
-    final imgW = original.width.toDouble();
-    final imgH = original.height.toDouble();
-
-    final rb = previewKey.currentContext!.findRenderObject() as RenderBox;
-    final containerW = rb.size.width;
-    final containerH = rb.size.height;
-
-    final ps = ctrl!.value.previewSize!;
-    final previewAR = ps.height / ps.width;
-    final containerAR = containerW / containerH;
-    final coverScale = previewAR / containerAR;
-
-    double childW, childH;
-    if (containerAR > previewAR) {
-      childH = containerH;
-      childW = childH * previewAR;
-    } else {
-      childW = containerW;
-      childH = childW / previewAR;
-    }
-    final displayW = childW * coverScale;
-    final displayH = childH * coverScale;
-    final offsetX = (containerW - displayW) / 2.0;
-    final offsetY = (containerH - displayH) / 2.0;
-
-    final cropRectInWidget = _computeCropRect(Size(containerW, containerH));
-
-    final scale = displayW / imgW;
-
-    int x = (((cropRectInWidget.left - offsetX) / scale).round()).clamp(
-      0,
-      imgW.toInt() - 1,
-    );
-    int y = (((cropRectInWidget.top - offsetY) / scale).round()).clamp(
-      0,
-      imgH.toInt() - 1,
-    );
-    int w = ((cropRectInWidget.width / scale).round()).clamp(
-      1,
-      imgW.toInt() - x,
-    );
-    int h = ((cropRectInWidget.height / scale).round()).clamp(
-      1,
-      imgH.toInt() - y,
-    );
-
-    final cropped = img.copyCrop(original, x: x, y: y, width: w, height: h);
-    final out = img.encodeJpg(cropped, quality: 100);
-
-    final result = await _setUseCase.call(
-      documentType: 'liveness_photo',
-      imageBytes: out,
-      fileName: 'selfie.jpg',
-    );
-
-    hideLoader?.call();
-    notifyListeners();
-
-    if (result is UploadImageSuccess) {
-      onProceed?.call();
-    } else if (result is UploadImageError) {
-      showError?.call(result.title, result.message);
+      if (result is UploadImageSuccess) {
+        onProceed?.call();
+      } else if (result is UploadImageError) {
+        showError?.call(result.title, result.message);
+      }
+    } catch (e) {
+      hideLoader?.call();
+      notifyListeners();
+      showError?.call('Processing error', 'Failed to process the image.');
     }
   }
 }
