@@ -43,7 +43,7 @@ class OnboardingViewModel extends ChangeNotifier {
         StageItem(
           id: 'personal',
           title: 'Fill in your details',
-          subtitle: personalDataDescription ?? 'Nothing extra needed',
+          subtitle: personalDataDescription?.isNotEmpty == true ? personalDataDescription! : 'Nothing extra needed',
           required: true,
           completed: true,
         ),
