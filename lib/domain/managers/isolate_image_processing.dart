@@ -62,16 +62,46 @@ Future<Uint8List> processCameraShotInIsolate(CameraCropParams p) async {
   final cropLeftInWidget = (p.containerW - cropW) / 2.0;
   final cropTopInWidget = (p.containerH - cropH) / 2.0;
 
-  final scale = displayW / imgW; 
+  final scale = displayW / imgW;
 
-  int x = (((cropLeftInWidget - offsetX) / scale).round())
-      .clamp(0, imgW.toInt() - 1);
-  int y = (((cropTopInWidget - offsetY) / scale).round())
-      .clamp(0, imgH.toInt() - 1);
+  int x = (((cropLeftInWidget - offsetX) / scale).round()).clamp(
+    0,
+    imgW.toInt() - 1,
+  );
+  int y = (((cropTopInWidget - offsetY) / scale).round()).clamp(
+    0,
+    imgH.toInt() - 1,
+  );
   int w = ((cropW / scale).round()).clamp(1, imgW.toInt() - x);
   int h = ((cropH / scale).round()).clamp(1, imgH.toInt() - y);
 
   final cropped = img.copyCrop(original, x: x, y: y, width: w, height: h);
   final out = img.encodeJpg(cropped, quality: p.jpegQuality);
   return Uint8List.fromList(out);
+}
+
+class GalleryProcessParams {
+  final Uint8List imageBytes;
+
+  const GalleryProcessParams({
+    required this.imageBytes,
+  });
+}
+
+Future<Uint8List> processGalleryImageInIsolate(GalleryProcessParams p) async {
+  try {
+    final decoded = img.decodeImage(p.imageBytes);
+    if (decoded == null) {
+      return p.imageBytes;
+    }
+
+    img.Image image = img.bakeOrientation(decoded);
+
+    image = img.copyResize(image);
+
+    final out = img.encodeJpg(image);
+    return Uint8List.fromList(out);
+  } catch (_) {
+    return p.imageBytes;
+  }
 }

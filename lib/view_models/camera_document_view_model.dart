@@ -177,17 +177,26 @@ class CameraDocumentViewModel extends ChangeNotifier {
     final picker = ImagePicker();
     showLoader?.call();
     notifyListeners();
+
     final XFile? picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked == null) {
       hideLoader?.call();
       notifyListeners();
       return;
     }
+
     final Uint8List raw = await picked.readAsBytes();
+
+    final Uint8List processed = await compute<GalleryProcessParams, Uint8List>(
+      processGalleryImageInIsolate,
+      GalleryProcessParams(
+        imageBytes: raw
+      ),
+    );
 
     final result = await _setUseCase.call(
       documentType: documentType.value,
-      imageBytes: raw,
+      imageBytes: processed,
       fileName: 'document.jpg',
     );
 
