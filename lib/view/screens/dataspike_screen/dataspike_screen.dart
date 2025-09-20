@@ -74,6 +74,7 @@ class _DataspikeScreenState extends State<DataspikeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
