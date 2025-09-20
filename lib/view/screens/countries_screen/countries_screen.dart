@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:dataspikemobilesdk/domain/models/country_domain_model.dart';
 import '/dependencies_provider/dataspike_injector.dart';
+import 'dart:async';
 
 class CountryPickerScreen extends StatefulWidget {
   final String title;
@@ -24,33 +25,45 @@ class CountryPickerScreen extends StatefulWidget {
 class _CountryPickerScreenState extends State<CountryPickerScreen> {
   final _searchCtrl = TextEditingController();
   late List<CountryDomainModel> _all;
+  List<CountryDomainModel> _filtered = [];
   String _query = '';
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     _all = DataspikeInjector.component.verificationManager.checks.countries;
+    _all.sort((a, b) => (a.name).compareTo(b.name));
+    _filtered = List.of(_all);
+
     _searchCtrl.addListener(() {
-      setState(() {
-        _query = _searchCtrl.text.trim().toLowerCase();
+      final text = _searchCtrl.text.trim().toLowerCase();
+      _debounce?.cancel();
+      _debounce = Timer(const Duration(milliseconds: 150), () {
+        if (!mounted) return;
+        setState(() {
+          _query = text;
+          if (_query.isEmpty) {
+            _filtered = _all;
+          } else {
+            _filtered = _all
+                .where((c) => (c.name).toLowerCase().contains(_query))
+                .toList();
+          }
+        });
       });
     });
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _all.where((c) {
-      if (_query.isEmpty) return true;
-      final name = (c.name).toLowerCase();
-      return name.contains(_query);
-    }).toList()..sort((a, b) => (a.name).compareTo(b.name));
-
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
@@ -134,12 +147,13 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
                   : ListView.separated(
                       padding: const EdgeInsets.only(bottom: 24),
                       itemBuilder: (_, i) {
-                        final c = filtered[i];
+                        final c = _filtered[i];
                         final alpha = (c.alphaTwo).toLowerCase();
                         final selected =
                             widget.initialAlphaTwo?.toLowerCase() == alpha;
                         final name = (c.name).trim();
                         return InkWell(
+                          key: ValueKey(alpha), // стабильные элементы
                           onTap: name.isEmpty
                               ? null
                               : () {
@@ -179,7 +193,7 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
                       },
                       separatorBuilder: (_, __) =>
                           const Divider(height: 1, indent: 24, endIndent: 24),
-                      itemCount: filtered.length,
+                      itemCount: _filtered.length,
                     ),
             ),
           ],
@@ -205,6 +219,10 @@ class _FlagNetwork extends StatelessWidget {
         url,
         width: 24,
         height: 18,
+        cacheWidth: 24,   // дешевле декодировать
+        cacheHeight: 18,
+        gaplessPlayback: true,
+        filterQuality: FilterQuality.none,
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) => const SizedBox(width: 26, height: 18),
       ),
