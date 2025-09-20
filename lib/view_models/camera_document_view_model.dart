@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import '/dependencies_provider/dataspike_injector.dart';
 import 'package:dataspikemobilesdk/data/use_cases/uploading_image_use_case.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/side_toggle_pill.dart';
 import 'package:dataspikemobilesdk/domain/models/document_type.dart';
+import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
 
 class CameraDocumentViewModel extends ChangeNotifier {
   Duration? timerDuration;
@@ -122,83 +122,54 @@ class CameraDocumentViewModel extends ChangeNotifier {
     notifyListeners();
     await Permission.photos.request();
 
-    final file = await ctrl!.takePicture();
-    final bytes = await file.readAsBytes();
+    try {
+      final file = await ctrl!.takePicture();
+      final bytes = await file.readAsBytes();
 
-    img.Image? original = img.decodeImage(bytes);
-    if (original == null) {
+      final rb = previewKey.currentContext!.findRenderObject() as RenderBox;
+      final containerW = rb.size.width;
+      final containerH = rb.size.height;
+
+      final ps = ctrl!.value.previewSize!;
+      final previewW = ps.width;
+      final previewH = ps.height;
+
+      final processed = await compute<CameraCropParams, Uint8List>(
+        processCameraShotInIsolate,
+        CameraCropParams(
+          imageBytes: bytes,
+          containerW: containerW,
+          containerH: containerH,
+          previewW: previewW,
+          previewH: previewH,
+          screenW: screenSize.width,
+          screenH: screenSize.height,
+        ),
+      );
+
+      final result = await _setUseCase.call(
+        documentType: documentType.value,
+        imageBytes: processed,
+        fileName: 'document.jpg',
+      );
+
       hideLoader?.call();
       notifyListeners();
-      return;
-    }
 
-    original = img.bakeOrientation(original);
-
-    final imgW = original.width.toDouble();
-    final imgH = original.height.toDouble();
-
-    final rb = previewKey.currentContext!.findRenderObject() as RenderBox;
-    final containerW = rb.size.width;
-    final containerH = rb.size.height;
-
-    final ps = ctrl!.value.previewSize!;
-    final previewAR = ps.height / ps.width;
-    final containerAR = containerW / containerH;
-    final coverScale = previewAR / containerAR;
-
-    double childW, childH;
-    if (containerAR > previewAR) {
-      childH = containerH;
-      childW = childH * previewAR;
-    } else {
-      childW = containerW;
-      childH = childW / previewAR;
-    }
-
-    final displayW = childW * coverScale;
-    final displayH = childH * coverScale;
-
-    final offsetX = (containerW - displayW) / 2.0;
-    final offsetY = (containerH - displayH) / 2.0;
-
-    final cropW = screenSize.width * 0.85;
-    final cropH = screenSize.height * 0.3;
-    final cropLeftInWidget = (containerW - cropW) / 2.0;
-    final cropTopInWidget = (containerH - cropH) / 2.0;
-
-    final scale = displayW / imgW;
-
-    int x = (((cropLeftInWidget - offsetX) / scale).round()).clamp(
-      0,
-      imgW.toInt() - 1,
-    );
-    int y = (((cropTopInWidget - offsetY) / scale).round()).clamp(
-      0,
-      imgH.toInt() - 1,
-    );
-    int w = ((cropW / scale).round()).clamp(1, imgW.toInt() - x);
-    int h = ((cropH / scale).round()).clamp(1, imgH.toInt() - y);
-
-    final cropped = img.copyCrop(original, x: x, y: y, width: w, height: h);
-    final out = img.encodeJpg(cropped);
-
-    final result = await _setUseCase.call(
-      documentType: documentType.value,
-      imageBytes: out,
-      fileName: 'document.jpg',
-    );
-    hideLoader?.call();
-    notifyListeners();
-
-    if (result is UploadImageSuccess) {
-      if (result.detectedTwoSideDocument && side == DocumentSide.front) {
-        side = DocumentSide.back;
-        notifyListeners();
-      } else {
-        onProceed?.call();
+      if (result is UploadImageSuccess) {
+        if (result.detectedTwoSideDocument && side == DocumentSide.front) {
+          side = DocumentSide.back;
+          notifyListeners();
+        } else {
+          onProceed?.call();
+        }
+      } else if (result is UploadImageError) {
+        showError?.call(result.title, result.message);
       }
-    } else if (result is UploadImageError) {
-      showError?.call(result.title, result.message);
+    } catch (e) {
+      hideLoader?.call();
+      notifyListeners();
+      showError?.call('Processing error', 'Failed to process the image.');
     }
   }
 
