@@ -84,7 +84,7 @@ class CameraAvatarViewModel extends ChangeNotifier {
   Rect _computeCropRect(Size size) {
     final w = size.width;
     final h = size.height;
-    
+
     final margin = strokeWidth / 2 + 0.5;
 
     final leftX = (w * sideInsetPct).clamp(margin, w - margin);
@@ -171,10 +171,10 @@ class CameraAvatarViewModel extends ChangeNotifier {
     hideLoader?.call();
     notifyListeners();
 
-    if (result is UploadImageError) {
-      showError?.call(result.title, result.message);
-    } else {
+    if (result is UploadImageSuccess) {
       onProceed?.call();
+    } else if (result is UploadImageError) {
+      showError?.call(result.title, result.message);
     }
   }
 }

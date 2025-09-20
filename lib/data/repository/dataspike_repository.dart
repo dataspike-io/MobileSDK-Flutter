@@ -13,6 +13,7 @@ import 'package:dataspikemobilesdk/domain/mappers/proceed_with_verification_resp
 import 'package:dataspikemobilesdk/data/models/request/country_request_body.dart';
 import 'package:dataspikemobilesdk/data/models/request/profile_fields_request_body.dart';
 import 'package:dataspikemobilesdk/domain/mappers/message_response_mapper.dart';
+import 'package:dataspikemobilesdk/data/models/response/upload_image_error_response.dart';
 
 abstract class IDataspikeRepository {
   Future<VerificationState> getVerification({required bool darkModeIsEnabled});
@@ -75,6 +76,8 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
     try {
       final response = await apiService.uploadImage(shortId, documentType, imageBytes, fileName);
       return uploadImageResponseMapper.map(response: response, error: null);
+    } on UploadImageErrorResponse catch (e) {
+      return uploadImageResponseMapper.map(response: null, error: e);
     } catch (e) {
       return uploadImageResponseMapper.map(response: null, error: e is Exception ? e : Exception(e.toString()));
     }

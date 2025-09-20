@@ -6,6 +6,7 @@ import 'package:dataspikemobilesdk/view/screens/camera/camera_document_screen.da
 import 'package:dataspikemobilesdk/view/screens/personal_data_screen/personal_data_screen.dart';
 import '/dependencies_provider/dataspike_injector.dart';
 import 'package:dataspikemobilesdk/domain/models/document_type.dart'; 
+import 'package:dataspikemobilesdk/view/screens/verification_completed_screen/verification_completed_screen.dart';
 
 enum DataspikeStep {
   onboarding,
@@ -13,6 +14,7 @@ enum DataspikeStep {
   documentCamera,
   selfieCamera,
   address,
+  verificationCompleted,
 }
 
 class DataspikeCoordinator {
@@ -59,6 +61,11 @@ class DataspikeCoordinator {
           MaterialPageRoute(builder: (_) => const LiveCropCamera(docType: DocumentType.address)),
         );
         break;
+      case DataspikeStep.verificationCompleted:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const VerificationCompletedScreen()),
+        );
+        break;
     }
   }
 
@@ -80,7 +87,12 @@ class DataspikeCoordinator {
 
   static void proceedNext(BuildContext context, {DataspikeStep? after}) {
     final steps = _requiredSteps();
-    if (steps.isEmpty) return;
+    if (steps.isEmpty) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const VerificationCompletedScreen()),
+      );
+      return;
+    }
 
     DataspikeStep? next;
     if (after == null) {
@@ -94,7 +106,11 @@ class DataspikeCoordinator {
 
     if (next != null) {
       showNextStep(context, next);
-    } else {  }
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const VerificationCompletedScreen()),
+      );
+    }
   }
 
   static void showOnboarding(BuildContext context) =>
@@ -105,4 +121,6 @@ class DataspikeCoordinator {
       showNextStep(context, DataspikeStep.documentCamera);
   static void showPersonalData(BuildContext context) =>
       showNextStep(context, DataspikeStep.personalData);
+  static void showVerificationCompleted(BuildContext context) =>
+      showNextStep(context, DataspikeStep.verificationCompleted);
 }

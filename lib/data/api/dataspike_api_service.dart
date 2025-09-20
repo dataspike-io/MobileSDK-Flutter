@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dataspikemobilesdk/data/models/response/proceed_with_verification_error_response.dart';
 import 'package:http/http.dart' as http;
 import 'package:dataspikemobilesdk/data/models/response/verification_response.dart';
 import 'package:dataspikemobilesdk/data/models/response/upload_image_response.dart';
@@ -25,7 +26,9 @@ abstract class IDataspikeApiService {
     CountryRequestBody body,
   );
   Future<List<CountryResponse>> getCountries();
-  Future<ProceedWithVerificationResponse> proceedWithVerification(String shortId);
+  Future<ProceedWithVerificationResponse> proceedWithVerification(
+    String shortId,
+  );
   Future<DataspikeProfileFieldsResponse> setProfileFields(
     String shortId,
     ProfileFieldsRequestBody body,
@@ -36,14 +39,13 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
   final String baseUrl;
   final String apiToken;
 
-  DataspikeApiServiceImpl({
-    required this.baseUrl,
-    required this.apiToken,
-  });
+  DataspikeApiServiceImpl({required this.baseUrl, required this.apiToken});
 
   @override
   Future<VerificationResponse> getVerification(String shortId) async {
-    final url = Uri.parse('$baseUrl${DataspikeEndpoint.getVerification.path(shortId: shortId)}');
+    final url = Uri.parse(
+      '$baseUrl${DataspikeEndpoint.getVerification.path(shortId: shortId)}',
+    );
     final headers = DataspikeEndpoint.getVerification.headers(apiToken);
 
     final response = await http.get(url, headers: headers);
@@ -63,7 +65,9 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     List<int> fileBytes,
     String fileName,
   ) async {
-    final url = Uri.parse('$baseUrl${DataspikeEndpoint.uploadImage.path(shortId: shortId)}');
+    final url = Uri.parse(
+      '$baseUrl${DataspikeEndpoint.uploadImage.path(shortId: shortId)}',
+    );
     final headers = DataspikeEndpoint.uploadImage.headers(apiToken);
 
     var request = http.MultipartRequest('POST', url)
@@ -91,7 +95,9 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
       try {
         final errorJson = json.decode(response.body) as Map<String, dynamic>;
         final errorResponse = UploadImageErrorResponse.fromJson(errorJson);
-        throw errorResponse; 
+        throw errorResponse;
+      } on UploadImageErrorResponse {
+        rethrow;
       } catch (_) {
         throw Exception('Failed to upload image: ${response.statusCode}');
       }
@@ -103,7 +109,9 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     String shortId,
     CountryRequestBody body,
   ) async {
-    final url = Uri.parse('$baseUrl${DataspikeEndpoint.setCountry.path(shortId: shortId)}');
+    final url = Uri.parse(
+      '$baseUrl${DataspikeEndpoint.setCountry.path(shortId: shortId)}',
+    );
     final headers = DataspikeEndpoint.setCountry.headers(apiToken);
 
     final response = await http.post(
@@ -138,8 +146,12 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
   }
 
   @override
-  Future<ProceedWithVerificationResponse> proceedWithVerification(String shortId) async {
-    final url = Uri.parse('$baseUrl${DataspikeEndpoint.proceedWithVerification.path(shortId: shortId)}');
+  Future<ProceedWithVerificationResponse> proceedWithVerification(
+    String shortId,
+  ) async {
+    final url = Uri.parse(
+      '$baseUrl${DataspikeEndpoint.proceedWithVerification.path(shortId: shortId)}',
+    );
     final headers = DataspikeEndpoint.proceedWithVerification.headers(apiToken);
 
     final response = await http.post(url, headers: headers);
@@ -148,7 +160,17 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
       final jsonBody = json.decode(response.body) as Map<String, dynamic>;
       return ProceedWithVerificationResponse.fromJson(jsonBody);
     } else {
-      throw Exception('Failed to proceed with verification: ${response.statusCode}');
+      try {
+        final errorJson = json.decode(response.body) as Map<String, dynamic>;
+        final errorResponse = ProceedWithVerificationErrorResponse.fromJson(errorJson);
+        throw errorResponse;
+      } on ProceedWithVerificationErrorResponse {
+        rethrow;
+      } catch (_) {
+        throw Exception(
+          'Failed to proceed with verification: ${response.statusCode}',
+        );
+      }
     }
   }
 
@@ -157,10 +179,12 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     String shortId,
     ProfileFieldsRequestBody body,
   ) async {
-    final url = Uri.parse('$baseUrl${DataspikeEndpoint.setProfileFields.path(shortId: shortId)}');
+    final url = Uri.parse(
+      '$baseUrl${DataspikeEndpoint.setProfileFields.path(shortId: shortId)}',
+    );
     final headers = DataspikeEndpoint.setProfileFields.headers(apiToken);
 
-     final response = await http.post(
+    final response = await http.post(
       url,
       headers: headers,
       body: json.encode(body.toJson()),

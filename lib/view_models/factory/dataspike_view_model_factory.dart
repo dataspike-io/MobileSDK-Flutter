@@ -1,11 +1,13 @@
 import 'package:dataspikemobilesdk/dependencies_provider/dataspike_injector.dart';
 import 'package:dataspikemobilesdk/data/use_cases/verification_use_case.dart';
+import 'package:dataspikemobilesdk/data/use_cases/proceed_with_verification_use_case.dart';
 import '../dataspike_activity_view_model.dart';
 import '../templates/base_view_model.dart';
 import '../onboarding_view_model.dart';
 import '../personal_data_view_model.dart';
 import '../camera_document_view_model.dart';
 import '../camera_avatar_view_model.dart';
+import '../verification_completed_view_model.dart';
 import 'package:dataspikemobilesdk/data/use_cases/set_profile_use_case.dart';
 import 'package:dataspikemobilesdk/data/use_cases/uploading_image_use_case.dart';
 import 'package:dataspikemobilesdk/domain/models/document_type.dart'; 
@@ -40,6 +42,12 @@ class DataspikeViewModelFactory {
         return CameraAvatarViewModel(
           setUseCase: UploadImageUseCase(
             dataspikeRepository: DataspikeInjector.component.dataspikeRepository
+          ),
+        ) as T;
+      case VerificationCompletedViewModel:
+        return VerificationCompletedViewModel(
+          getProceedWithVerificationUseCase: ProceedWithVerificationUseCase(
+            dataspikeRepository: DataspikeInjector.component.dataspikeRepository,
           ),
         ) as T;
       default:

@@ -190,15 +190,15 @@ class CameraDocumentViewModel extends ChangeNotifier {
     hideLoader?.call();
     notifyListeners();
 
-    if (result is UploadImageError) {
-      showError?.call(result.title, result.message);
-    } else if (result is UploadImageSuccess) {
+    if (result is UploadImageSuccess) {
       if (result.detectedTwoSideDocument && side == DocumentSide.front) {
         side = DocumentSide.back;
         notifyListeners();
       } else {
         onProceed?.call();
       }
+    } else if (result is UploadImageError) {
+      showError?.call(result.title, result.message);
     }
   }
 
@@ -223,15 +223,15 @@ class CameraDocumentViewModel extends ChangeNotifier {
     hideLoader?.call();
     notifyListeners();
 
-    if (result is UploadImageError) {
-      showError?.call(result.title, result.message);
-    } else if (result is UploadImageSuccess) {
+    if (result is UploadImageSuccess) {
       if (result.detectedTwoSideDocument && side == DocumentSide.front) {
         side = DocumentSide.back;
         notifyListeners();
       } else {
         onProceed?.call();
       }
+    } else if (result is UploadImageError) {
+      showError?.call(result.title, result.message);
     }
   }
 }

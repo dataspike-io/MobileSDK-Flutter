@@ -4,9 +4,9 @@ extension DocumentTypeX on DocumentType {
   String get value {
     switch (this) {
       case DocumentType.identity:
-        return 'poa';
+        return 'poi';
       case DocumentType.address:
-        return 'residence_permit';
+        return 'poa';
     }
   }
 }

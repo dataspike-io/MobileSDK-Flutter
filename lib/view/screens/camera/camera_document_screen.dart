@@ -57,7 +57,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
       case DocumentType.identity:
         DataspikeCoordinator.proceedNext(
           context,
-          after: DataspikeStep.selfieCamera,
+          after: DataspikeStep.documentCamera,
         );
       case DocumentType.address:
         DataspikeCoordinator.proceedNext(
