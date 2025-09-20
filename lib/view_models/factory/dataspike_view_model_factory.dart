@@ -8,6 +8,7 @@ import '../camera_document_view_model.dart';
 import '../camera_avatar_view_model.dart';
 import 'package:dataspikemobilesdk/data/use_cases/set_profile_use_case.dart';
 import 'package:dataspikemobilesdk/data/use_cases/uploading_image_use_case.dart';
+import 'package:dataspikemobilesdk/domain/models/document_type.dart'; 
 
 class DataspikeViewModelFactory {
   T create<T extends Object>() {
@@ -35,13 +36,6 @@ class DataspikeViewModelFactory {
           ),
         ) as T;
 
-      case CameraDocumentViewModel:
-        return CameraDocumentViewModel(
-          setUseCase: UploadImageUseCase(
-            dataspikeRepository: DataspikeInjector.component.dataspikeRepository
-          ),
-        ) as T;
-
       case CameraAvatarViewModel:
         return CameraAvatarViewModel(
           setUseCase: UploadImageUseCase(
@@ -51,5 +45,16 @@ class DataspikeViewModelFactory {
       default:
         throw Exception("Unknown ViewModel Type");
     }
+  }
+
+  CameraDocumentViewModel createCameraDocumentViewModel({
+    required DocumentType docType
+  }) {
+    return CameraDocumentViewModel(
+      setUseCase: UploadImageUseCase(
+        dataspikeRepository: DataspikeInjector.component.dataspikeRepository,
+      ),
+      docType: docType,
+    );
   }
 }

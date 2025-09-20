@@ -5,6 +5,7 @@ import 'package:dataspikemobilesdk/view/screens/camera/camera_avatar_screen.dart
 import 'package:dataspikemobilesdk/view/screens/camera/camera_document_screen.dart';
 import 'package:dataspikemobilesdk/view/screens/personal_data_screen/personal_data_screen.dart';
 import '/dependencies_provider/dataspike_injector.dart';
+import 'package:dataspikemobilesdk/domain/models/document_type.dart'; 
 
 enum DataspikeStep {
   onboarding,
@@ -45,7 +46,7 @@ class DataspikeCoordinator {
         break;
       case DataspikeStep.documentCamera:
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const LiveCropCamera()),
+          MaterialPageRoute(builder: (_) => const LiveCropCamera(docType: DocumentType.identity)),
         );
         break;
       case DataspikeStep.selfieCamera:
@@ -55,7 +56,7 @@ class DataspikeCoordinator {
         break;
       case DataspikeStep.address:
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const LiveCropCamera()),
+          MaterialPageRoute(builder: (_) => const LiveCropCamera(docType: DocumentType.address)),
         );
         break;
     }

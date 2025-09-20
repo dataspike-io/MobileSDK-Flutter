@@ -13,9 +13,15 @@ import '/main/coordinator/coordinator.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/instruction_pill.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/side_toggle_pill.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/error_bottom_sheet.dart';
+import 'package:dataspikemobilesdk/domain/models/document_type.dart'; 
 
 class LiveCropCamera extends StatefulWidget {
-  const LiveCropCamera({super.key});
+  const LiveCropCamera({
+    super.key,
+    required this.docType,
+  });
+
+  final DocumentType docType;
 
   @override
   State<LiveCropCamera> createState() => _LiveCropCameraState();
@@ -26,7 +32,10 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
 
   @override
   void initState() {
-    viewModel = DataspikeViewModelFactory().create<CameraDocumentViewModel>();
+    viewModel = DataspikeViewModelFactory().createCameraDocumentViewModel(
+      docType: widget.docType,
+    );
+
     viewModel.attachCallbacks(
       onProceed: () => proceedNext(),
       showLoader: showLoader,
@@ -44,10 +53,18 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
 
   void proceedNext() {
     if (!mounted) return;
-    DataspikeCoordinator.proceedNext(
-      context,
-      after: DataspikeStep.documentCamera,
-    );
+    switch (widget.docType) {
+      case DocumentType.identity:
+        DataspikeCoordinator.proceedNext(
+          context,
+          after: DataspikeStep.selfieCamera,
+        );
+      case DocumentType.address:
+        DataspikeCoordinator.proceedNext(
+          context,
+          after: DataspikeStep.address,
+        );
+    }
   }
 
   void shootAndCrop(GlobalKey previewKey) async {
@@ -232,9 +249,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                                     right: 0,
                                     child: Center(
                                       child: Text(
-                                        viewModel.side == DocumentSide.front
-                                            ? 'Please make a photo of front side of ID'
-                                            : '', //'Please make a photo of back side of ID',
+                                        viewModel.hint,
                                         style: const TextStyle(
                                           color: AppColors.white,
                                           fontSize: 14,

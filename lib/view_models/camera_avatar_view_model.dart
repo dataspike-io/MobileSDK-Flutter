@@ -174,8 +174,7 @@ class CameraAvatarViewModel extends ChangeNotifier {
     if (result is UploadImageError) {
       showError?.call(result.title, result.message);
     } else {
-      showError?.call('SUCCESS', '');
-      // onProceed?.call();
+      onProceed?.call();
     }
   }
 }

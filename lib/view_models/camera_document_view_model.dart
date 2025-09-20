@@ -9,6 +9,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/side_toggle_pill.dart';
+import 'package:dataspikemobilesdk/domain/models/document_type.dart';
 
 class CameraDocumentViewModel extends ChangeNotifier {
   Duration? timerDuration;
@@ -16,6 +17,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
   DocumentSide side = DocumentSide.front;
 
   final UploadImageUseCase _setUseCase;
+  final DocumentType documentType;
 
   CameraController? ctrl;
   late Future<void> init;
@@ -27,7 +29,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
   VoidCallback? showLoader;
   VoidCallback? hideLoader;
   void Function(String title, String message)? showError;
-  
+
   void attachCallbacks({
     VoidCallback? onProceed,
     VoidCallback? showLoader,
@@ -40,8 +42,11 @@ class CameraDocumentViewModel extends ChangeNotifier {
     this.showError = showError;
   }
 
-  CameraDocumentViewModel({required UploadImageUseCase setUseCase})
-    : _setUseCase = setUseCase {
+  CameraDocumentViewModel({
+    required UploadImageUseCase setUseCase,
+    required DocumentType docType,
+  }) : _setUseCase = setUseCase,
+       documentType = docType {
     init = _setup();
     setVerificationTimer();
   }
@@ -60,6 +65,17 @@ class CameraDocumentViewModel extends ChangeNotifier {
   void dispose() {
     ctrl?.dispose();
     super.dispose();
+  }
+
+  String get hint {
+    switch (documentType) {
+      case DocumentType.identity:
+        return side == DocumentSide.front
+          ? 'Please make a photo of front side of ID'
+          : ''; //'Please make a photo of back side of ID',
+      case DocumentType.address:
+        return 'Please make a photo of residence proof';
+    }
   }
 
   Future<void> _setup() async {
@@ -167,7 +183,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
     final out = img.encodeJpg(cropped);
 
     final result = await _setUseCase.call(
-      documentType: 'poi',
+      documentType: documentType.value,
       imageBytes: out,
       fileName: 'document.jpg',
     );
@@ -177,10 +193,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
     if (result is UploadImageError) {
       showError?.call(result.title, result.message);
     } else if (result is UploadImageSuccess) {
-      if (
-        result.detectedTwoSideDocument &&
-        side == DocumentSide.front
-      ) {
+      if (result.detectedTwoSideDocument && side == DocumentSide.front) {
         side = DocumentSide.back;
         notifyListeners();
       } else {
@@ -202,7 +215,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
     final Uint8List raw = await picked.readAsBytes();
 
     final result = await _setUseCase.call(
-      documentType: 'poi',
+      documentType: documentType.value,
       imageBytes: raw,
       fileName: 'document.jpg',
     );
@@ -213,10 +226,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
     if (result is UploadImageError) {
       showError?.call(result.title, result.message);
     } else if (result is UploadImageSuccess) {
-      if (
-        result.detectedTwoSideDocument &&
-        side == DocumentSide.front
-      ) {
+      if (result.detectedTwoSideDocument && side == DocumentSide.front) {
         side = DocumentSide.back;
         notifyListeners();
       } else {
