@@ -14,6 +14,7 @@ import 'package:dataspikemobilesdk/data/models/request/country_request_body.dart
 import 'package:dataspikemobilesdk/data/models/request/profile_fields_request_body.dart';
 import 'package:dataspikemobilesdk/domain/mappers/message_response_mapper.dart';
 import 'package:dataspikemobilesdk/data/models/response/upload_image_error_response.dart';
+import 'package:dataspikemobilesdk/data/models/response/proceed_with_verification_error_response.dart';
 
 abstract class IDataspikeRepository {
   Future<VerificationState> getVerification({required bool darkModeIsEnabled});
@@ -35,7 +36,8 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
   final UploadImageResponseMapper uploadImageResponseMapper;
   final CountriesResponseMapper countriesResponseMapper;
   final EmptyResponseMapper emptyResponseMapper;
-  final ProceedWithVerificationResponseMapper proceedWithVerificationResponseMapper;
+  final ProceedWithVerificationResponseMapper
+  proceedWithVerificationResponseMapper;
   final MessageResponseMapper messageResponseMapper;
 
   DataspikeRepositoryImpl({
@@ -50,7 +52,9 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
   });
 
   @override
-  Future<VerificationState> getVerification({required bool darkModeIsEnabled}) async {
+  Future<VerificationState> getVerification({
+    required bool darkModeIsEnabled,
+  }) async {
     try {
       final response = await apiService.getVerification(shortId);
       return verificationResponseMapper.map(
@@ -74,12 +78,20 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
     required String fileName,
   }) async {
     try {
-      final response = await apiService.uploadImage(shortId, documentType, imageBytes, fileName);
+      final response = await apiService.uploadImage(
+        shortId,
+        documentType,
+        imageBytes,
+        fileName,
+      );
       return uploadImageResponseMapper.map(response: response, error: null);
     } on UploadImageErrorResponse catch (e) {
       return uploadImageResponseMapper.map(response: null, error: e);
     } catch (e) {
-      return uploadImageResponseMapper.map(response: null, error: e is Exception ? e : Exception(e.toString()));
+      return uploadImageResponseMapper.map(
+        response: null,
+        error: e is Exception ? e : Exception(e.toString()),
+      );
     }
   }
 
@@ -89,7 +101,10 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
       final response = await apiService.getCountries();
       return countriesResponseMapper.map(response: response, error: null);
     } catch (e) {
-      return countriesResponseMapper.map(response: null, error: e is Exception ? e : Exception(e.toString()));
+      return countriesResponseMapper.map(
+        response: null,
+        error: e is Exception ? e : Exception(e.toString()),
+      );
     }
   }
 
@@ -99,7 +114,10 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
       final response = await apiService.setCountry(shortId, body);
       return emptyResponseMapper.map(response: response, error: null);
     } catch (e) {
-      return emptyResponseMapper.map(response: null, error: e is Exception ? e : Exception(e.toString()));
+      return emptyResponseMapper.map(
+        response: null,
+        error: e is Exception ? e : Exception(e.toString()),
+      );
     }
   }
 
@@ -107,9 +125,17 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
   Future<ProceedWithVerificationState> proceedWithVerification() async {
     try {
       final response = await apiService.proceedWithVerification(shortId);
-      return proceedWithVerificationResponseMapper.map(response: response, error: null);
+      return proceedWithVerificationResponseMapper.map(
+        response: response,
+        error: null,
+      );
+    } on ProceedWithVerificationErrorResponse catch (e) {
+      return proceedWithVerificationResponseMapper.map(response: null, error: e);
     } catch (e) {
-      return proceedWithVerificationResponseMapper.map(response: null, error: e is Exception ? e : Exception(e.toString()));
+      return proceedWithVerificationResponseMapper.map(
+        response: null,
+        error: e is Exception ? e : Exception(e.toString()),
+      );
     }
   }
 
@@ -119,7 +145,10 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
       final response = await apiService.setProfileFields(shortId, body);
       return messageResponseMapper.map(response: response, error: null);
     } catch (e) {
-      return messageResponseMapper.map(response: null, error: e is Exception ? e : Exception(e.toString()));
+      return messageResponseMapper.map(
+        response: null,
+        error: e is Exception ? e : Exception(e.toString()),
+      );
     }
   }
 }
