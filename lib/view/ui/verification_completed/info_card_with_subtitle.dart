@@ -6,15 +6,15 @@ import 'package:flutter_svg/flutter_svg.dart';
 class InfoCardWithSubtitle extends StatelessWidget {
   final String title;
   final String subtitle;
-  final String copyValue;
-  final String linkText;
+  final String? copyValue;
+  final String? linkText;
 
   const InfoCardWithSubtitle({
     super.key,
     required this.title,
     required this.subtitle,
-    required this.copyValue,
-    required this.linkText,
+    this.copyValue,
+    this.linkText,
   });
 
   @override
@@ -42,6 +42,7 @@ class InfoCardWithSubtitle extends StatelessWidget {
                 child: Text(
                   title,
                   maxLines: 2,
+                  // strutStyle: const StrutStyle(height: 1.7),
                   style: const TextStyle(
                     fontSize: 14,
                     color: AppColors.black,
@@ -70,40 +71,43 @@ class InfoCardWithSubtitle extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () async {
-              await Clipboard.setData(ClipboardData(text: copyValue));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Link copied to clipboard'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SvgPicture.asset(
-                  'packages/dataspikemobilesdk/assets/images/copy.svg',
-                  height: 16,
-                  width: 16,
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  linkText,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.royalPurple,
-                    fontFamily: 'Figtree',
-                    package: 'dataspikemobilesdk',
-                    fontWeight: FontWeight.w500,
+          if (copyValue?.isNotEmpty == true && linkText?.isNotEmpty == true) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () async {
+                await Clipboard.setData(ClipboardData(text: copyValue!));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Link copied to clipboard'),
+                    duration: Duration(seconds: 2),
                   ),
-                ),
-              ],
+                );
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SvgPicture.asset(
+                    'packages/dataspikemobilesdk/assets/images/copy.svg',
+                    height: 16,
+                    width: 16,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    linkText ?? 'Copy link',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.royalPurple,
+                      fontFamily: 'Figtree',
+                      package: 'dataspikemobilesdk',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
