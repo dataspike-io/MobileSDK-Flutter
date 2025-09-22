@@ -1,5 +1,4 @@
 import 'package:dataspikemobilesdk/domain/models/country_domain_model.dart';
-
 import '../models/verification_settings_domain_model.dart';
 import '../models/dataspike_check_domain_model.dart';
 import 'package:intl/intl.dart';
@@ -13,6 +12,7 @@ class VerificationManager {
     countries: [],
     manualFields: null,
     verificationUrl: '',
+    finishScreenSettings: null,
   );
 
   String _expiresAt = '';
@@ -35,6 +35,7 @@ class VerificationManager {
       countries: countries,
       manualFields: settings.manualFields,
       verificationUrl: verificationUrl,
+      finishScreenSettings: settings.finishScreenSettings,
     );
     _status = status;
     _expiresAt = expiresAt;

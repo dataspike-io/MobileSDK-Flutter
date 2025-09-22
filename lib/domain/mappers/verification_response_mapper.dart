@@ -36,24 +36,25 @@ class VerificationResponseMapper {
             gender: field(f?.gender),
             citizenship: field(f?.citizenship),
             address: field(f?.address),
-            customFields: f?.customFields?.map<ManualCustomFieldDomainModel>((c) {
+            customFields: f?.customFields?.map<ManualCustomFieldDomainModel>((
+              c,
+            ) {
               final o = c.options;
               return ManualCustomFieldDomainModel(
                 label: c.label ?? "",
                 caption: c.caption ?? "",
-                    order: c.order,
-                    options: o == null
-                        ? null
-                        : ManualCustomFieldOptionsDomainModel(
-                            type: ManualCustomFieldOptionType.fromRaw(o.type),
-                            choices: o.choices,
-                            attachmentTypePreset: o.attachmentTypePreset,
-                            allowedMimeTypes: o.allowedMimeTypes,
-                            maxSize: o.maxSize,
-                          ),
-                  );
-                })
-                .toList()
+                order: c.order,
+                options: o == null
+                    ? null
+                    : ManualCustomFieldOptionsDomainModel(
+                        type: ManualCustomFieldOptionType.fromRaw(o.type),
+                        choices: o.choices,
+                        attachmentTypePreset: o.attachmentTypePreset,
+                        allowedMimeTypes: o.allowedMimeTypes,
+                        maxSize: o.maxSize,
+                      ),
+              );
+            }).toList(),
           );
 
       return VerificationSuccess(
@@ -134,6 +135,11 @@ class VerificationResponseMapper {
           manualFields: settingsField(response.settings?.manualFields),
           finishScreenSettings: FinishScreenSettingsDomainModel(
             enabled: response.settings?.finishScreenSettings?.enabled ?? false,
+            title: response.finishScreenSettings?.title,
+            redirectLink: response.finishScreenSettings?.redirectLink,
+            mainText: response.finishScreenSettings?.mainText,
+            redirectWarning: response.finishScreenSettings?.redirectWarning,
+            cta: response.finishScreenSettings?.cta,
           ),
           // uiConfig: UiConfigModel.getConfig(darkModeIsEnabled),
         ),
@@ -141,6 +147,11 @@ class VerificationResponseMapper {
         manualFields: settingsField(response.manualFields),
         finishScreenSettings: FinishScreenSettingsDomainModel(
           enabled: response.finishScreenSettings?.enabled ?? false,
+          title: response.finishScreenSettings?.title,
+          redirectLink: response.finishScreenSettings?.redirectLink,
+          mainText: response.finishScreenSettings?.mainText,
+          redirectWarning: response.finishScreenSettings?.redirectWarning,
+          cta: response.finishScreenSettings?.cta,
         ),
       );
     } else if (error != null) {

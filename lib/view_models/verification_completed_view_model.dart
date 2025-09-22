@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:dataspikemobilesdk/data/use_cases/proceed_with_verification_use_case.dart';
+import 'package:dataspikemobilesdk/domain/models/finish_screen_settings_domain_model.dart';
 import 'package:dataspikemobilesdk/domain/models/states/proceed_with_verification_state.dart';
 import '/domain/models/stage_item.dart';
 import '/dependencies_provider/dataspike_injector.dart';
@@ -13,8 +14,7 @@ class VerificationCompletedViewModel {
   VerificationCompletedViewModel({
     required this.getProceedWithVerificationUseCase,
   }) {
-    buildStages();
-    buildScreen();
+    buildStagesAndFinishScreen();
   }
 
   Future<void> getVerificationCompleted() async {
@@ -26,11 +26,45 @@ class VerificationCompletedViewModel {
     _verificationController.close();
   }
 
-  String verificationUrl = '';
-
+  FinishScreenSettingsDomainModel? finishScreenSettings;
   List<StageItem> stages = const [];
 
-  void buildStages() {
+  String get title {
+    final settings = finishScreenSettings;
+    final t = settings?.title?.trim();
+    if (settings?.enabled == true && t != null && t.isNotEmpty) {
+      return t;
+    }
+    return 'Well done! Verification completed';
+  }
+
+  String get subtitle {
+    final settings = finishScreenSettings;
+    final t = settings?.mainText?.trim();
+    if (settings?.enabled == true && t != null && t.isNotEmpty) {
+      return t;
+    }
+    return 'We’re now processing your documents for J.P. Morgan.';
+  }
+
+  String? get redirectWarning {
+    return finishScreenSettings?.redirectWarning?.trim();
+  }
+
+  String? get link {
+    return finishScreenSettings?.redirectLink?.trim();
+  }
+
+  String get continueButtonText {
+    return finishScreenSettings?.cta?.trim() ?? 'Continue';
+  }
+
+  bool get isButtonAndStagesShown {
+    return (redirectWarning?.isEmpty == true) 
+    || (link?.isEmpty == true);
+  }
+
+  void buildStagesAndFinishScreen() {
     final vm = DataspikeInjector.component.verificationManager.checks;
 
     final requiresDocument = vm.poiIsRequired;
@@ -38,6 +72,7 @@ class VerificationCompletedViewModel {
     final requiresAddress = vm.poaIsRequired;
     final personalData = vm.personalDataRequired;
     final personalDataDescription = vm.manualFields?.description;
+    finishScreenSettings = vm.finishScreenSettings;
 
     final list = <StageItem>[
       if (personalData)
@@ -75,8 +110,5 @@ class VerificationCompletedViewModel {
     ];
 
     stages = list;
-  }
-
-  void buildScreen() {
   }
 }

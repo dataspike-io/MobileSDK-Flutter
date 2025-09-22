@@ -5,16 +5,16 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class InfoCardWithSubtitle extends StatelessWidget {
   final String title;
-  final String subtitle;
+  final String? subtitle;
   final String? copyValue;
-  final String? linkText;
+  final String linkText;
 
   const InfoCardWithSubtitle({
     super.key,
     required this.title,
     required this.subtitle,
     this.copyValue,
-    this.linkText,
+    required this.linkText,
   });
 
   @override
@@ -55,23 +55,23 @@ class InfoCardWithSubtitle extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 12),
-          Divider(height: 1, thickness: 1, color: AppColors.cadetBlue),
-          const SizedBox(height: 12),
+          if (copyValue?.isNotEmpty == true &&
+              subtitle?.isNotEmpty == true) ...[
+            const SizedBox(height: 12),
+            Divider(height: 1, thickness: 1, color: AppColors.cadetBlue),
+            const SizedBox(height: 12),
 
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.darkIndigo,
-              fontFamily: 'Figtree',
-              package: 'dataspikemobilesdk',
-              fontWeight: FontWeight.w500,
+            Text(
+              subtitle!,
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.darkIndigo,
+                fontFamily: 'Figtree',
+                package: 'dataspikemobilesdk',
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
 
-          if (copyValue?.isNotEmpty == true && linkText?.isNotEmpty == true) ...[
             const SizedBox(height: 12),
             GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -95,7 +95,7 @@ class InfoCardWithSubtitle extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    linkText ?? 'Copy link',
+                    linkText,
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.royalPurple,

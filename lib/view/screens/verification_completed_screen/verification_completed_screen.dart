@@ -11,7 +11,6 @@ import '../../ui/onboarding/stage_row.dart';
 import 'package:dataspikemobilesdk/main/coordinator/coordinator.dart';
 import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
 
-
 class VerificationCompletedScreen extends StatefulWidget {
   const VerificationCompletedScreen({super.key});
 
@@ -78,10 +77,14 @@ class _VerificationCompletedScreenState
                   children: [
                     TopBar(timer: null, isBackButtonHidden: true),
                     const SizedBox(height: 20),
-                    Container(height: 1, width: double.infinity, color: AppColors.snowyLilac),
+                    Container(
+                      height: 1,
+                      width: double.infinity,
+                      color: AppColors.snowyLilac,
+                    ),
                     const SizedBox(height: 16),
                     Text(
-                      'Title',
+                      viewModel.title,
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w600,
@@ -92,34 +95,42 @@ class _VerificationCompletedScreenState
                     ),
                     const SizedBox(height: 12),
                     InfoCardWithSubtitle(
-                      title: 'We’re now processing your documents for J.P. Morgan.',
-                      subtitle: 'You can track your verification status on this page, and we’ll also notify you by email when the status changes.',
-                      copyValue: 'https://example.com',
+                      title: viewModel.subtitle,
+                      subtitle: viewModel.redirectWarning,
+                      copyValue: viewModel.link,
                       linkText: 'Save link on status page',
                     ),
                   ],
                 ),
               ),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-              sliver: SliverToBoxAdapter(
-                child: StagesCard(
-                  stages: viewModel.stages
-                      .map((s) => Stage(title: s.title, subtitle: s.subtitle, isCompleted: s.completed))
-                      .toList(),
+            if (viewModel.isButtonAndStagesShown)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                sliver: SliverToBoxAdapter(
+                  child: StagesCard(
+                    stages: viewModel.stages
+                        .map(
+                          (s) => Stage(
+                            title: s.title,
+                            subtitle: s.subtitle,
+                            isCompleted: s.completed,
+                          ),
+                        )
+                        .toList(),
+                  ),
                 ),
               ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-              sliver: SliverToBoxAdapter(
-                child: ContinueButton(
-                  onPressed: _onFinish,
-                  text: "CTA",
+            if (viewModel.isButtonAndStagesShown)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                sliver: SliverToBoxAdapter(
+                  child: ContinueButton(
+                    onPressed: _onFinish,
+                    text: viewModel.continueButtonText,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:dataspikemobilesdk/domain/models/country_domain_model.dart';
 import 'manual_field_settings_domain_model.dart';
+import 'finish_screen_settings_domain_model.dart';
 
 class DataspikeCheckDomainModel {
   final bool poiIsRequired;
@@ -9,6 +10,7 @@ class DataspikeCheckDomainModel {
   final List<CountryDomainModel> countries;
   final ManualFieldsSettingsDomainModel? manualFields;
   final String verificationUrl;
+  final FinishScreenSettingsDomainModel? finishScreenSettings;
 
   const DataspikeCheckDomainModel({
     required this.poiIsRequired,
@@ -18,5 +20,6 @@ class DataspikeCheckDomainModel {
     required this.countries,
     required this.manualFields,
     required this.verificationUrl,
+    this.finishScreenSettings,
   });
 }
