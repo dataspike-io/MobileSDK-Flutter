@@ -11,6 +11,9 @@ class AppColors {
   // GREY
   static const Color darkIndigo = Color(0xFF737390);
   static const Color slateGray = Color(0xB3F0F0FD);
+  
+  // BLUE
+  static const Color cadetBlue = Color(0xFFCACFF7);
 
   // PURPLE
   static const Color royalPurple = Color(0xFF6664E8);

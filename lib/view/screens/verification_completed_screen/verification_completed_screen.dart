@@ -78,11 +78,7 @@ class _VerificationCompletedScreenState
                   children: [
                     TopBar(timer: null, isBackButtonHidden: true),
                     const SizedBox(height: 20),
-                    Container(
-                      height: 1,
-                      width: double.infinity,
-                      color: AppColors.snowyLilac,
-                    ),
+                    Container(height: 1, width: double.infinity, color: AppColors.snowyLilac),
                     const SizedBox(height: 16),
                     Text(
                       'Title',
@@ -107,29 +103,23 @@ class _VerificationCompletedScreenState
             ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-              sliver: SliverFillRemaining(
-                hasScrollBody: false,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: StagesCard(
-                        stages: viewModel.stages
-                            .map(
-                              (s) =>
-                                  Stage(title: s.title, subtitle: s.subtitle),
-                            )
-                            .toList(),
-                      ),
-                    ),
-                  ],
+              sliver: SliverToBoxAdapter(
+                child: StagesCard(
+                  stages: viewModel.stages
+                      .map((s) => Stage(title: s.title, subtitle: s.subtitle))
+                      .toList(),
                 ),
               ),
             ),
-            ContinueButton(
-            onPressed: _onFinish,
-            text: "CTA",
-          ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              sliver: SliverToBoxAdapter(
+                child: ContinueButton(
+                  onPressed: _onFinish,
+                  text: "CTA",
+                ),
+              ),
+            ),
           ],
         ),
       ),
