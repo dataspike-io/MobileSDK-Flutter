@@ -32,7 +32,7 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
   @override
   void initState() {
     super.initState();
-    _all = DataspikeInjector.component.verificationManager.checks.countries;
+    _all = DataspikeInjector.component.verificationManager.countries;
     _all.sort((a, b) => (a.name).compareTo(b.name));
     _filtered = List.of(_all);
 

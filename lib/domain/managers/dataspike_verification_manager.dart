@@ -2,6 +2,7 @@ import 'package:dataspikemobilesdk/domain/models/country_domain_model.dart';
 import '../models/verification_settings_domain_model.dart';
 import '../models/dataspike_check_domain_model.dart';
 import 'package:intl/intl.dart';
+import '../models/finish_screen_settings_domain_model.dart';
 
 class VerificationManager {
   DataspikeCheckDomainModel checks = const DataspikeCheckDomainModel(
@@ -9,15 +10,14 @@ class VerificationManager {
     livenessIsRequired: false,
     poaIsRequired: false,
     personalDataRequired: false,
-    countries: [],
     manualFields: null,
-    verificationUrl: '',
-    finishScreenSettings: null,
   );
 
   String _expiresAt = '';
   String _status = '';
-
+  String verificationUrl = '';
+  FinishScreenSettingsDomainModel? finishScreenSettings;
+  List<CountryDomainModel> countries = [];
   String get status => _status;
 
   void setChecksAndExpiration(
@@ -32,13 +32,13 @@ class VerificationManager {
       livenessIsRequired: settings.faceComparisonRequired,
       poaIsRequired: settings.poaRequired,
       personalDataRequired: settings.manualFields.enabled,
-      countries: countries,
       manualFields: settings.manualFields,
-      verificationUrl: verificationUrl,
-      finishScreenSettings: settings.finishScreenSettings,
     );
     _status = status;
     _expiresAt = expiresAt;
+    this.countries = countries;
+    this.verificationUrl = verificationUrl;
+    finishScreenSettings = settings.finishScreenSettings;
   }
 
   int get millisecondsUntilVerificationExpired {

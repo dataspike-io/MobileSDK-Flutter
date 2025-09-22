@@ -17,7 +17,7 @@ class OnboardingViewModel extends ChangeNotifier {
   OnboardingViewModel() {
     setVerificationTimer();
     buildStages();
-    verificationUrl = DataspikeInjector.component.verificationManager.checks.verificationUrl;
+    verificationUrl = DataspikeInjector.component.verificationManager.verificationUrl;
   }
 
   void setVerificationTimer() {

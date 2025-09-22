@@ -65,13 +65,13 @@ class VerificationCompletedViewModel {
   }
 
   void buildStagesAndFinishScreen() {
-    final vm = DataspikeInjector.component.verificationManager.checks;
+    final vm = DataspikeInjector.component.verificationManager;
 
-    final requiresDocument = vm.poiIsRequired;
-    final requiresSelfie = vm.livenessIsRequired;
-    final requiresAddress = vm.poaIsRequired;
-    final personalData = vm.personalDataRequired;
-    final personalDataDescription = vm.manualFields?.description;
+    final requiresDocument = vm.checks.poiIsRequired;
+    final requiresSelfie = vm.checks.livenessIsRequired;
+    final requiresAddress = vm.checks.poaIsRequired;
+    final personalData = vm.checks.personalDataRequired;
+    final personalDataDescription = vm.checks.manualFields?.description;
     finishScreenSettings = vm.finishScreenSettings;
 
     final list = <StageItem>[
