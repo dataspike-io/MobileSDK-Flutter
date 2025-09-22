@@ -5,7 +5,7 @@ import 'package:dataspikemobilesdk/view/screens/alarm_screen/alarm_screen.dart';
 import '/view_models/onboarding_view_model.dart';
 import '/view_models/factory/dataspike_view_model_factory.dart';
 import 'package:dataspikemobilesdk/view/ui/top_bar.dart';
-import '../../ui/onboarding/stages_card.dart';
+import '../../ui/onboarding/stages_card_with_terms.dart';
 import '../../ui/onboarding/info_card.dart';
 import '../../ui/onboarding/stage_row.dart';
 import 'package:dataspikemobilesdk/main/coordinator/coordinator.dart';
@@ -95,7 +95,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ],
                       ),
                     const SizedBox(height: 12),
-                    InfoCard(),
+                    InfoCard(
+                      title: 'JP Morgan requests proof of address, proof of identity and liveness verifications.'
+                    ),
                   ],
                 ),
               ),
@@ -108,7 +110,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: StagesCard(
+                      child: StagesCardWithTerms(
                         stages: viewModel.stages
                             .map(
                               (s) =>

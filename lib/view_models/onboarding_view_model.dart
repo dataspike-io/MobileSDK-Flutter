@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '/dependencies_provider/dataspike_injector.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '/domain/models/stage_item.dart';
 
 class OnboardingViewModel extends ChangeNotifier {
   bool termsAccepted = true;
@@ -87,15 +88,6 @@ class OnboardingViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // void onTimerFinish(BuildContext context) {
-  //   Navigator.of(context).pushAndRemoveUntil(
-  //     MaterialPageRoute(
-  //       builder: (_) => VerificationExpiredScreen(),
-  //     ),
-  //     (route) => false,
-  //   );
-  // }
-
   Future<void> openVerificationUrl() async {
     _openUrl(verificationUrl);
   }
@@ -114,28 +106,4 @@ class OnboardingViewModel extends ChangeNotifier {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     }
   }
-}
-
-class StageItem {
-  final String id;
-  final String title;
-  final String subtitle;
-  final bool required;
-  final bool completed;
-
-  const StageItem({
-    required this.id,
-    required this.title,
-    required this.subtitle,
-    required this.required,
-    required this.completed,
-  });
-
-  StageItem copyWith({bool? completed}) => StageItem(
-    id: id,
-    title: title,
-    subtitle: subtitle,
-    required: required,
-    completed: completed ?? this.completed,
-  );
 }

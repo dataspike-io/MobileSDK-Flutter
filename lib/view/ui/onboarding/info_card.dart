@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 
-class InfoCard extends StatelessWidget {
+class InfoCard extends StatelessWidget {  
+  final String title;
+
+  const InfoCard({
+    super.key,
+    required this.title
+  });
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -21,7 +28,7 @@ class InfoCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'JP Morgan requests proof of address, proof of identity and liveness verifications.',
+              title,
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.darkIndigo,

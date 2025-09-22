@@ -6,7 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'section_header.dart';
 import 'stage_row.dart';
 
-class StagesCard extends StatefulWidget {
+class StagesCardWithTerms extends StatefulWidget {
   final List<Stage> stages;
   final String placeholderAsset;
   final bool accepted;
@@ -15,7 +15,7 @@ class StagesCard extends StatefulWidget {
   final VoidCallback openTerms;
   final VoidCallback openPrivacy;
 
-  const StagesCard({
+  const StagesCardWithTerms({
     super.key,
     required this.stages,
     required this.placeholderAsset,
@@ -27,10 +27,10 @@ class StagesCard extends StatefulWidget {
   });
 
   @override
-  State<StagesCard> createState() => _StagesCardState();
+  State<StagesCardWithTerms> createState() => _StagesCardWithTermsState();
 }
 
-class _StagesCardState extends State<StagesCard> {
+class _StagesCardWithTermsState extends State<StagesCardWithTerms> {
   bool _showAcceptError = false;
 
   void _toggleAccept() {
