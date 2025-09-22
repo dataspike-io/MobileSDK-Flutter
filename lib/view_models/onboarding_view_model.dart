@@ -46,7 +46,7 @@ class OnboardingViewModel extends ChangeNotifier {
           title: 'Fill in your details',
           subtitle: personalDataDescription?.isNotEmpty == true ? personalDataDescription! : 'Nothing extra needed',
           required: true,
-          completed: true,
+          completed: false,
         ),
       if (requiresDocument)
         const StageItem(

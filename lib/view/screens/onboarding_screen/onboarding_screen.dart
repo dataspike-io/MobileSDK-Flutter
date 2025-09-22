@@ -114,7 +114,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         stages: viewModel.stages
                             .map(
                               (s) =>
-                                  Stage(title: s.title, subtitle: s.subtitle),
+                                  Stage(title: s.title, subtitle: s.subtitle, isCompleted: s.completed),
                             )
                             .toList(),
                         placeholderAsset:

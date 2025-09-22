@@ -26,6 +26,9 @@ class AppColors {
   static const Color palePeriwinkle = Color(0xFFD3D8F8);
   static const Color snowyLilac = Color(0xFFF6F8FE);
 
+  // GREEN
+  static const Color mediumSeaGreen = Color(0xFF49CA5D);
+
   // Clear
   static const Color clear = Colors.transparent;
 }

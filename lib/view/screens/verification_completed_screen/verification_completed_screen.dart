@@ -106,7 +106,7 @@ class _VerificationCompletedScreenState
               sliver: SliverToBoxAdapter(
                 child: StagesCard(
                   stages: viewModel.stages
-                      .map((s) => Stage(title: s.title, subtitle: s.subtitle))
+                      .map((s) => Stage(title: s.title, subtitle: s.subtitle, isCompleted: s.completed))
                       .toList(),
                 ),
               ),

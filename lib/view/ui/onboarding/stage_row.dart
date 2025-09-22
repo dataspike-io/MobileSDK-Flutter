@@ -5,7 +5,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 class Stage {
   final String title;
   final String subtitle;
-  const Stage({required this.title, required this.subtitle});
+  final bool isCompleted;
+  const Stage({required this.title, required this.subtitle, required this.isCompleted});
 }
 
 class StageRow extends StatelessWidget {
@@ -23,7 +24,7 @@ class StageRow extends StatelessWidget {
             width: 24,
             height: 24.0,
             decoration: BoxDecoration(
-              color: AppColors.softLavender,
+              color: stage.isCompleted ? AppColors.mediumSeaGreen : AppColors.softLavender,
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
