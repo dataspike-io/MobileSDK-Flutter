@@ -100,7 +100,7 @@ class OnboardingViewModel extends ChangeNotifier {
     _openUrl("https://dataspike.io/privacy?lang=en");
   }
 
-   Future<void> _openUrl(String urlStr) async {
+  Future<void> _openUrl(String urlStr) async {
     final url = Uri.parse(urlStr);
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);

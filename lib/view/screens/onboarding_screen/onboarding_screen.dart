@@ -66,7 +66,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Verify your identity for J.P. Morgan',
+                      'Verify your identity for Company',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w600,
@@ -96,7 +96,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     const SizedBox(height: 12),
                     InfoCard(
-                      title: 'JP Morgan requests proof of address, proof of identity and liveness verifications.'
+                      title: 'Company requests proof of address, proof of identity and liveness verifications.'
                     ),
                   ],
                 ),

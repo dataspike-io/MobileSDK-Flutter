@@ -4,6 +4,7 @@ import 'package:dataspikemobilesdk/domain/models/finish_screen_settings_domain_m
 import 'package:dataspikemobilesdk/domain/models/states/proceed_with_verification_state.dart';
 import '/domain/models/stage_item.dart';
 import '/dependencies_provider/dataspike_injector.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class VerificationCompletedViewModel {
   final ProceedWithVerificationUseCase getProceedWithVerificationUseCase;
@@ -44,7 +45,7 @@ class VerificationCompletedViewModel {
     if (settings?.enabled == true && t != null && t.isNotEmpty) {
       return t;
     }
-    return 'We’re now processing your documents for J.P. Morgan.';
+    return 'We’re now processing your documents for Company.';
   }
 
   String? get redirectWarning {
@@ -59,9 +60,20 @@ class VerificationCompletedViewModel {
     return finishScreenSettings?.cta?.trim() ?? 'Continue';
   }
 
+   bool get isCustomScreenEnabled {
+    return (finishScreenSettings?.enabled == true);
+  }
+
   bool get isButtonAndStagesShown {
     return (redirectWarning?.isEmpty == true) 
     || (link?.isEmpty == true);
+  }
+  
+  Future<void> openUrl() async {
+    final url = Uri.parse(link ?? '');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
   }
 
   void buildStagesAndFinishScreen() {
