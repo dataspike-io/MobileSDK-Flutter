@@ -1,3 +1,4 @@
+import 'package:dataspikemobilesdk/main/manager/dataspike_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/view/screens/dataspike_screen/dataspike_screen.dart';
 import 'package:dataspikemobilesdk/view/screens/onboarding_screen/onboarding_screen.dart';
@@ -7,6 +8,7 @@ import 'package:dataspikemobilesdk/view/screens/personal_data_screen/personal_da
 import '/dependencies_provider/dataspike_injector.dart';
 import 'package:dataspikemobilesdk/domain/models/document_type.dart'; 
 import 'package:dataspikemobilesdk/view/screens/verification_completed_screen/verification_completed_screen.dart';
+import 'package:dataspikemobilesdk/main/models/dataspike_verifications_status.dart';
 
 enum DataspikeStep {
   onboarding,
@@ -123,4 +125,8 @@ class DataspikeCoordinator {
       showNextStep(context, DataspikeStep.personalData);
   static void showVerificationCompleted(BuildContext context) =>
       showNextStep(context, DataspikeStep.verificationCompleted);
+
+  static void finishFlow(DataspikeVerificationStatus status) {
+   DataspikeManager.passVerificationCompletedResult(status);
+  }
 }

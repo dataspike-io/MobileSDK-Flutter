@@ -11,6 +11,7 @@ import '../../ui/onboarding/stage_row.dart';
 import 'package:dataspikemobilesdk/main/coordinator/coordinator.dart';
 import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:dataspikemobilesdk/main/models/dataspike_verifications_status.dart';
 
 class VerificationCompletedScreen extends StatefulWidget {
   const VerificationCompletedScreen({super.key});
@@ -29,7 +30,7 @@ class _VerificationCompletedScreenState
 
   void _onFinish() {
     viewModel.openUrl();
-    // DataspikeCoordinator.proceedNext(context);
+    DataspikeCoordinator.finishFlow(DataspikeVerificationStatus.verificationCompleted); // TODO: CHANGE HERE
   }
 
   @override
