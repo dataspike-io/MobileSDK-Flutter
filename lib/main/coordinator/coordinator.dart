@@ -6,7 +6,7 @@ import 'package:dataspikemobilesdk/view/screens/camera/camera_avatar_screen.dart
 import 'package:dataspikemobilesdk/view/screens/camera/camera_document_screen.dart';
 import 'package:dataspikemobilesdk/view/screens/personal_data_screen/personal_data_screen.dart';
 import '/dependencies_provider/dataspike_injector.dart';
-import 'package:dataspikemobilesdk/domain/models/document_type.dart'; 
+import 'package:dataspikemobilesdk/domain/models/document_type.dart';
 import 'package:dataspikemobilesdk/view/screens/verification_completed_screen/verification_completed_screen.dart';
 import 'package:dataspikemobilesdk/main/models/dataspike_verifications_status.dart';
 
@@ -44,28 +44,36 @@ class DataspikeCoordinator {
         );
         break;
       case DataspikeStep.personalData:
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const PersonalDataScreen()),
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const PersonalDataScreen()));
         break;
       case DataspikeStep.documentCamera:
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const LiveCropCamera(docType: DocumentType.identity)),
+          MaterialPageRoute(
+            builder: (_) =>
+                const LiveCropCamera(docType: DocumentType.identity),
+          ),
         );
         break;
       case DataspikeStep.selfieCamera:
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const LiveAvatarCamera()),
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const LiveAvatarCamera()));
         break;
       case DataspikeStep.address:
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const LiveCropCamera(docType: DocumentType.address)),
+          MaterialPageRoute(
+            builder: (_) => const LiveCropCamera(docType: DocumentType.address),
+          ),
         );
         break;
       case DataspikeStep.verificationCompleted:
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const VerificationCompletedScreen()),
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => const VerificationCompletedScreen(),
+          ),
+          (route) => false,
         );
         break;
     }
@@ -73,7 +81,7 @@ class DataspikeCoordinator {
 
   static List<DataspikeStep> _requiredSteps() {
     final vm = DataspikeInjector.component.verificationManager.checks;
- 
+
     final requiresDocument = vm.poiIsRequired;
     final requiresSelfie = vm.livenessIsRequired;
     final requiresAddress = vm.poaIsRequired;
@@ -84,21 +92,20 @@ class DataspikeCoordinator {
     if (requiresDocument) steps.add(DataspikeStep.documentCamera);
     if (requiresSelfie) steps.add(DataspikeStep.selfieCamera);
     if (requiresAddress) steps.add(DataspikeStep.address);
+    steps.add(DataspikeStep.verificationCompleted);
     return steps;
   }
 
   static void proceedNext(BuildContext context, {DataspikeStep? after}) {
     final steps = _requiredSteps();
     if (steps.isEmpty) {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const VerificationCompletedScreen()),
-      );
+      showNextStep(context, DataspikeStep.verificationCompleted);
       return;
     }
 
     DataspikeStep? next;
     if (after == null) {
-      next = steps.first; 
+      next = steps.first;
     } else {
       final idx = steps.indexOf(after);
       if (idx >= 0 && idx + 1 < steps.length) {
@@ -109,9 +116,7 @@ class DataspikeCoordinator {
     if (next != null) {
       showNextStep(context, next);
     } else {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const VerificationCompletedScreen()),
-      );
+      showNextStep(context, DataspikeStep.verificationCompleted);
     }
   }
 
@@ -127,6 +132,6 @@ class DataspikeCoordinator {
       showNextStep(context, DataspikeStep.verificationCompleted);
 
   static void finishFlow(DataspikeVerificationStatus status) {
-   DataspikeManager.passVerificationCompletedResult(status);
+    DataspikeManager.passVerificationCompletedResult(status);
   }
 }
