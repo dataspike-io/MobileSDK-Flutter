@@ -18,7 +18,7 @@ class FieldLine extends StatelessWidget {
   final void Function(int, String?) onChanged;
   final void Function(int index, PlatformFile file)? uploadFile;
 
-  const FieldLine({
+  const FieldLine({super.key, 
     required this.index,
     required this.field,
     required this.value,

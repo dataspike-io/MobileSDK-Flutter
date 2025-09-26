@@ -5,7 +5,7 @@ class RadioChoices extends StatelessWidget {
   final List<String> options;
   final String? value;
   final ValueChanged<String> onChanged;
-  const RadioChoices({
+  const RadioChoices({super.key, 
     required this.options,
     required this.value,
     required this.onChanged,

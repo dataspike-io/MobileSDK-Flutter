@@ -9,7 +9,7 @@ class FieldsCard extends StatelessWidget {
   final List<ManualCustomFieldRepresentationModel> fields;
   final void Function(int index, String? value) onChanged;
   final void Function(int index, PlatformFile file)? uploadFile;
-  const FieldsCard({required this.fields, required this.onChanged, this.uploadFile});
+  const FieldsCard({super.key, required this.fields, required this.onChanged, this.uploadFile});
 
   @override
   Widget build(BuildContext context) {

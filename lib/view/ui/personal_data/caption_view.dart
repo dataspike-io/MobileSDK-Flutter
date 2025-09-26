@@ -3,7 +3,7 @@ import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 
 class Caption extends StatelessWidget {
   final String text;
-  const Caption({required this.text});
+  const Caption({super.key, required this.text});
 
   @override
   Widget build(BuildContext context) {

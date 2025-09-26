@@ -11,7 +11,7 @@ class Stage {
 
 class StageRow extends StatelessWidget {
   final Stage stage;
-  const StageRow({required this.stage});
+  const StageRow({super.key, required this.stage});
 
   @override
   Widget build(BuildContext context) {

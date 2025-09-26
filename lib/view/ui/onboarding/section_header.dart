@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 
 class SectionHeader extends StatelessWidget {
+  const SectionHeader({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Column(

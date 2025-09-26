@@ -3,7 +3,7 @@ import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class ErrorBottomSheet extends StatelessWidget {
-  const ErrorBottomSheet({required this.title, required this.message});
+  const ErrorBottomSheet({super.key, required this.title, required this.message});
 
   final String title;
   final String message;
