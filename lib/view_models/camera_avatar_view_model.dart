@@ -19,7 +19,7 @@ class CameraAvatarViewModel extends ChangeNotifier {
   VoidCallback? onProceed;
   VoidCallback? showLoader;
   VoidCallback? hideLoader;
-  void Function(String title, String message)? showError;
+  void Function(String title, String message, bool withInstruction)? showError;
 
   static const double sideInsetPct = 0.10;
   static const double topApexPct = 0.10;
@@ -33,7 +33,7 @@ class CameraAvatarViewModel extends ChangeNotifier {
     VoidCallback? onProceed,
     VoidCallback? showLoader,
     VoidCallback? hideLoader,
-    void Function(String title, String message)? showError,
+    void Function(String title, String message, bool withInstruction)? showError,
   }) {
     this.onProceed = onProceed;
     this.showLoader = showLoader;
@@ -101,7 +101,6 @@ class CameraAvatarViewModel extends ChangeNotifier {
       final previewW = ps.width;
       final previewH = ps.height;
 
-      // Тяжелое в изолят
       final processed = await compute<AvatarCropParams, Uint8List>(
         processAvatarShotInIsolate,
         AvatarCropParams(
@@ -129,12 +128,12 @@ class CameraAvatarViewModel extends ChangeNotifier {
       if (result is UploadImageSuccess) {
         onProceed?.call();
       } else if (result is UploadImageError) {
-        showError?.call(result.title, result.message);
+        showError?.call(result.title, result.message, result.withInstruction);
       }
     } catch (e) {
       hideLoader?.call();
       notifyListeners();
-      showError?.call('Processing error', 'Failed to process the image.');
+      showError?.call('Processing error', 'Failed to process the image.', false);
     }
   }
 }

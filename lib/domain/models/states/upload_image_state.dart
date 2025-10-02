@@ -50,6 +50,13 @@ class UploadImageError extends UploadImageState {
         return message;
     }
   }
+
+  bool get withInstruction {
+    switch (code) {
+      default:
+        return true;
+    }
+  }
 }
 
 const int ERROR_CODE_EXPIRED = 8000;

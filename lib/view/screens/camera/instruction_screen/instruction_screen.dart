@@ -1,0 +1,86 @@
+import 'package:flutter/material.dart';
+import '../../../ui/top_bar.dart';
+import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
+import 'package:dataspikemobilesdk/dependencies_provider/dataspike_injector.dart';
+import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
+import 'package:dataspikemobilesdk/view/ui/camera/additional/swipable_view.dart';
+import 'package:dataspikemobilesdk/domain/models/instruction_type.dart';
+
+class InstructionScreen extends StatefulWidget {
+  final InstructionType type;
+  final VoidCallback? onContinue;
+
+  const InstructionScreen({
+    super.key,
+    required this.type,
+    this.onContinue,
+  });
+
+  @override
+  State<InstructionScreen> createState() => _InstructionScreenState();
+}
+
+class _InstructionScreenState extends State<InstructionScreen> {
+  @override
+  Widget build(BuildContext context) {
+    final timer = Duration(
+      milliseconds: DataspikeInjector
+          .component
+          .verificationManager
+          .millisecondsUntilVerificationExpired,
+    );
+
+    final title = widget.type == InstructionType.poi
+        ? 'Take a photo of your ID'
+        : 'Take a selfie';
+
+    final ctaText = widget.type == InstructionType.poi
+        ? 'Take a photo'
+        : 'Take a selfie';
+
+    return Scaffold(
+      backgroundColor: AppColors.white,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            TopBar(timer: timer),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.black,
+                        fontFamily: 'FunnelDisplay',
+                        package: 'dataspikemobilesdk',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Flexible(
+                      flex: 6,
+                      fit: FlexFit.tight,
+                      child: SwipableView(type: widget.type),
+                    ),
+                    const Spacer(),
+                    ContinueButton(
+                      text: ctaText,
+                      onPressed: widget.onContinue ?? () {},
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

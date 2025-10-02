@@ -1,0 +1,1 @@
+enum InstructionType { poi, liveness }

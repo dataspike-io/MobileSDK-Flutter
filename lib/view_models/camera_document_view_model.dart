@@ -28,13 +28,13 @@ class CameraDocumentViewModel extends ChangeNotifier {
   VoidCallback? onProceed;
   VoidCallback? showLoader;
   VoidCallback? hideLoader;
-  void Function(String title, String message)? showError;
+  void Function(String title, String message, bool withInstruction)? showError;
 
   void attachCallbacks({
     VoidCallback? onProceed,
     VoidCallback? showLoader,
     VoidCallback? hideLoader,
-    void Function(String title, String message)? showError,
+    void Function(String title, String message, bool withInstruction)? showError,
   }) {
     this.onProceed = onProceed;
     this.showLoader = showLoader;
@@ -164,12 +164,12 @@ class CameraDocumentViewModel extends ChangeNotifier {
           onProceed?.call();
         }
       } else if (result is UploadImageError) {
-        showError?.call(result.title, result.message);
+        showError?.call(result.title, result.message, result.withInstruction);
       }
     } catch (e) {
       hideLoader?.call();
       notifyListeners();
-      showError?.call('Processing error', 'Failed to process the image.');
+      showError?.call('Processing error', 'Failed to process the image.', false);
     }
   }
 
@@ -211,7 +211,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
         onProceed?.call();
       }
     } else if (result is UploadImageError) {
-      showError?.call(result.title, result.message);
+      showError?.call(result.title, result.message, result.withInstruction);
     }
   }
 }

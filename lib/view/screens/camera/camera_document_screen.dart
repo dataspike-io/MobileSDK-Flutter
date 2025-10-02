@@ -14,6 +14,7 @@ import 'package:dataspikemobilesdk/view/ui/camera/instruction_pill.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/side_toggle_pill.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/error_bottom_sheet.dart';
 import 'package:dataspikemobilesdk/domain/models/document_type.dart';
+import 'package:dataspikemobilesdk/domain/models/instruction_type.dart';
 
 class LiveCropCamera extends StatefulWidget {
   const LiveCropCamera({super.key, required this.docType});
@@ -37,7 +38,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
       onProceed: () => proceedNext(),
       showLoader: showLoader,
       hideLoader: hideLoader,
-      showError: (title, msg) => showError(title, msg),
+      showError: (title, msg, withInstruction) => showError(title, msg, withInstruction),
     );
     super.initState();
   }
@@ -86,7 +87,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
     rootNav.pop();
   }
 
-  void showError(String title, String message) {
+  void showError(String title, String message, bool withInstruction) {
     if (!mounted) return;
     showModalBottomSheet<void>(
       context: context,
@@ -96,7 +97,11 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
       enableDrag: true,
       backgroundColor: AppColors.clear,
       barrierColor: AppColors.clear,
-      builder: (_) => ErrorBottomSheet(title: title, message: message),
+       builder: (_) => ErrorBottomSheet(
+        title: title,
+        message: message,
+        instruction: withInstruction ? InstructionType.poi : null,
+      ),
     );
   }
 

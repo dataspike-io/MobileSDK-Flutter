@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:dataspikemobilesdk/view/ui/camera/additional/swipable_view.dart';
+import 'package:dataspikemobilesdk/domain/models/instruction_type.dart';
 
 class ErrorBottomSheet extends StatelessWidget {
-  const ErrorBottomSheet({super.key, required this.title, required this.message});
+  const ErrorBottomSheet({
+    super.key,
+    required this.title,
+    required this.message,
+    this.instruction,
+  });
 
   final String title;
   final String message;
+  final InstructionType? instruction;
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +25,7 @@ class ErrorBottomSheet extends StatelessWidget {
       bottom: false,
       child: Container(
         width: double.infinity,
-        height: h * 0.5,
+        height: instruction == null ? h * 0.5 : h * 0.8,
         decoration: const BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.only(
@@ -72,6 +80,13 @@ class ErrorBottomSheet extends StatelessWidget {
                       ),
                       textAlign: TextAlign.center,
                     ),
+
+                    if (instruction != null)
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        height: h * 0.6, 
+                        child: SwipableView(type: instruction!),
+                      ),
                   ],
                 ),
               ),
