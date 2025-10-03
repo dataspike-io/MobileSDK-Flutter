@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dataspikemobilesdk/main/manager/dataspike_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/view/screens/dataspike_screen/dataspike_screen.dart';
@@ -27,10 +28,50 @@ enum DataspikeStep {
   verificationCompleted,
   cameraAccess,
   cameraDenied,
+  verificationExpired
 }
 
 class DataspikeCoordinator {
+  static BuildContext? _flowContext;
+  static Timer? _verificationExpiryTimer;
+
+  static void _bindFlowContext(BuildContext context) {
+      _flowContext = Navigator.of(context).context;
+  }
+
+  static void _cancelVerificationExpiryWatch({bool clearContext = false}) {
+    _verificationExpiryTimer?.cancel();
+    _verificationExpiryTimer = null;
+    if (clearContext) _flowContext = null;
+  }
+
+  static void scheduleVerificationExpiryWatch() {
+    final ctx = _flowContext;
+    if (ctx == null) return;
+
+    _verificationExpiryTimer?.cancel();
+
+    final vm = DataspikeInjector.component.verificationManager;
+    final ms = vm.millisecondsUntilVerificationExpired;
+    if (ms <= 0) {
+      if (ctx.mounted) {
+        showVerificationExpiredScreen(ctx);
+      }
+      return;
+    }
+
+    _verificationExpiryTimer = Timer(Duration(milliseconds: ms), () {
+      final c = _flowContext;
+      if (c != null && c.mounted) {
+        showVerificationExpiredScreen(c);
+      }
+    });
+  }
+
   static void startFlow(BuildContext context) {
+    _bindFlowContext(context);
+    scheduleVerificationExpiryWatch();
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => DataspikeScreen(
@@ -108,6 +149,7 @@ class DataspikeCoordinator {
         );
         break;
       case DataspikeStep.verificationCompleted:
+        _cancelVerificationExpiryWatch(clearContext: true);
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (_) => const VerificationCompletedScreen(),
@@ -115,6 +157,15 @@ class DataspikeCoordinator {
           (route) => false,
         );
         break;
+      case DataspikeStep.verificationExpired:
+        _cancelVerificationExpiryWatch(clearContext: true);
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => const VerificationExpiredScreen(),
+          ),
+          (route) => false,
+        );
+        break;  
     }
   }
 
@@ -201,6 +252,9 @@ class DataspikeCoordinator {
   static void showCameraDeniedScreen(BuildContext context) =>
       showNextStep(context, DataspikeStep.cameraDenied);
 
+  static void showVerificationExpiredScreen(BuildContext context) =>
+      showNextStep(context, DataspikeStep.verificationExpired);
+
   static void showDocumentInstructionScreen(
     BuildContext context,
     InstructionType type,
@@ -212,6 +266,7 @@ class DataspikeCoordinator {
   };
 
   static void finishFlow(DataspikeVerificationStatus status) {
+    _cancelVerificationExpiryWatch(clearContext: true);
     DataspikeManager.passVerificationCompletedResult(status);
   }
 }

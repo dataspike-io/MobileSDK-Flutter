@@ -4,7 +4,8 @@ import 'package:dataspikemobilesdk/domain/models/states/verification_state.dart'
 
 class DataspikeActivityViewModel {
   final VerificationUseCase getVerificationUseCase;
-  final _verificationController = StreamController<VerificationState>.broadcast();
+  final StreamController<VerificationState> _verificationController =
+      StreamController<VerificationState>.broadcast();
 
   Stream<VerificationState> get verificationFlow => _verificationController.stream;
 
@@ -13,12 +14,20 @@ class DataspikeActivityViewModel {
   });
 
   Future<void> getVerification(bool darkModeIsEnabled) async {
-    final state = await getVerificationUseCase.call(darkModeIsEnabled: darkModeIsEnabled);
+    if (_verificationController.isClosed) return;
+
+    final state = await getVerificationUseCase.call(
+      darkModeIsEnabled: darkModeIsEnabled,
+    );
+
+    if (_verificationController.isClosed) return;
+
     _verificationController.add(state);
   }
 
-  @override
   void dispose() {
-    _verificationController.close();
+    if (!_verificationController.isClosed) {
+      _verificationController.close();
+    }
   }
 }

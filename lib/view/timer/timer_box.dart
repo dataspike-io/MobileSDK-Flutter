@@ -4,13 +4,11 @@ import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 
 class TimeBox extends StatefulWidget {
   final Duration initialTime;
-  final VoidCallback? onFinish;
   final bool isTitle;
 
   const TimeBox({
     super.key,
     required this.initialTime,
-    this.onFinish,
     this.isTitle = true,
   });
 
@@ -43,7 +41,6 @@ class _TimeLeftBoxState extends State<TimeBox> {
         setState(() {
           isActive = false;
         });
-        widget.onFinish?.call();
       }
     });
   }

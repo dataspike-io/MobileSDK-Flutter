@@ -82,15 +82,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           TimeBox(
                             initialTime: timer,
                             isTitle: false,
-                            onFinish: () {
-                              Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      const VerificationExpiredScreen(),
-                                ),
-                                (r) => false,
-                              );
-                            },
                           ),
                         ],
                       ),
