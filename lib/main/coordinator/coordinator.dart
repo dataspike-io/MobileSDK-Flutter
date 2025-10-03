@@ -5,6 +5,7 @@ import 'package:dataspikemobilesdk/view/screens/onboarding_screen/onboarding_scr
 import 'package:dataspikemobilesdk/view/screens/camera/camera_avatar_screen.dart';
 import 'package:dataspikemobilesdk/view/screens/camera/camera_document_screen.dart';
 import 'package:dataspikemobilesdk/view/screens/personal_data_screen/personal_data_screen.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '/dependencies_provider/dataspike_injector.dart';
 import 'package:dataspikemobilesdk/domain/models/document_type.dart';
 import 'package:dataspikemobilesdk/view/screens/verification_completed_screen/verification_completed_screen.dart';
@@ -18,12 +19,14 @@ import 'package:dataspikemobilesdk/domain/models/instruction_type.dart';
 enum DataspikeStep {
   onboarding,
   personalData,
-  documentInstructionScreen,
-  selfieInstructionScreen,
+  documentInstruction,
+  selfieInstruction,
   documentCamera,
   selfieCamera,
   address,
   verificationCompleted,
+  cameraAccess,
+  cameraDenied,
 }
 
 class DataspikeCoordinator {
@@ -55,11 +58,24 @@ class DataspikeCoordinator {
           context,
         ).push(MaterialPageRoute(builder: (_) => const PersonalDataScreen()));
         break;
-      case DataspikeStep.documentInstructionScreen:
+      case DataspikeStep.cameraAccess:
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) =>
-                const InstructionScreen(type: InstructionType.poi),
+            builder: (_) => const CameraAccessScreen(),
+          ),
+        );
+        break;
+      case DataspikeStep.cameraDenied:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const CameraDeniedScreen(),
+          ),
+        );
+        break;
+      case DataspikeStep.documentInstruction:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const InstructionScreen(type: InstructionType.poi),
           ),
         );
         break;
@@ -71,7 +87,7 @@ class DataspikeCoordinator {
           ),
         );
         break;
-      case DataspikeStep.selfieInstructionScreen:
+      case DataspikeStep.selfieInstruction:
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) =>
@@ -102,7 +118,7 @@ class DataspikeCoordinator {
     }
   }
 
-  static List<DataspikeStep> _requiredSteps() {
+  static List<DataspikeStep> _requiredSteps()  {
     final vm = DataspikeInjector.component.verificationManager.checks;
 
     final requiresDocument = vm.poiIsRequired;
@@ -112,12 +128,28 @@ class DataspikeCoordinator {
 
     final steps = <DataspikeStep>[];
     if (personalData) steps.add(DataspikeStep.personalData);
+
+    if (requiresDocument || requiresSelfie) {
+      final cameraStatus = DataspikeInjector.component.permissionService.initialStatus;
+
+      switch (cameraStatus) {
+        case PermissionStatus.restricted:
+        case PermissionStatus.permanentlyDenied:
+          steps.add(DataspikeStep.cameraDenied);
+        case PermissionStatus.granted:
+          break;
+        case PermissionStatus.denied:
+        case PermissionStatus.limited:
+        default:
+          steps.add(DataspikeStep.cameraAccess);
+      }
+    }
     if (requiresDocument) {
-      steps.add(DataspikeStep.documentInstructionScreen);
+      steps.add(DataspikeStep.documentInstruction);
       steps.add(DataspikeStep.documentCamera);
     }
     if (requiresSelfie) {
-      steps.add(DataspikeStep.selfieInstructionScreen);
+      steps.add(DataspikeStep.selfieInstruction);
       steps.add(DataspikeStep.selfieCamera);
     }
     if (requiresAddress) steps.add(DataspikeStep.address);
@@ -163,14 +195,20 @@ class DataspikeCoordinator {
   static void showAddressScreen(BuildContext context) =>
       showNextStep(context, DataspikeStep.address);
 
+  static void showCameraAccessScreen(BuildContext context) =>
+      showNextStep(context, DataspikeStep.cameraAccess);
+
+  static void showCameraDeniedScreen(BuildContext context) =>
+      showNextStep(context, DataspikeStep.cameraDenied);
+
   static void showDocumentInstructionScreen(
     BuildContext context,
     InstructionType type,
   ) => {
     if (type == InstructionType.poi)
-      showNextStep(context, DataspikeStep.documentInstructionScreen)
+      showNextStep(context, DataspikeStep.documentInstruction)
     else if (type == InstructionType.liveness)
-      showNextStep(context, DataspikeStep.selfieInstructionScreen),
+      showNextStep(context, DataspikeStep.selfieInstruction),
   };
 
   static void finishFlow(DataspikeVerificationStatus status) {

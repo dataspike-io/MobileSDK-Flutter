@@ -9,13 +9,13 @@ class InfoCardWithoutImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      alignment: Alignment.center,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.mistyLilac,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Expanded(
-        child: Text(
+      child: Text(
           title,
           textAlign: TextAlign.center,
           style: TextStyle(
@@ -26,7 +26,6 @@ class InfoCardWithoutImage extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
-      ),
     );
   }
 }

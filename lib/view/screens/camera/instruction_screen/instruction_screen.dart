@@ -25,13 +25,13 @@ class _InstructionScreenState extends State<InstructionScreen> {
       case InstructionType.poi:
         DataspikeCoordinator.proceedNext(
           context,
-          after: DataspikeStep.documentInstructionScreen,
+          after: DataspikeStep.documentInstruction,
         );
         break;
       case InstructionType.liveness:
         DataspikeCoordinator.proceedNext(
           context,
-          after: DataspikeStep.selfieInstructionScreen,
+          after: DataspikeStep.selfieInstruction,
         );
         break;
     }

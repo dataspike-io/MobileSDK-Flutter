@@ -47,6 +47,7 @@ class DataspikeModuleImpl implements DataspikeModule {
     _verificationManager = VerificationManager();
     _personalDataManager = PersonalDataManager();
     _permissionService = PermissionService();
+    _permissionService.requestCameraStatus();
   }
 
   @override

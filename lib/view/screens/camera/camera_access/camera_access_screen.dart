@@ -1,45 +1,31 @@
+import 'package:dataspikemobilesdk/main/coordinator/coordinator.dart';
 import 'package:flutter/material.dart';
 import '../../../ui/top_bar.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:dataspikemobilesdk/dependencies_provider/dataspike_injector.dart';
-import 'package:dataspikemobilesdk/view/ui/camera/additional/info_card_without_image.dart';
-import 'package:package_info_plus/package_info_plus.dart';
+import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
 
-class CameraDeniedScreen extends StatefulWidget {
-  const CameraDeniedScreen({super.key});
+class CameraAccessScreen extends StatefulWidget {
+  const CameraAccessScreen({super.key});
+
+  static Route route() =>
+      MaterialPageRoute<void>(builder: (_) => const CameraAccessScreen());
 
   @override
-  State<CameraDeniedScreen> createState() => _CameraDeniedScreenState();
+  State<CameraAccessScreen> createState() => _CameraAccessScreenState();
 }
 
-class _CameraDeniedScreenState extends State<CameraDeniedScreen> {
-  String _appName = '';
+class _CameraAccessScreenState extends State<CameraAccessScreen> {
 
   @override
   void initState() {
     super.initState();
-    _loadAppName();
-  }
-
-  Future<void> _loadAppName() async {
-    try {
-      final info = await PackageInfo.fromPlatform();
-      final name = info.appName.trim();
-      if (!mounted) return;
-      setState(() {
-        _appName = name.isNotEmpty ? name : info.packageName.split('.').last;
-      });
-    } catch (e) {
-      debugPrint('PackageInfo error: $e');
-      if (!mounted) return;
-      setState(() => _appName = '');
-    }
   }
 
   @override
   void dispose() {
     super.dispose();
-  }
+  }    
 
   @override
   Widget build(BuildContext context) {
@@ -49,8 +35,6 @@ class _CameraDeniedScreenState extends State<CameraDeniedScreen> {
           .verificationManager
           .millisecondsUntilVerificationExpired,
     );
-
-    final appName = _appName.isEmpty ? 'this app' : _appName;
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -69,8 +53,9 @@ class _CameraDeniedScreenState extends State<CameraDeniedScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          const Spacer(),
                           Text(
-                            'Camera access needed',
+                            'Allow camera access to continue',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 20,
@@ -82,7 +67,7 @@ class _CameraDeniedScreenState extends State<CameraDeniedScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'To continue, please enable camera access for $appName in your device settings:',
+                            'We need access to your camera to complete verification. It`s used only to check liveness and confirm your identity.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 14,
@@ -92,20 +77,30 @@ class _CameraDeniedScreenState extends State<CameraDeniedScreen> {
                               package: 'dataspikemobilesdk',
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            height: 64,
-                            child: InfoCardWithoutImage(
-                              title:
-                                  'Go to Settings → Privacy → Camera and allow $appName access to the camera',
-                            ),
+                          const SizedBox(height: 24),
+                          ContinueButton(
+                            text: 'Allow camera access',
+                            onPressed: () async {
+                              try {
+                                final isGranted = await DataspikeInjector.component.permissionService.requestCameraPermission();
+                                if (!mounted) return;
+                                if (isGranted) {
+                                  DataspikeCoordinator.proceedNext(context, after: DataspikeStep.cameraAccess);
+                                } else {
+                                  DataspikeCoordinator.showCameraDeniedScreen(context);
+                                }
+                              } catch (e) {
+                                debugPrint('Camera permission error: $e');
+                              }
+                            },
                           ),
+                          const Spacer(),
                         ],
                       ),
                     ),
                   ),
                   Image.asset(
-                    'packages/dataspikemobilesdk/assets/images/camera_access_denied.png',
+                    'packages/dataspikemobilesdk/assets/images/allow_camera_access.png',
                     width: double.infinity,
                     fit: BoxFit.fitWidth,
                   ),
