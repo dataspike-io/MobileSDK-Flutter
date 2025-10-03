@@ -160,6 +160,19 @@ class DataspikeCoordinator {
   static void showVerificationCompleted(BuildContext context) =>
       showNextStep(context, DataspikeStep.verificationCompleted);
 
+  static void showAddressScreen(BuildContext context) =>
+      showNextStep(context, DataspikeStep.address);
+
+  static void showDocumentInstructionScreen(
+    BuildContext context,
+    InstructionType type,
+  ) => {
+    if (type == InstructionType.poi)
+      showNextStep(context, DataspikeStep.documentInstructionScreen)
+    else if (type == InstructionType.liveness)
+      showNextStep(context, DataspikeStep.selfieInstructionScreen),
+  };
+
   static void finishFlow(DataspikeVerificationStatus status) {
     DataspikeManager.passVerificationCompletedResult(status);
   }
