@@ -1,3 +1,4 @@
+import 'package:dataspikemobilesdk/domain/managers/permission_service.dart';
 import 'package:dataspikemobilesdk/main/models/dataspike_dependencies.dart';
 import 'dataspike_module.dart';
 import 'package:dataspikemobilesdk/data/repository/dataspike_repository.dart';
@@ -9,6 +10,7 @@ abstract class DataspikeComponent {
   IDataspikeRepository get dataspikeRepository;
   VerificationManager get verificationManager;
   PersonalDataManager get personalDataManager;
+  PermissionService get permissionService;
 }
 
 class DataspikeComponentImpl implements DataspikeComponent {
@@ -28,4 +30,7 @@ class DataspikeComponentImpl implements DataspikeComponent {
 
   @override
   PersonalDataManager get personalDataManager => _module.personalDataManager;
+
+  @override
+  PermissionService get permissionService => _module.permissionService;
 }

@@ -5,15 +5,14 @@ import 'package:dataspikemobilesdk/dependencies_provider/dataspike_injector.dart
 import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/additional/swipable_view.dart';
 import 'package:dataspikemobilesdk/domain/models/instruction_type.dart';
+import 'package:dataspikemobilesdk/main/coordinator/coordinator.dart';
 
 class InstructionScreen extends StatefulWidget {
   final InstructionType type;
-  final VoidCallback? onContinue;
 
   const InstructionScreen({
     super.key,
     required this.type,
-    this.onContinue,
   });
 
   @override
@@ -21,6 +20,23 @@ class InstructionScreen extends StatefulWidget {
 }
 
 class _InstructionScreenState extends State<InstructionScreen> {
+  void _onContinue() {
+    switch (widget.type) {
+      case InstructionType.poi:
+        DataspikeCoordinator.proceedNext(
+          context,
+          after: DataspikeStep.documentInstructionScreen,
+        );
+        break;
+      case InstructionType.liveness:
+        DataspikeCoordinator.proceedNext(
+          context,
+          after: DataspikeStep.selfieInstructionScreen,
+        );
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final timer = Duration(
@@ -71,7 +87,7 @@ class _InstructionScreenState extends State<InstructionScreen> {
                     const Spacer(),
                     ContinueButton(
                       text: ctaText,
-                      onPressed: widget.onContinue ?? () {},
+                      onPressed: _onContinue,
                     ),
                     const SizedBox(height: 16),
                   ],

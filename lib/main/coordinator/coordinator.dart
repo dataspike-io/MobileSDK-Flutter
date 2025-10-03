@@ -9,10 +9,17 @@ import '/dependencies_provider/dataspike_injector.dart';
 import 'package:dataspikemobilesdk/domain/models/document_type.dart';
 import 'package:dataspikemobilesdk/view/screens/verification_completed_screen/verification_completed_screen.dart';
 import 'package:dataspikemobilesdk/main/models/dataspike_verifications_status.dart';
+import 'package:dataspikemobilesdk/view/screens/camera/camera_access/camera_access_screen.dart';
+import 'package:dataspikemobilesdk/view/screens/camera/camera_access/camera_denied_screen.dart';
+import 'package:dataspikemobilesdk/view/screens/verification_expired_screen/verification_expired_screen.dart';
+import 'package:dataspikemobilesdk/view/screens/camera/instruction_screen/instruction_screen.dart';
+import 'package:dataspikemobilesdk/domain/models/instruction_type.dart';
 
 enum DataspikeStep {
   onboarding,
   personalData,
+  documentInstructionScreen,
+  selfieInstructionScreen,
   documentCamera,
   selfieCamera,
   address,
@@ -48,11 +55,27 @@ class DataspikeCoordinator {
           context,
         ).push(MaterialPageRoute(builder: (_) => const PersonalDataScreen()));
         break;
+      case DataspikeStep.documentInstructionScreen:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                const InstructionScreen(type: InstructionType.poi),
+          ),
+        );
+        break;
       case DataspikeStep.documentCamera:
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) =>
                 const LiveCropCamera(docType: DocumentType.identity),
+          ),
+        );
+        break;
+      case DataspikeStep.selfieInstructionScreen:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                const InstructionScreen(type: InstructionType.liveness),
           ),
         );
         break;
@@ -89,8 +112,14 @@ class DataspikeCoordinator {
 
     final steps = <DataspikeStep>[];
     if (personalData) steps.add(DataspikeStep.personalData);
-    if (requiresDocument) steps.add(DataspikeStep.documentCamera);
-    if (requiresSelfie) steps.add(DataspikeStep.selfieCamera);
+    if (requiresDocument) {
+      steps.add(DataspikeStep.documentInstructionScreen);
+      steps.add(DataspikeStep.documentCamera);
+    }
+    if (requiresSelfie) {
+      steps.add(DataspikeStep.selfieInstructionScreen);
+      steps.add(DataspikeStep.selfieCamera);
+    }
     if (requiresAddress) steps.add(DataspikeStep.address);
     steps.add(DataspikeStep.verificationCompleted);
     return steps;
