@@ -4,20 +4,19 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../timer/timer_box.dart';
 
 class TopBar extends StatelessWidget {
-  final Duration? timer;
+  final bool hasTimer;
   final bool isBackButtonHidden;
   final bool popToRoot;
 
   const TopBar({
     super.key,
-    required this.timer,
+    required this.hasTimer,
     this.isBackButtonHidden = false,
     this.popToRoot = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bool hasTimer = timer != null;
     final bool showCenterLogo = !hasTimer && !isBackButtonHidden;
 
     return Padding(

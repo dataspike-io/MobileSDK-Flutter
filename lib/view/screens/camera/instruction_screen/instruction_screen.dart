@@ -10,10 +10,7 @@ import 'package:dataspikemobilesdk/main/coordinator/coordinator.dart';
 class InstructionScreen extends StatefulWidget {
   final InstructionType type;
 
-  const InstructionScreen({
-    super.key,
-    required this.type,
-  });
+  const InstructionScreen({super.key, required this.type});
 
   @override
   State<InstructionScreen> createState() => _InstructionScreenState();
@@ -60,7 +57,7 @@ class _InstructionScreenState extends State<InstructionScreen> {
         bottom: false,
         child: Column(
           children: [
-            TopBar(timer: timer),
+            TopBar(hasTimer: true),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
@@ -85,10 +82,7 @@ class _InstructionScreenState extends State<InstructionScreen> {
                       child: SwipableView(type: widget.type),
                     ),
                     const Spacer(),
-                    ContinueButton(
-                      text: ctaText,
-                      onPressed: _onContinue,
-                    ),
+                    ContinueButton(text: ctaText, onPressed: _onContinue),
                     const SizedBox(height: 16),
                   ],
                 ),

@@ -133,7 +133,7 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    TopBar(timer: timer),
+                    TopBar(hasTimer: true),
                     Center(
                       child: SizedBox(
                         key: previewKey,

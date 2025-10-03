@@ -42,7 +42,7 @@ class _CameraAccessScreenState extends State<CameraAccessScreen> {
         bottom: false,
         child: Column(
           children: [
-            TopBar(timer: timer),
+            TopBar(hasTimer: true),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

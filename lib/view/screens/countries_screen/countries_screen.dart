@@ -69,7 +69,7 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            TopBar(timer: null),
+            TopBar(hasTimer: false),
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
               child: Align(

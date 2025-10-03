@@ -147,7 +147,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    TopBar(timer: timer),
+                    TopBar(hasTimer: true),
                     Center(
                       child: SizedBox(
                         key: previewKey,

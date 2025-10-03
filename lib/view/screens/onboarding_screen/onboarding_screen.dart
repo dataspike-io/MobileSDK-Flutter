@@ -54,7 +54,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TopBar(timer: null, isBackButtonHidden: true),
+                    TopBar(hasTimer: false, isBackButtonHidden: true),
                     const SizedBox(height: 20),
                     Container(
                       height: 1,

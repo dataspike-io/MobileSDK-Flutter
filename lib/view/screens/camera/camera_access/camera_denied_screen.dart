@@ -58,7 +58,7 @@ class _CameraDeniedScreenState extends State<CameraDeniedScreen> {
         bottom: false,
         child: Column(
           children: [
-            TopBar(timer: timer),
+            TopBar(hasTimer: true),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

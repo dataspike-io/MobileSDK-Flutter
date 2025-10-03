@@ -125,7 +125,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            TopBar(timer: timer),
+            TopBar(hasTimer: true),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
@@ -148,7 +148,9 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
                       const Center(
                         child: Padding(
                           padding: EdgeInsets.symmetric(vertical: 40),
-                          child: Center(child: Loader(color: AppColors.slateGray)),
+                          child: Center(
+                            child: Loader(color: AppColors.slateGray),
+                          ),
                         ),
                       )
                     else
