@@ -258,12 +258,13 @@ class DataspikeCoordinator {
   static void showDocumentInstructionScreen(
     BuildContext context,
     InstructionType type,
-  ) => {
-    if (type == InstructionType.poi)
-      showNextStep(context, DataspikeStep.documentInstruction)
-    else if (type == InstructionType.liveness)
-      showNextStep(context, DataspikeStep.selfieInstruction),
-  };
+  ) {
+    if (type == InstructionType.poi) {
+      showNextStep(context, DataspikeStep.documentInstruction);
+    } else if (type == InstructionType.liveness) {
+      showNextStep(context, DataspikeStep.selfieInstruction);
+    }
+  }
 
   static void finishFlow(DataspikeVerificationStatus status) {
     _cancelVerificationExpiryWatch(clearContext: true);
