@@ -1,14 +1,13 @@
 import 'dart:async';
+import 'package:dataspikemobilesdk/dependencies_provider/dataspike_injector.dart';
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 
 class TimeBox extends StatefulWidget {
-  final Duration initialTime;
   final bool isTitle;
 
   const TimeBox({
     super.key,
-    required this.initialTime,
     this.isTitle = true,
   });
 
@@ -16,7 +15,7 @@ class TimeBox extends StatefulWidget {
   State<TimeBox> createState() => _TimeLeftBoxState();
 }
 
-class _TimeLeftBoxState extends State<TimeBox> {
+class _TimeLeftBoxState extends State<TimeBox> with WidgetsBindingObserver {
   late Duration _timeLeft;
   Timer? _timer;
   bool isActive = true;
@@ -24,12 +23,21 @@ class _TimeLeftBoxState extends State<TimeBox> {
   @override
   void initState() {
     super.initState();
-    _timeLeft = widget.initialTime;
+    WidgetsBinding.instance.addObserver(this);
+
+    final remaining = Duration(
+      milliseconds: DataspikeInjector
+          .component.verificationManager.millisecondsUntilVerificationExpired,
+    );
+    _timeLeft = remaining > Duration.zero ? remaining : Duration.zero;
     isActive = _timeLeft > Duration.zero;
     _startTimer();
   }
 
   void _startTimer() {
+    _timer?.cancel();
+    if (!isActive) return;
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_timeLeft > Duration.zero) {
         setState(() {
@@ -39,14 +47,37 @@ class _TimeLeftBoxState extends State<TimeBox> {
       } else {
         timer.cancel();
         setState(() {
+          _timeLeft = Duration.zero;
           isActive = false;
         });
       }
     });
   }
 
+  void _recalculateFromManager() {
+    final remaining = Duration(
+      milliseconds: DataspikeInjector
+          .component.verificationManager.millisecondsUntilVerificationExpired,
+    );
+    setState(() {
+      _timeLeft = remaining > Duration.zero ? remaining : Duration.zero;
+      isActive = _timeLeft > Duration.zero;
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      _timer?.cancel();
+    } else if (state == AppLifecycleState.resumed) {
+      _recalculateFromManager();
+      _startTimer();
+    }
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     super.dispose();
   }

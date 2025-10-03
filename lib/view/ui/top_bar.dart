@@ -44,10 +44,7 @@ class TopBar extends StatelessWidget {
           Expanded(
             child: Center(
               child: hasTimer
-                  ? TimeBox(
-                      initialTime: timer!,
-                      isTitle: true,
-                    )
+                  ? TimeBox(isTitle: true)
                   : (showCenterLogo ? const _Logo() : const SizedBox.shrink()),
             ),
           ),

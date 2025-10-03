@@ -24,7 +24,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void initState() {
     super.initState();
     viewModel = DataspikeViewModelFactory().create<OnboardingViewModel>();
-    viewModel.setVerificationTimer();
     viewModel.addListener(_onVmChanged);
   }
 
@@ -42,8 +41,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final timer = viewModel.timerDuration;
-
     final bool accepted = viewModel.termsAccepted && viewModel.dataAccepted;
 
     return Scaffold(
@@ -76,18 +73,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    if (timer != null)
-                      Row(
-                        children: [
-                          TimeBox(
-                            initialTime: timer,
-                            isTitle: false,
-                          ),
-                        ],
-                      ),
+                    Row(children: [TimeBox(isTitle: false)]),
                     const SizedBox(height: 12),
                     InfoCard(
-                      title: 'Company requests proof of address, proof of identity and liveness verifications.'
+                      title:
+                          'Company requests proof of address, proof of identity and liveness verifications.',
                     ),
                   ],
                 ),
@@ -104,8 +94,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: StagesCardWithTerms(
                         stages: viewModel.stages
                             .map(
-                              (s) =>
-                                  Stage(title: s.title, subtitle: s.subtitle, isCompleted: s.completed),
+                              (s) => Stage(
+                                title: s.title,
+                                subtitle: s.subtitle,
+                                isCompleted: s.completed,
+                              ),
                             )
                             .toList(),
                         placeholderAsset:
@@ -129,20 +122,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           style: TextButton.styleFrom(
                             foregroundColor: AppColors.deepViolet,
                             padding: EdgeInsets.zero,
-                          minimumSize: const Size(0, 0),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: const Text(
-                          'Continue verification on a desktop',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'Figtree',
-                            package: 'dataspikemobilesdk',
+                            minimumSize: const Size(0, 0),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text(
+                            'Continue verification on a desktop',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Figtree',
+                              package: 'dataspikemobilesdk',
+                            ),
                           ),
                         ),
                       ),
-                      )
                     ),
                   ],
                 ),

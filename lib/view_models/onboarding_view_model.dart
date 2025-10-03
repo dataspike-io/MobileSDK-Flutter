@@ -10,24 +10,12 @@ class OnboardingViewModel extends ChangeNotifier {
 
   String verificationUrl = '';
 
-  Duration? timerDuration;
 
   List<StageItem> stages = const [];
   
   OnboardingViewModel() {
-    setVerificationTimer();
     buildStages();
     verificationUrl = DataspikeInjector.component.verificationManager.verificationUrl;
-  }
-
-  void setVerificationTimer() {
-    final verificationManager = DataspikeInjector.component.verificationManager;
-    final millisecondsUntilVerificationExpired =
-        verificationManager.millisecondsUntilVerificationExpired;
-    timerDuration = Duration(
-      milliseconds: millisecondsUntilVerificationExpired,
-    );
-    notifyListeners();
   }
 
   void buildStages() {
