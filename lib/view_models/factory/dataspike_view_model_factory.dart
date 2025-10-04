@@ -1,3 +1,4 @@
+import 'package:dataspikemobilesdk/data/use_cases/set_country_use_case.dart';
 import 'package:dataspikemobilesdk/dependencies_provider/dataspike_injector.dart';
 import 'package:dataspikemobilesdk/data/use_cases/verification_use_case.dart';
 import 'package:dataspikemobilesdk/data/use_cases/proceed_with_verification_use_case.dart';
@@ -6,6 +7,7 @@ import '../onboarding_view_model.dart';
 import '../personal_data_view_model.dart';
 import '../camera_document_view_model.dart';
 import '../camera_avatar_view_model.dart';
+import '../countries_view_model.dart';
 import '../verification_completed_view_model.dart';
 import 'package:dataspikemobilesdk/data/use_cases/set_profile_use_case.dart';
 import 'package:dataspikemobilesdk/data/use_cases/uploading_image_use_case.dart';
@@ -43,6 +45,12 @@ class DataspikeViewModelFactory {
       case VerificationCompletedViewModel:
         return VerificationCompletedViewModel(
           getProceedWithVerificationUseCase: ProceedWithVerificationUseCase(
+            dataspikeRepository: DataspikeInjector.component.dataspikeRepository,
+          ),
+        ) as T;
+      case CountryPickerViewModel:
+        return CountryPickerViewModel(
+          setCountryUseCase: SetCountryUseCase(
             dataspikeRepository: DataspikeInjector.component.dataspikeRepository,
           ),
         ) as T;
