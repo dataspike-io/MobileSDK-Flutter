@@ -12,6 +12,7 @@ import 'package:dataspikemobilesdk/main/coordinator/coordinator.dart';
 import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:dataspikemobilesdk/main/models/dataspike_verifications_status.dart';
+import 'package:dataspikemobilesdk/domain/models/states/proceed_with_verification_state.dart';
 
 class VerificationCompletedScreen extends StatefulWidget {
   const VerificationCompletedScreen({super.key});
@@ -39,13 +40,24 @@ class _VerificationCompletedScreenState
     viewModel = DataspikeViewModelFactory()
         .create<VerificationCompletedViewModel>();
 
-    _verificationSubscription = viewModel.verificationFlow.listen((
-      verificationState,
-    ) {
-      setState(() {
-        _state = verificationState;
-      });
-    });
+    _verificationSubscription = viewModel.verificationFlow.listen(
+      (verificationState) {
+        if (!mounted) return;
+
+        if (verificationState is ProceedWithVerificationStateError &&
+            verificationState.shouldNavigateToSelectCountry) {
+              if (!mounted) return;
+              DataspikeCoordinator.showCountryPicker(
+                context,
+                title: 'Please, choose your country',
+            );
+        }
+
+        setState(() {
+          _state = verificationState;
+        });
+      },
+    );
 
     viewModel.getVerificationCompleted();
   }
