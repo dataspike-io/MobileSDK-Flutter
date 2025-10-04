@@ -3,7 +3,7 @@ import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:dataspikemobilesdk/domain/models/manual_custom_representation_type.dart';
 import 'package:dataspikemobilesdk/domain/models/manual_custom_field_type.dart';
 import 'package:dataspikemobilesdk/domain/models/manual_custom_field_option_type.dart';
-import 'package:dataspikemobilesdk/view/screens/countries_screen/countries_screen.dart';
+import 'package:dataspikemobilesdk/main/coordinator/coordinator.dart';
 import 'package:file_picker/file_picker.dart';
 import '/view/ui/personal_data/radio_view.dart';
 import '/view/ui/personal_data/label.dart';
@@ -179,15 +179,10 @@ class FieldLine extends StatelessWidget {
           InkWell(
             borderRadius: BorderRadius.circular(14),
             onTap: () async {
-              final picked = await Navigator.of(context).push<String>(
-                MaterialPageRoute(
-                  builder: (_) => CountryPickerScreen(
-                    title: 'Please, choose your ${field.label.toLowerCase()}',
-                    onCountrySelected: (country) {
-                      onChanged(index, country);
-                    },
-                  ),
-                ),
+              final picked = await DataspikeCoordinator.showCountryPicker(
+                context,
+                title: 'Please, choose your ${field.label.toLowerCase()}',
+                onSelected: (country) => onChanged(index, country),
               );
               if (picked != null && picked.isNotEmpty) {
                 onChanged(index, picked);

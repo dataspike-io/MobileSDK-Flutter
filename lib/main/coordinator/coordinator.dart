@@ -16,6 +16,7 @@ import 'package:dataspikemobilesdk/view/screens/camera/camera_access/camera_deni
 import 'package:dataspikemobilesdk/view/screens/verification_expired_screen/verification_expired_screen.dart';
 import 'package:dataspikemobilesdk/view/screens/camera/instruction_screen/instruction_screen.dart';
 import 'package:dataspikemobilesdk/domain/models/instruction_type.dart';
+import 'package:dataspikemobilesdk/view/screens/countries_screen/countries_screen.dart';
 
 enum DataspikeStep {
   onboarding,
@@ -289,6 +290,21 @@ class DataspikeCoordinator {
 
   static void _onAppResumed() {
     scheduleVerificationExpiryWatch();
+  }
+
+  static Future<String?> showCountryPicker(
+    BuildContext context, {
+    required String title,
+    ValueChanged<String>? onSelected,
+  }) {
+    return Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => CountryPickerScreen(
+          title: title,
+          onCountrySelected: onSelected,
+        ),
+      ),
+    );
   }
 }
 
