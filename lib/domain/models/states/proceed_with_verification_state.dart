@@ -15,9 +15,13 @@ class ProceedWithVerificationStateError extends ProceedWithVerificationState {
   final List<String> pendingDocuments;
   final String message;
 
+  bool get shouldNavigateToSelectCountry => error == COUNTRY_UNKNOWN;
+
   ProceedWithVerificationStateError({
     required this.error,
     required this.pendingDocuments,
     required this.message,
   });
 }
+
+const String COUNTRY_UNKNOWN = 'COUNTRY_UNKNOWN';                            
