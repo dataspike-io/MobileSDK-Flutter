@@ -4,8 +4,8 @@ class ProfileFieldsRequestBody {
   final String? email;
   final String? phone;
   final String? country;
-  final String? dob;          // формат yyyy-MM-dd (или как требуется беком)
-  final String? gender;       // ожидается 'M' / 'F' / др. код
+  final String? dob;          // yyyy-MM-dd
+  final String? gender;       // 'M' / 'F' 
   final String? citizenship;
   final String? address;
   final Map<String, dynamic>? customFields; // { backendKey : value }

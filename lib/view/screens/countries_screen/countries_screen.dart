@@ -153,7 +153,7 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
                             widget.initialAlphaTwo?.toLowerCase() == alpha;
                         final name = (c.name).trim();
                         return InkWell(
-                          key: ValueKey(alpha), // стабильные элементы
+                          key: ValueKey(alpha),
                           onTap: name.isEmpty
                               ? null
                               : () {
@@ -219,7 +219,7 @@ class _FlagNetwork extends StatelessWidget {
         url,
         width: 24,
         height: 18,
-        cacheWidth: 24,   // дешевле декодировать
+        cacheWidth: 24,  
         cacheHeight: 18,
         gaplessPlayback: true,
         filterQuality: FilterQuality.none,
