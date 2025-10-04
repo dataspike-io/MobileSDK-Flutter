@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '/dependencies_provider/dataspike_injector.dart';
 import 'package:dataspikemobilesdk/data/use_cases/set_profile_use_case.dart';
 import 'package:dataspikemobilesdk/data/models/request/profile_fields_request_body.dart';
 import 'package:dataspikemobilesdk/domain/models/manual_custom_representation_type.dart';
@@ -10,14 +9,12 @@ import 'dart:convert';
 import 'package:dataspikemobilesdk/domain/models/states/message_state.dart';
 
 class PersonalDataViewModel extends ChangeNotifier {
-  Duration? timerDuration;
 
   List<ManualCustomFieldRepresentationModel> personalDataFields = [];
   final SetProfileUseCase _setProfileUseCase;
 
   PersonalDataViewModel({required SetProfileUseCase setProfileUseCase})
     : _setProfileUseCase = setProfileUseCase {
-    setVerificationTimer();
     setStages();
   }
 
@@ -30,16 +27,6 @@ class PersonalDataViewModel extends ChangeNotifier {
           !f.isValid ||
           !f.isValidData,
     );
-  }
-
-  void setVerificationTimer() {
-    final verificationManager = DataspikeInjector.component.verificationManager;
-    final millisecondsUntilVerificationExpired =
-        verificationManager.millisecondsUntilVerificationExpired;
-    timerDuration = Duration(
-      milliseconds: millisecondsUntilVerificationExpired,
-    );
-    notifyListeners();
   }
 
   void setStages() {

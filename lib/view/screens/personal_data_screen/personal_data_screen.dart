@@ -25,7 +25,6 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
   void initState() {
     super.initState();
     viewModel = DataspikeViewModelFactory().create<PersonalDataViewModel>();
-    viewModel.setVerificationTimer();
     viewModel.addListener(_onVmChanged);
   }
 
@@ -117,7 +116,6 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final timer = viewModel.timerDuration;
     final fields = viewModel.personalDataFields;
 
     return Scaffold(

@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '/dependencies_provider/dataspike_injector.dart';
 import 'package:dataspikemobilesdk/data/use_cases/uploading_image_use_case.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
@@ -12,7 +11,6 @@ import 'package:dataspikemobilesdk/domain/models/document_type.dart';
 import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
 
 class CameraDocumentViewModel extends ChangeNotifier {
-  Duration? timerDuration;
 
   DocumentSide side = DocumentSide.front;
 
@@ -48,17 +46,6 @@ class CameraDocumentViewModel extends ChangeNotifier {
   }) : _setUseCase = setUseCase,
        documentType = docType {
     init = _setup();
-    setVerificationTimer();
-  }
-
-  void setVerificationTimer() {
-    final verificationManager = DataspikeInjector.component.verificationManager;
-    final millisecondsUntilVerificationExpired =
-        verificationManager.millisecondsUntilVerificationExpired;
-    timerDuration = Duration(
-      milliseconds: millisecondsUntilVerificationExpired,
-    );
-    notifyListeners();
   }
 
   @override

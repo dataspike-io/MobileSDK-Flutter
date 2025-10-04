@@ -43,13 +43,6 @@ class _CameraDeniedScreenState extends State<CameraDeniedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final timer = Duration(
-      milliseconds: DataspikeInjector
-          .component
-          .verificationManager
-          .millisecondsUntilVerificationExpired,
-    );
-
     final appName = _appName.isEmpty ? 'this app' : _appName;
 
     return Scaffold(

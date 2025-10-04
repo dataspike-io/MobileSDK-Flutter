@@ -103,8 +103,6 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
     final camWidth = screenSize.width;
     final camHeight = screenSize.height * 0.65;
 
-    final timer = viewModel.timerDuration;
-
     return FutureBuilder(
       future: viewModel.init,
       builder: (context, snap) {

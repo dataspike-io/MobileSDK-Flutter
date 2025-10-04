@@ -29,13 +29,6 @@ class _CameraAccessScreenState extends State<CameraAccessScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final timer = Duration(
-      milliseconds: DataspikeInjector
-          .component
-          .verificationManager
-          .millisecondsUntilVerificationExpired,
-    );
-
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(

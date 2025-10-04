@@ -116,8 +116,6 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
     final camWidth = screenSize.width;
     final camHeight = screenSize.height * 0.65;
 
-    final timer = viewModel.timerDuration;
-
     return FutureBuilder(
       future: viewModel.init,
       builder: (context, snap) {

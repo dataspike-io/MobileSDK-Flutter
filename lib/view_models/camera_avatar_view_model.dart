@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '/dependencies_provider/dataspike_injector.dart';
 import 'package:dataspikemobilesdk/data/use_cases/uploading_image_use_case.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
@@ -9,7 +8,6 @@ import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart
 import 'package:flutter/foundation.dart';
 
 class CameraAvatarViewModel extends ChangeNotifier {
-  Duration? timerDuration;
 
   CameraController? ctrl;
   late Future<void> init;
@@ -44,7 +42,6 @@ class CameraAvatarViewModel extends ChangeNotifier {
   CameraAvatarViewModel({required UploadImageUseCase setUseCase})
     : _setUseCase = setUseCase {
     init = _setup();
-    setVerificationTimer();
   }
 
   Future<void> _setup() async {
@@ -64,16 +61,6 @@ class CameraAvatarViewModel extends ChangeNotifier {
     } catch (e) {
       debugPrint('Flash off not supported: $e');
     }
-  }
-
-  void setVerificationTimer() {
-    final verificationManager = DataspikeInjector.component.verificationManager;
-    final millisecondsUntilVerificationExpired =
-        verificationManager.millisecondsUntilVerificationExpired;
-    timerDuration = Duration(
-      milliseconds: millisecondsUntilVerificationExpired,
-    );
-    notifyListeners();
   }
 
   @override
