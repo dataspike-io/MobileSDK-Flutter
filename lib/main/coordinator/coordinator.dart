@@ -34,6 +34,10 @@ enum DataspikeStep {
 class DataspikeCoordinator {
   static BuildContext? _flowContext;
   static Timer? _verificationExpiryTimer;
+  
+  static bool _lifecycleObserverAttached = false;
+  static final WidgetsBindingObserver _lifecycleObserver =
+      _CoordinatorLifecycleObserver(_onAppResumed);
 
   static void _bindFlowContext(BuildContext context) {
       _flowContext = Navigator.of(context).context;
@@ -42,6 +46,12 @@ class DataspikeCoordinator {
   static void _cancelVerificationExpiryWatch({bool clearContext = false}) {
     _verificationExpiryTimer?.cancel();
     _verificationExpiryTimer = null;
+
+    if (_lifecycleObserverAttached) {
+      WidgetsBinding.instance.removeObserver(_lifecycleObserver);
+      _lifecycleObserverAttached = false;
+    }
+
     if (clearContext) _flowContext = null;
   }
 
@@ -69,8 +79,10 @@ class DataspikeCoordinator {
   }
 
   static void startFlow(BuildContext context) {
-    _bindFlowContext(context);
-    scheduleVerificationExpiryWatch();
+    if (!_lifecycleObserverAttached) {
+      WidgetsBinding.instance.addObserver(_lifecycleObserver);
+      _lifecycleObserverAttached = true;
+    }
 
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -93,6 +105,8 @@ class DataspikeCoordinator {
           MaterialPageRoute(builder: (_) => const OnboardingScreen()),
           (route) => false,
         );
+        _bindFlowContext(context);
+        scheduleVerificationExpiryWatch();
         break;
       case DataspikeStep.personalData:
         Navigator.of(
@@ -269,5 +283,21 @@ class DataspikeCoordinator {
   static void finishFlow(DataspikeVerificationStatus status) {
     _cancelVerificationExpiryWatch(clearContext: true);
     DataspikeManager.passVerificationCompletedResult(status);
+  }
+
+  static void _onAppResumed() {
+    scheduleVerificationExpiryWatch();
+  }
+}
+
+class _CoordinatorLifecycleObserver with WidgetsBindingObserver {
+  final VoidCallback onResumed;
+  _CoordinatorLifecycleObserver(this.onResumed);
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      onResumed();
+    }
   }
 }
