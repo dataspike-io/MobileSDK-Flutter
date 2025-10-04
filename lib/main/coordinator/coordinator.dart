@@ -105,6 +105,8 @@ class DataspikeCoordinator {
           MaterialPageRoute(builder: (_) => const OnboardingScreen()),
           (route) => false,
         );
+        
+        // TODO: IN CASE OF REMOVING ONBOARDING CHANGE PLACE OF CALLING
         _bindFlowContext(context);
         scheduleVerificationExpiryWatch();
         break;
