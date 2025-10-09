@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../ui/top_bar.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
-import 'package:dataspikemobilesdk/dependencies_provider/dataspike_injector.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/additional/info_card_without_image.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 

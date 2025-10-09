@@ -1,7 +1,6 @@
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/view/timer/timer_box.dart';
-import 'package:dataspikemobilesdk/view/screens/verification_expired_screen/verification_expired_screen.dart';
 import '/view_models/onboarding_view_model.dart';
 import '/view_models/factory/dataspike_view_model_factory.dart';
 import 'package:dataspikemobilesdk/view/ui/top_bar.dart';
