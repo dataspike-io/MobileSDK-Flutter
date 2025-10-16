@@ -42,105 +42,108 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final bool accepted = viewModel.termsAccepted && viewModel.dataAccepted;
 
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TopBar(hasTimer: false, isBackButtonHidden: true),
-                    const SizedBox(height: 20),
-                    Container(
-                      height: 1,
-                      width: double.infinity,
-                      color: AppColors.snowyLilac,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Verify your identity for Company',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.black,
-                        fontFamily: 'FunnelDisplay',
-                        package: 'dataspikemobilesdk',
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: AppColors.white,
+        body: SafeArea(
+          child: CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TopBar(hasTimer: false, isBackButtonHidden: true),
+                      const SizedBox(height: 20),
+                      Container(
+                        height: 1,
+                        width: double.infinity,
+                        color: AppColors.snowyLilac,
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(children: [TimeBox(isTitle: false)]),
-                    const SizedBox(height: 12),
-                    InfoCard(
-                      title:
-                          'Company requests proof of address, proof of identity and liveness verifications.',
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      Text(
+                        'Verify your identity for Company',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.black,
+                          fontFamily: 'FunnelDisplay',
+                          package: 'dataspikemobilesdk',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(children: [TimeBox(isTitle: false)]),
+                      const SizedBox(height: 12),
+                      InfoCard(
+                        title:
+                            'Company requests proof of address, proof of identity and liveness verifications.',
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-              sliver: SliverFillRemaining(
-                hasScrollBody: false,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: StagesCardWithTerms(
-                        stages: viewModel.stages
-                            .map(
-                              (s) => Stage(
-                                title: s.title,
-                                subtitle: s.subtitle,
-                                isCompleted: s.completed,
-                              ),
-                            )
-                            .toList(),
-                        placeholderAsset:
-                            'packages/dataspikemobilesdk/assets/images/dinosaur.svg',
-                        accepted: accepted,
-                        onAcceptChanged: (v) {
-                          viewModel.setTermsAccepted(v);
-                          viewModel.setDataAccepted(v);
-                        },
-                        onStartPressed: accepted ? _onStart : null,
-                        openTerms: () => viewModel.openTermsUrl(),
-                        openPrivacy: () => viewModel.openPrivacyUrl(),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                sliver: SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: StagesCardWithTerms(
+                          stages: viewModel.stages
+                              .map(
+                                (s) => Stage(
+                                  title: s.title,
+                                  subtitle: s.subtitle,
+                                  isCompleted: s.completed,
+                                ),
+                              )
+                              .toList(),
+                          placeholderAsset:
+                              'packages/dataspikemobilesdk/assets/images/dinosaur.svg',
+                          accepted: accepted,
+                          onAcceptChanged: (v) {
+                            viewModel.setTermsAccepted(v);
+                            viewModel.setDataAccepted(v);
+                          },
+                          onStartPressed: accepted ? _onStart : null,
+                          openTerms: () => viewModel.openTermsUrl(),
+                          openPrivacy: () => viewModel.openPrivacyUrl(),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Center(
-                      child: SizedBox(
-                        height: 40,
-                        child: TextButton(
-                          onPressed: viewModel.openVerificationUrl,
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppColors.deepViolet,
-                            padding: EdgeInsets.zero,
-                            minimumSize: const Size(0, 0),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: const Text(
-                            'Continue verification on a desktop',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: 'Figtree',
-                              package: 'dataspikemobilesdk',
+                      const SizedBox(height: 16),
+                      Center(
+                        child: SizedBox(
+                          height: 40,
+                          child: TextButton(
+                            onPressed: viewModel.openVerificationUrl,
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.deepViolet,
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(0, 0),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: const Text(
+                              'Continue verification on a desktop',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                fontFamily: 'Figtree',
+                                package: 'dataspikemobilesdk',
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

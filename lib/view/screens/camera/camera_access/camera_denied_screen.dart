@@ -44,67 +44,70 @@ class _CameraDeniedScreenState extends State<CameraDeniedScreen> {
   Widget build(BuildContext context) {
     final appName = _appName.isEmpty ? 'this app' : _appName;
 
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            TopBar(hasTimer: true),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'Camera access needed',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.black,
-                              fontFamily: 'FunnelDisplay',
-                              package: 'dataspikemobilesdk',
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: AppColors.white,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              TopBar(hasTimer: true),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              'Camera access needed',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.black,
+                                fontFamily: 'FunnelDisplay',
+                                package: 'dataspikemobilesdk',
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'To continue, please enable camera access for $appName in your device settings:',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                              color: AppColors.black,
-                              fontFamily: 'Figtree',
-                              package: 'dataspikemobilesdk',
+                            const SizedBox(height: 8),
+                            Text(
+                              'To continue, please enable camera access for $appName in your device settings:',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: AppColors.black,
+                                fontFamily: 'Figtree',
+                                package: 'dataspikemobilesdk',
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            height: 64,
-                            child: InfoCardWithoutImage(
-                              title:
-                                  'Go to Settings → Privacy → Camera and allow $appName access to the camera',
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              height: 64,
+                              child: InfoCardWithoutImage(
+                                title:
+                                    'Go to Settings → Privacy → Camera and allow $appName access to the camera',
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  Image.asset(
-                    'packages/dataspikemobilesdk/assets/images/camera_access_denied.png',
-                    width: double.infinity,
-                    fit: BoxFit.fitWidth,
-                  ),
-                ],
+                    Image.asset(
+                      'packages/dataspikemobilesdk/assets/images/camera_access_denied.png',
+                      width: double.infinity,
+                      fit: BoxFit.fitWidth,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

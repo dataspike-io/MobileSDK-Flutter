@@ -39,153 +39,159 @@ class _CountryPickerScreenState extends State<CountryPickerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            TopBar(hasTimer: false, popToRoot: false),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  widget.title,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontFamily: 'FunnelDisplay',
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.black,
-                    package: 'dataspikemobilesdk',
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: AppColors.white,
+        body: SafeArea(
+          child: Column(
+            children: [
+              TopBar(hasTimer: false, isShowingWarningPopup: false),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    widget.title,
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontFamily: 'FunnelDisplay',
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.black,
+                      package: 'dataspikemobilesdk',
+                    ),
                   ),
                 ),
               ),
-            ),
-            AnimatedBuilder(
-              animation: _vm,
-              builder: (_, __) {
-                if (_vm.isEmptyData) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'No countries loaded',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontFamily: 'FunnelDisplay',
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.black,
-                          package: 'dataspikemobilesdk',
-                        ),
-                      ),
-                    ),
-                  );
-                }
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 10,
-                  ),
-                  child: TextField(
-                    controller: _searchCtrl,
-                    style: const TextStyle(
-                      color: AppColors.darkIndigo,
-                      fontSize: 14,
-                      fontFamily: 'Figtree',
-                      fontWeight: FontWeight.w500,
-                      package: 'dataspikemobilesdk',
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Search by country name',
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 14,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                          color: AppColors.palePeriwinkle,
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                          color: AppColors.palePeriwinkle,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                          color: AppColors.palePeriwinkle,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 6),
-            Expanded(
-              child: AnimatedBuilder(
+              AnimatedBuilder(
                 animation: _vm,
                 builder: (_, __) {
                   if (_vm.isEmptyData) {
-                    return const Center(
-                      child: Loader(color: AppColors.slateGray),
-                    );
-                  }
-                  final list = _vm.countries;
-                  return ListView.separated(
-                    padding: const EdgeInsets.only(bottom: 24),
-                    itemCount: list.length,
-                    itemBuilder: (_, i) {
-                      final c = list[i];
-                      final alpha = c.alphaTwo.toLowerCase();
-                      final name = c.name.trim();
-                      return InkWell(
-                        key: ValueKey(alpha),
-                        onTap: name.isEmpty
-                            ? null
-                            : () {
-                                if (widget.onCountrySelected != null) {
-                                  widget.onCountrySelected?.call(name);
-                                } else {
-                                  _vm.setCountry(c);
-                                }
-                                Navigator.of(context).pop(name);
-                              },
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
-                          child: Row(
-                            children: [
-                              _FlagNetwork(code: alpha),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  name,
-                                  style: TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.darkIndigo,
-                                    fontFamily: 'FunnelDisplay',
-                                    package: 'dataspikemobilesdk',
-                                  ),
-                                ),
-                              ),
-                            ],
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'No countries loaded',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontFamily: 'FunnelDisplay',
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.black,
+                            package: 'dataspikemobilesdk',
                           ),
                         ),
-                      );
-                    },
-                    separatorBuilder: (_, __) =>
-                        const Divider(height: 1, indent: 24, endIndent: 24),
+                      ),
+                    );
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 10,
+                    ),
+                    child: TextField(
+                      controller: _searchCtrl,
+                      style: const TextStyle(
+                        color: AppColors.darkIndigo,
+                        fontSize: 14,
+                        fontFamily: 'Figtree',
+                        fontWeight: FontWeight.w500,
+                        package: 'dataspikemobilesdk',
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Search by country name',
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 14,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(
+                            color: AppColors.palePeriwinkle,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(
+                            color: AppColors.palePeriwinkle,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(
+                            color: AppColors.palePeriwinkle,
+                          ),
+                        ),
+                      ),
+                    ),
                   );
                 },
               ),
-            ),
-          ],
+              const SizedBox(height: 6),
+              Expanded(
+                child: AnimatedBuilder(
+                  animation: _vm,
+                  builder: (_, __) {
+                    if (_vm.isEmptyData) {
+                      return const Center(
+                        child: Loader(color: AppColors.slateGray),
+                      );
+                    }
+                    final list = _vm.countries;
+                    return ListView.separated(
+                      padding: const EdgeInsets.only(bottom: 24),
+                      itemCount: list.length,
+                      itemBuilder: (_, i) {
+                        final c = list[i];
+                        final alpha = c.alphaTwo.toLowerCase();
+                        final name = c.name.trim();
+                        return InkWell(
+                          key: ValueKey(alpha),
+                          onTap: name.isEmpty
+                              ? null
+                              : () {
+                                  if (widget.onCountrySelected != null) {
+                                    widget.onCountrySelected?.call(name);
+                                  } else {
+                                    _vm.setCountry(c);
+                                  }
+                                  Navigator.of(context).pop(name);
+                                },
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
+                            child: Row(
+                              children: [
+                                _FlagNetwork(code: alpha),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    name,
+                                    style: TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.darkIndigo,
+                                      fontFamily: 'FunnelDisplay',
+                                      package: 'dataspikemobilesdk',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                      separatorBuilder: (_, __) =>
+                          const Divider(height: 1, indent: 24, endIndent: 24),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

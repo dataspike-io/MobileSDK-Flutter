@@ -31,7 +31,9 @@ class _VerificationCompletedScreenState
 
   void _onFinish() {
     viewModel.openUrl();
-    DataspikeCoordinator.finishFlow(DataspikeVerificationStatus.verificationCompleted); // TODO: CHANGE HERE
+    DataspikeCoordinator.finishFlow(
+      DataspikeVerificationStatus.verificationCompleted,
+    ); // TODO: CHANGE HERE
   }
 
   @override
@@ -40,24 +42,24 @@ class _VerificationCompletedScreenState
     viewModel = DataspikeViewModelFactory()
         .create<VerificationCompletedViewModel>();
 
-    _verificationSubscription = viewModel.verificationFlow.listen(
-      (verificationState) {
+    _verificationSubscription = viewModel.verificationFlow.listen((
+      verificationState,
+    ) {
+      if (!mounted) return;
+
+      if (verificationState is ProceedWithVerificationStateError &&
+          verificationState.shouldNavigateToSelectCountry) {
         if (!mounted) return;
+        DataspikeCoordinator.showCountryPicker(
+          context,
+          title: 'Please, choose your country',
+        );
+      }
 
-        if (verificationState is ProceedWithVerificationStateError &&
-            verificationState.shouldNavigateToSelectCountry) {
-              if (!mounted) return;
-              DataspikeCoordinator.showCountryPicker(
-                context,
-                title: 'Please, choose your country',
-            );
-        }
-
-        setState(() {
-          _state = verificationState;
-        });
-      },
-    );
+      setState(() {
+        _state = verificationState;
+      });
+    });
 
     viewModel.getVerificationCompleted();
   }
@@ -74,131 +76,141 @@ class _VerificationCompletedScreenState
     final state = _state;
 
     if (state == null) {
-      return Scaffold(
-        body: Center(child: Loader(color: AppColors.slateGray)),
+      return PopScope(
+        canPop: false,
+        child: Scaffold(
+          body: Center(child: Loader(color: AppColors.slateGray)),
+        ),
       );
     }
 
     if (viewModel.isCustomScreenEnabled) {
-      return Scaffold(
-        backgroundColor: AppColors.white,
-        body: SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TopBar(hasTimer: false, isBackButtonHidden: true),
-                      const SizedBox(height: 20),
-                      Container(
-                        height: 1,
-                        width: double.infinity,
-                        color: AppColors.snowyLilac,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        viewModel.title,
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.black,
-                          fontFamily: 'FunnelDisplay',
-                          package: 'dataspikemobilesdk',
+      return PopScope(
+        canPop: false,
+        child: Scaffold(
+          backgroundColor: AppColors.white,
+          body: SafeArea(
+            child: CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TopBar(hasTimer: false, isBackButtonHidden: true),
+                        const SizedBox(height: 20),
+                        Container(
+                          height: 1,
+                          width: double.infinity,
+                          color: AppColors.snowyLilac,
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      InfoCardWithSubtitle(
-                        title: viewModel.subtitle,
-                        subtitle: viewModel.redirectWarning,
-                        copyValue: viewModel.link,
-                        linkText: 'Save link on status page',
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (viewModel.isButtonAndStagesShown)
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                  sliver: SliverToBoxAdapter(
-                    child: StagesCard(
-                      stages: viewModel.stages
-                          .map(
-                            (s) => Stage(
-                              title: s.title,
-                              subtitle: s.subtitle,
-                              isCompleted: s.completed,
-                            ),
-                          )
-                          .toList(),
+                        const SizedBox(height: 16),
+                        Text(
+                          viewModel.title,
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.black,
+                            fontFamily: 'FunnelDisplay',
+                            package: 'dataspikemobilesdk',
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        InfoCardWithSubtitle(
+                          title: viewModel.subtitle,
+                          subtitle: viewModel.redirectWarning,
+                          copyValue: viewModel.link,
+                          linkText: 'Save link on status page',
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              if (viewModel.isButtonAndStagesShown)
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-                  sliver: SliverToBoxAdapter(
-                    child: ContinueButton(
-                      onPressed: _onFinish,
-                      text: viewModel.continueButtonText,
+                if (viewModel.isButtonAndStagesShown)
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                    sliver: SliverToBoxAdapter(
+                      child: StagesCard(
+                        stages: viewModel.stages
+                            .map(
+                              (s) => Stage(
+                                title: s.title,
+                                subtitle: s.subtitle,
+                                isCompleted: s.completed,
+                              ),
+                            )
+                            .toList(),
+                      ),
                     ),
                   ),
-                ),
-            ],
+                if (viewModel.isButtonAndStagesShown)
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                    sliver: SliverToBoxAdapter(
+                      child: ContinueButton(
+                        onPressed: _onFinish,
+                        text: viewModel.continueButtonText,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       );
     } else {
-      return Scaffold(
-        backgroundColor: AppColors.white,
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 64),
-                Icon(Icons.check_circle, color: AppColors.mediumSeaGreen, size: 56),
-                const SizedBox(height: 24),
-                Text(
-                  'Thank you!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.black,
-                    fontFamily: 'FunnelDisplay',
-                    package: 'dataspikemobilesdk',
+      return PopScope(
+        canPop: false,
+        child: Scaffold(
+          backgroundColor: AppColors.white,
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 64),
+                  Icon(
+                    Icons.check_circle,
+                    color: AppColors.mediumSeaGreen,
+                    size: 56,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'You have successfully uploaded all required documents.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppColors.darkIndigo,
-                    fontFamily: 'FunnelDisplay',
-                    package: 'dataspikemobilesdk',
+                  const SizedBox(height: 24),
+                  Text(
+                    'Thank you!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.black,
+                      fontFamily: 'FunnelDisplay',
+                      package: 'dataspikemobilesdk',
+                    ),
                   ),
-                ),
-                const Spacer(),
-                  ContinueButton(
-                    onPressed: _onFinish,
-                    text: 'Continue',
+                  const SizedBox(height: 8),
+                  Text(
+                    'You have successfully uploaded all required documents.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: AppColors.darkIndigo,
+                      fontFamily: 'FunnelDisplay',
+                      package: 'dataspikemobilesdk',
+                    ),
                   ),
-                const SizedBox(height: 24),
-                SvgPicture.asset(
-                  'packages/dataspikemobilesdk/assets/images/dataspike_logo.svg',
-                  height: 16,
-                  width: 80,
-                  fit: BoxFit.contain,
-                ),
-                SizedBox(height: 24),
-              ],
+                  const Spacer(),
+                  ContinueButton(onPressed: _onFinish, text: 'Continue'),
+                  const SizedBox(height: 24),
+                  SvgPicture.asset(
+                    'packages/dataspikemobilesdk/assets/images/dataspike_logo.svg',
+                    height: 16,
+                    width: 80,
+                    fit: BoxFit.contain,
+                  ),
+                  SizedBox(height: 24),
+                ],
+              ),
             ),
           ),
         ),

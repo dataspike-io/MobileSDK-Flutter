@@ -107,9 +107,12 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
       future: viewModel.init,
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return Scaffold(
-            backgroundColor: AppColors.white,
-            body: const Center(child: Loader(color: AppColors.slateGray)),
+          return PopScope(
+            canPop: false,
+            child: Scaffold(
+              backgroundColor: AppColors.white,
+              body: const Center(child: Loader(color: AppColors.slateGray)),
+            ),
           );
         }
 
@@ -120,73 +123,79 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
             final isReady = ctrl != null && ctrl.value.isInitialized;
 
             if (!isReady) {
-              return Scaffold(
-                backgroundColor: AppColors.white,
-                body: const Center(child: Loader(color: AppColors.slateGray)),
+              return PopScope(
+                canPop: false,
+                child: Scaffold(
+                  backgroundColor: AppColors.white,
+                  body: const Center(child: Loader(color: AppColors.slateGray)),
+                ),
               );
             }
-            return Scaffold(
-              backgroundColor: AppColors.white,
-              body: SafeArea(
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    TopBar(hasTimer: true),
-                    Center(
-                      child: SizedBox(
-                        key: previewKey,
-                        width: camWidth,
-                        height: camHeight,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(32),
-                          child: LayoutBuilder(
-                            builder: (context, c) {
-                              final ps = viewModel.ctrl!.value.previewSize!;
-                              final previewAR = ps.height / ps.width;
-                              final containerAR = c.maxWidth / c.maxHeight;
-                              final coverScale = previewAR / containerAR;
+            return PopScope(
+              canPop: false,
+              child: Scaffold(
+                backgroundColor: AppColors.white,
+                body: SafeArea(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      TopBar(hasTimer: true),
+                      Center(
+                        child: SizedBox(
+                          key: previewKey,
+                          width: camWidth,
+                          height: camHeight,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(32),
+                            child: LayoutBuilder(
+                              builder: (context, c) {
+                                final ps = viewModel.ctrl!.value.previewSize!;
+                                final previewAR = ps.height / ps.width;
+                                final containerAR = c.maxWidth / c.maxHeight;
+                                final coverScale = previewAR / containerAR;
 
-                              return Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  Transform.scale(
-                                    scale: coverScale,
-                                    child: Center(
-                                      child: AspectRatio(
-                                        aspectRatio: previewAR,
-                                        child: CameraPreview(viewModel.ctrl!),
+                                return Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    Transform.scale(
+                                      scale: coverScale,
+                                      child: Center(
+                                        child: AspectRatio(
+                                          aspectRatio: previewAR,
+                                          child: CameraPreview(viewModel.ctrl!),
+                                        ),
                                       ),
                                     ),
-                                  ),
 
-                                  CustomPaint(
-                                    size: Size(c.maxWidth, c.maxHeight),
-                                    painter: TwoArcsPainter(
-                                      color: AppColors.white,
-                                      strokeWidth: _strokeWidth,
-                                      sideInsetPct: _sideInsetPct,
-                                      topApexPct: _topApexPct,
-                                      bottomApexFromBottomPct:
-                                          _bottomApexFromBottomPct,
-                                      topRisePx: _topRisePx,
-                                      bottomRisePx: _bottomRisePx,
-                                      ctrlXpx: _ctrlXpx,
+                                    CustomPaint(
+                                      size: Size(c.maxWidth, c.maxHeight),
+                                      painter: TwoArcsPainter(
+                                        color: AppColors.white,
+                                        strokeWidth: _strokeWidth,
+                                        sideInsetPct: _sideInsetPct,
+                                        topApexPct: _topApexPct,
+                                        bottomApexFromBottomPct:
+                                            _bottomApexFromBottomPct,
+                                        topRisePx: _topRisePx,
+                                        bottomRisePx: _bottomRisePx,
+                                        ctrlXpx: _ctrlXpx,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              );
-                            },
+                                  ],
+                                );
+                              },
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 32),
+                      const SizedBox(height: 32),
 
-                    CircularContinueButton(
-                      onPressed: () => shootAndCrop(previewKey),
-                    ),
-                    const SizedBox(height: 10),
-                  ],
+                      CircularContinueButton(
+                        onPressed: () => shootAndCrop(previewKey),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                  ),
                 ),
               ),
             );

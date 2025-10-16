@@ -43,44 +43,47 @@ class _InstructionScreenState extends State<InstructionScreen> {
         ? 'Take a photo'
         : 'Take a selfie';
 
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            TopBar(hasTimer: true),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      title,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.black,
-                        fontFamily: 'FunnelDisplay',
-                        package: 'dataspikemobilesdk',
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: AppColors.white,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              TopBar(hasTimer: true),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.black,
+                          fontFamily: 'FunnelDisplay',
+                          package: 'dataspikemobilesdk',
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Flexible(
-                      flex: 6,
-                      fit: FlexFit.tight,
-                      child: SwipableView(type: widget.type),
-                    ),
-                    const Spacer(),
-                    ContinueButton(text: ctaText, onPressed: _onContinue),
-                    const SizedBox(height: 16),
-                  ],
+                      const SizedBox(height: 16),
+                      Flexible(
+                        flex: 6,
+                        fit: FlexFit.tight,
+                        child: SwipableView(type: widget.type),
+                      ),
+                      const Spacer(),
+                      ContinueButton(text: ctaText, onPressed: _onContinue),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
