@@ -59,11 +59,13 @@ class VerificationExpiredScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              const Spacer(),
-              Image.asset(
-                'packages/dataspikemobilesdk/assets/images/verification_expired.png',
-                width: double.infinity,
-                fit: BoxFit.fitWidth,
+              Flexible(
+                child: Image.asset(
+                  'packages/dataspikemobilesdk/assets/images/verification_expired.png',
+                  width: double.infinity,
+                  fit: BoxFit.fitWidth,
+                  alignment: Alignment.bottomCenter,
+                ),
               ),
             ],
           ),

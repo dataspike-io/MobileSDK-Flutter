@@ -57,8 +57,7 @@ class _CameraDeniedScreenState extends State<CameraDeniedScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: Padding(
+                    Padding(
                         padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -94,14 +93,16 @@ class _CameraDeniedScreenState extends State<CameraDeniedScreen> {
                                     'Go to Settings → Privacy → Camera and allow $appName access to the camera',
                               ),
                             ),
+                            SizedBox(height: 22),
                           ],
                         ),
-                      ),
                     ),
-                    Image.asset(
-                      'packages/dataspikemobilesdk/assets/images/camera_access_denied.png',
-                      width: double.infinity,
-                      fit: BoxFit.fitWidth,
+                   Flexible(
+                      child: Image.asset(
+                        'packages/dataspikemobilesdk/assets/images/camera_access_denied.png',
+                        fit: BoxFit.fitWidth,
+                        alignment: Alignment.bottomCenter,
+                      ),
                     ),
                   ],
                 ),

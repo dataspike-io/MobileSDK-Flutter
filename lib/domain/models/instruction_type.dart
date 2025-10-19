@@ -1,1 +1,1 @@
-enum InstructionType { poi, liveness }
+enum InstructionType { poi, liveness, poa }

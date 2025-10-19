@@ -30,18 +30,28 @@ class _InstructionScreenState extends State<InstructionScreen> {
           after: DataspikeStep.selfieInstruction,
         );
         break;
+      case InstructionType.poa:
+        DataspikeCoordinator.proceedNext(
+          context,
+          after: DataspikeStep.poaInstruction,
+        );
+        break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.type == InstructionType.poi
-        ? 'Take a photo of your ID'
-        : 'Take a selfie';
+    final title = switch (widget.type) {
+      InstructionType.poi => 'Take a photo of your ID',
+      InstructionType.liveness => 'Take a selfie',
+      InstructionType.poa => 'Upload a document to prove your address',
+    };
 
-    final ctaText = widget.type == InstructionType.poi
-        ? 'Take a photo'
-        : 'Take a selfie';
+    final ctaText = switch (widget.type) {
+      InstructionType.poi => 'Take a photo',
+      InstructionType.liveness => 'Take a selfie',
+      InstructionType.poa => 'Add photo',
+    };
 
     return PopScope(
       canPop: false,

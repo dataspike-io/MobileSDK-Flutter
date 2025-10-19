@@ -50,7 +50,7 @@ class WarningPopup extends StatelessWidget {
                     ),
                     const SizedBox(height: 11),
                     Text(
-                      "Are you sure you want to return?",
+                      "Go back to the previous step?",
                       style: const TextStyle(
                         color: AppColors.black,
                         fontSize: 20,
@@ -62,7 +62,7 @@ class WarningPopup extends StatelessWidget {
                     ),
                     const SizedBox(height: 11),
                     Text(
-                      "You'll need to complete the previous step fully again",
+                      "If you return, you'll need to redo the previous step from the start.",
                       style: const TextStyle(
                         color: AppColors.black,
                         fontSize: 12,
@@ -77,7 +77,7 @@ class WarningPopup extends StatelessWidget {
                       onPressed: () =>
                           Navigator.of(parentContext, rootNavigator: true)
                               .pop(),
-                      text: 'Continue verification',
+                      text: 'Stay here',
                     ),
                     const SizedBox(height: 2),
                     SizedBox(
@@ -91,7 +91,7 @@ class WarningPopup extends StatelessWidget {
                             Navigator.of(parentContext, rootNavigator: true).pop();
                           },
                           child: Text(
-                            'Return to previous step',
+                            'Go back',
                             style: TextStyle(
                               color: AppColors.royalPurple,
                               fontSize: 14,

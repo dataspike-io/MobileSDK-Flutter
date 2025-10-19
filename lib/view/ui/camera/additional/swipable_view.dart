@@ -52,9 +52,29 @@ class SwipableView extends StatefulWidget {
     ),
   ];
 
-  List<_InstructionSlide> get _slides => (type == InstructionType.liveness)
-      ? _defaultLivenessSlides
-      : _defaultPoiSlides;
+  final List<_InstructionSlide> _defaultPoaSlides = const [
+    _InstructionSlide(
+      imageAsset:
+          'packages/dataspikemobilesdk/assets/images/poa_instruction_1.png',
+      hint: 'You can use a bank statement, utility bill, or lease agreement.',
+    ),
+    _InstructionSlide(
+      imageAsset:
+          'packages/dataspikemobilesdk/assets/images/poa_instruction_2.png',
+      hint: 'Documents should be actual — last 3 months for utility bills, bank statements or an active lease agreement.',
+    ),
+    _InstructionSlide(
+      imageAsset:
+          'packages/dataspikemobilesdk/assets/images/poa_instruction_3.png',
+      hint: 'Make sure your name and address match those on your identity document.',
+    ),
+  ];
+
+  List<_InstructionSlide> get _slides => switch (type) {
+        InstructionType.liveness => _defaultLivenessSlides,
+        InstructionType.poi  => _defaultPoiSlides,
+        InstructionType.poa  => _defaultPoaSlides,
+      };
 
   @override
   State<SwipableView> createState() => _SwipableViewState();
