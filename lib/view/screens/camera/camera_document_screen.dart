@@ -168,12 +168,13 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                                 final previewAR = ps.height / ps.width;
                                 final containerAR = c.maxWidth / c.maxHeight;
                                 final coverScale = previewAR / containerAR;
+                                final coverScaleRation = coverScale >= 1 ? coverScale : 1 / coverScale;
 
                                 return Stack(
                                   fit: StackFit.expand,
                                   children: [
                                     Transform.scale(
-                                      scale: coverScale,
+                                      scale: coverScaleRation,
                                       child: Center(
                                         child: AspectRatio(
                                           aspectRatio: previewAR,
