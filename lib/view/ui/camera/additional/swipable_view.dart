@@ -29,13 +29,13 @@ class SwipableView extends StatefulWidget {
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/poi_instruction_3.png',
       hint:
-          'No incomplete document, faded text, obstructed information or incorrect perspective',
+          'Avoid faded text, cut corners, or tilted angles.',
     ),
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/poi_instruction_4.png',
       hint:
-          'No watermarks or stamps covering crucial details, non-standard or expired.',
+          'Avoid watermarks, stickers, or anything covering details.',
     ),
   ];
 
