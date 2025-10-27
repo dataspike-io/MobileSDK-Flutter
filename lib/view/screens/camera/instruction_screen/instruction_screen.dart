@@ -48,7 +48,7 @@ class _InstructionScreenState extends State<InstructionScreen> {
     };
 
     final ctaText = switch (widget.type) {
-      InstructionType.poi => 'Take a photo',
+      InstructionType.poi => 'Add photo',
       InstructionType.liveness => 'Take a selfie',
       InstructionType.poa => 'Add photo',
     };
