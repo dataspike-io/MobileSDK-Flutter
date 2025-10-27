@@ -130,7 +130,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Complete personal data',
+                        'Complete your personal details',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 20,

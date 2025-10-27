@@ -18,12 +18,12 @@ class SwipableView extends StatefulWidget {
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/poi_instruction_1.png',
       hint:
-          'Front-side only. Follow the instructions below to make sure your document photo is accepted.',
+          'Front side only. Follow the instructions below to make sure your document photo is accepted.',
     ),
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/poi_instruction_2.png',
-      hint: 'No blurry image, glare, reflection, low contrast',
+      hint: 'Avoid blur, glare, reflections, or low contrast.',
     ),
     _InstructionSlide(
       imageAsset:
@@ -43,12 +43,12 @@ class SwipableView extends StatefulWidget {
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/liveness_instruction_1.png',
-      hint: 'Place your face fully to mask for recognition',
+      hint: 'Look straight at the camera with your face centered in the frame.',
     ),
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/liveness_instruction_2.png',
-      hint: 'Place your face fully to mask for recognition',
+      hint: 'Center your face in the frame so we can recognize it clearly.',
     ),
   ];
 
