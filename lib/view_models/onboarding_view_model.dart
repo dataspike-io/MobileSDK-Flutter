@@ -5,8 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '/domain/models/stage_item.dart';
 
 class OnboardingViewModel extends ChangeNotifier {
-  bool termsAccepted = true;
-  bool dataAccepted = true;
+  bool termsAccepted = false;
+  bool dataAccepted = false;
 
   String verificationUrl = '';
 

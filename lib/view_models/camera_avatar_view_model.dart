@@ -66,6 +66,7 @@ class CameraAvatarViewModel extends ChangeNotifier {
   @override
   void dispose() {
     ctrl?.dispose();
+    ctrl = null;
     super.dispose();
   }
 

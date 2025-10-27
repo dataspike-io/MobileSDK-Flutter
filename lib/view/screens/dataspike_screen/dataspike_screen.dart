@@ -59,9 +59,7 @@ class _DataspikeScreenState extends State<DataspikeScreen> {
       }
     });
 
-    viewModel.getVerification(
-      false,
-    ); 
+    viewModel.getVerification(false);
   }
 
   @override
@@ -73,12 +71,15 @@ class _DataspikeScreenState extends State<DataspikeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [const Center(child: Loader(color: AppColors.slateGray))],
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: AppColors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [const Center(child: Loader(color: AppColors.slateGray))],
+          ),
         ),
       ),
     );

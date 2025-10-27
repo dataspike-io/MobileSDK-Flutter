@@ -11,9 +11,6 @@ import 'package:dataspikemobilesdk/main/coordinator/coordinator.dart';
 class PersonalDataScreen extends StatefulWidget {
   const PersonalDataScreen({super.key});
 
-  static Route route() =>
-      MaterialPageRoute<void>(builder: (_) => const PersonalDataScreen());
-
   @override
   State<PersonalDataScreen> createState() => _PersonalDataScreenState();
 }
@@ -118,65 +115,68 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
   Widget build(BuildContext context) {
     final fields = viewModel.personalDataFields;
 
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            TopBar(hasTimer: true),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Complete personal data',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontFamily: 'FunnelDisplay',
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.black,
-                        package: 'dataspikemobilesdk',
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    if (fields.isEmpty)
-                      const Center(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 40),
-                          child: Center(
-                            child: Loader(color: AppColors.slateGray),
-                          ),
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: AppColors.white,
+        body: SafeArea(
+          child: Column(
+            children: [
+              TopBar(hasTimer: true),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Complete your personal details',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontFamily: 'FunnelDisplay',
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.black,
+                          package: 'dataspikemobilesdk',
                         ),
-                      )
-                    else
-                      FieldsCard(
-                        fields: fields,
-                        onChanged: (index, val) {
-                          setState(() {
-                            fields[index].value = val;
-                          });
-                        },
-                        uploadFile: (index, file) {
-                          setState(() {
-                            fields[index].file = file;
-                          });
-                        },
                       ),
-                    const SizedBox(height: 24),
-                    ContinueButton(
-                      text: 'Continue',
-                      onPressed: viewModel.isContinueButtonDisabled
-                          ? null
-                          : _onContinue,
-                    ),
-                  ],
+                      const SizedBox(height: 20),
+                      if (fields.isEmpty)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 40),
+                            child: Center(
+                              child: Loader(color: AppColors.slateGray),
+                            ),
+                          ),
+                        )
+                      else
+                        FieldsCard(
+                          fields: fields,
+                          onChanged: (index, val) {
+                            setState(() {
+                              fields[index].value = val;
+                            });
+                          },
+                          uploadFile: (index, file) {
+                            setState(() {
+                              fields[index].file = file;
+                            });
+                          },
+                        ),
+                      const SizedBox(height: 24),
+                      ContinueButton(
+                        text: 'Continue',
+                        onPressed: viewModel.isContinueButtonDisabled
+                            ? null
+                            : _onContinue,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

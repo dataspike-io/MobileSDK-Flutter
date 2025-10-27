@@ -38,7 +38,8 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
       onProceed: () => proceedNext(),
       showLoader: showLoader,
       hideLoader: hideLoader,
-      showError: (title, msg, withInstruction) => showError(title, msg, withInstruction),
+      showError: (title, msg, withInstruction) =>
+          showError(title, msg, withInstruction),
     );
     super.initState();
   }
@@ -97,7 +98,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
       enableDrag: true,
       backgroundColor: AppColors.clear,
       barrierColor: AppColors.clear,
-       builder: (_) => ErrorBottomSheet(
+      builder: (_) => ErrorBottomSheet(
         title: title,
         message: message,
         instruction: withInstruction ? InstructionType.poi : null,
@@ -110,19 +111,22 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
     final previewKey = GlobalKey();
     final screenSize = MediaQuery.of(context).size;
 
-    final cropWidth = screenSize.width * 0.85;
-    final cropHeight = screenSize.height * 0.3;
-
     final camWidth = screenSize.width;
     final camHeight = screenSize.height * 0.65;
+
+    final cropWidth = screenSize.width * (widget.docType == DocumentType.identity ? 0.85 : 0.6);
+    final cropHeight = screenSize.height * (widget.docType == DocumentType.identity ? 0.3 : 0.5);
 
     return FutureBuilder(
       future: viewModel.init,
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return Scaffold(
-            backgroundColor: AppColors.white,
-            body: const Center(child: Loader(color: AppColors.slateGray)),
+          return PopScope(
+            canPop: false,
+            child: Scaffold(
+              backgroundColor: AppColors.white,
+              body: const Center(child: Loader(color: AppColors.slateGray)),
+            ),
           );
         }
 
@@ -133,194 +137,204 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
             final isReady = ctrl != null && ctrl.value.isInitialized;
 
             if (!isReady) {
-              return Scaffold(
-                backgroundColor: AppColors.white,
-                body: const Center(child: Loader(color: AppColors.slateGray)),
+              return PopScope(
+                canPop: false,
+                child: Scaffold(
+                  backgroundColor: AppColors.white,
+                  body: const Center(child: Loader(color: AppColors.slateGray)),
+                ),
               );
             }
 
-            return Scaffold(
-              backgroundColor: AppColors.white,
-              body: SafeArea(
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    TopBar(hasTimer: true),
-                    Center(
-                      child: SizedBox(
-                        key: previewKey,
-                        width: camWidth,
-                        height: camHeight,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(32),
-                          child: LayoutBuilder(
-                            builder: (context, c) {
-                              final ps = ctrl.value.previewSize!;
-                              final previewAR = ps.height / ps.width;
-                              final containerAR = c.maxWidth / c.maxHeight;
-                              final coverScale = previewAR / containerAR;
+            return PopScope(
+              canPop: false,
+              child: Scaffold(
+                backgroundColor: AppColors.white,
+                body: SafeArea(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      TopBar(hasTimer: true),
+                      Center(
+                        child: SizedBox(
+                          key: previewKey,
+                          width: camWidth,
+                          height: camHeight,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(32),
+                            child: LayoutBuilder(
+                              builder: (context, c) {
+                                final ps = ctrl.value.previewSize!;
+                                final previewAR = ps.height / ps.width;
+                                final containerAR = c.maxWidth / c.maxHeight;
+                                final coverScale = previewAR / containerAR;
+                                final coverScaleRation = coverScale >= 1 ? coverScale : 1 / coverScale;
 
-                              return Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  Transform.scale(
-                                    scale: coverScale,
-                                    child: Center(
-                                      child: AspectRatio(
-                                        aspectRatio: previewAR,
-                                        child: CameraPreview(
-                                          ctrl,
-                                          key: ValueKey(ctrl.description.name),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned.fill(
-                                    child: CustomPaint(
-                                      painter: DimOverlayPainter(
-                                        holeRect: Rect.fromCenter(
-                                          center: Offset(
-                                            c.maxWidth / 2,
-                                            c.maxHeight / 2,
+                                return Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    Transform.scale(
+                                      scale: coverScaleRation,
+                                      child: Center(
+                                        child: AspectRatio(
+                                          aspectRatio: previewAR,
+                                          child: CameraPreview(
+                                            ctrl,
+                                            key: ValueKey(
+                                              ctrl.description.name,
+                                            ),
                                           ),
-                                          width: cropWidth,
-                                          height: cropHeight,
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  Center(
-                                    child: CustomPaint(
-                                      size: Size(cropWidth, cropHeight),
-                                      painter: GreyCornersPainter(
-                                        rect: Rect.fromLTWH(
-                                          0,
-                                          0,
-                                          cropWidth,
-                                          cropHeight,
+                                    Positioned.fill(
+                                      child: CustomPaint(
+                                        painter: DimOverlayPainter(
+                                          holeRect: Rect.fromCenter(
+                                            center: Offset(
+                                              c.maxWidth / 2,
+                                              c.maxHeight / 2,
+                                            ),
+                                            width: cropWidth,
+                                            height: cropHeight,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  Positioned(
-                                    top: 24,
-                                    right: 24,
-                                    child:
-                                        (viewModel.frontCam != null ||
-                                            viewModel.backCam != null)
-                                        ? Builder(
-                                            builder: (context) {
-                                              final canSwitch =
-                                                  viewModel.frontCam != null &&
-                                                  viewModel.backCam != null;
-                                              return Opacity(
-                                                opacity: canSwitch ? 1 : 0.4,
-                                                child: GestureDetector(
-                                                  onTap: canSwitch
-                                                      ? () async {
-                                                          await viewModel
-                                                              .toggleCamera();
-                                                        }
-                                                      : null,
-                                                  child: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      SvgPicture.asset(
-                                                        'packages/dataspikemobilesdk/assets/images/camera.svg',
-                                                        height: 24,
-                                                        width: 24,
-                                                        fit: BoxFit.contain,
-                                                      ),
-                                                    ],
+                                    Center(
+                                      child: CustomPaint(
+                                        size: Size(cropWidth, cropHeight),
+                                        painter: GreyCornersPainter(
+                                          rect: Rect.fromLTWH(
+                                            0,
+                                            0,
+                                            cropWidth,
+                                            cropHeight,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      top: 24,
+                                      right: 24,
+                                      child:
+                                          (viewModel.frontCam != null ||
+                                              viewModel.backCam != null)
+                                          ? Builder(
+                                              builder: (context) {
+                                                final canSwitch =
+                                                    viewModel.frontCam !=
+                                                        null &&
+                                                    viewModel.backCam != null;
+                                                return Opacity(
+                                                  opacity: canSwitch ? 1 : 0.4,
+                                                  child: GestureDetector(
+                                                    onTap: canSwitch
+                                                        ? () async {
+                                                            await viewModel
+                                                                .toggleCamera();
+                                                          }
+                                                        : null,
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        SvgPicture.asset(
+                                                          'packages/dataspikemobilesdk/assets/images/camera.svg',
+                                                          height: 24,
+                                                          width: 24,
+                                                          fit: BoxFit.contain,
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
-                                                ),
-                                              );
-                                            },
-                                          )
-                                        : const SizedBox.shrink(),
-                                  ),
-                                  Positioned(
-                                    top: 100,
-                                    left: 0,
-                                    right: 0,
-                                    child: Center(
-                                      child: Text(
-                                        viewModel.hint,
-                                        style: const TextStyle(
-                                          color: AppColors.white,
-                                          fontSize: 14,
-                                          fontFamily: 'Figtree',
-                                          package: 'dataspikemobilesdk',
-                                          fontWeight: FontWeight.w600,
-                                          decoration: TextDecoration.none,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
+                                                );
+                                              },
+                                            )
+                                          : const SizedBox.shrink(),
                                     ),
-                                  ),
-
-                                  if (viewModel.side == DocumentSide.back)
                                     Positioned(
-                                      bottom: 24,
+                                      top: widget.docType == DocumentType.identity ? 100 : 24,
                                       left: 0,
                                       right: 0,
                                       child: Center(
-                                        child: SideTogglePill(
-                                          value: viewModel.side,
-                                          onChanged: (v) => setState(
-                                            () => viewModel.side = v,
+                                        child: Text(
+                                          viewModel.hint,
+                                          style: const TextStyle(
+                                            color: AppColors.white,
+                                            fontSize: 14,
+                                            fontFamily: 'Figtree',
+                                            package: 'dataspikemobilesdk',
+                                            fontWeight: FontWeight.w600,
+                                            decoration: TextDecoration.none,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+
+                                    if (viewModel.side == DocumentSide.back)
+                                      Positioned(
+                                        bottom: 24,
+                                        left: 0,
+                                        right: 0,
+                                        child: Center(
+                                          child: SideTogglePill(
+                                            value: viewModel.side,
+                                            onChanged: (v) => setState(
+                                              () => viewModel.side = v,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
 
-                                  if (viewModel.side == DocumentSide.front)
-                                    Positioned(
-                                      bottom: 80,
-                                      left: 0,
-                                      right: 0,
-                                      child: Center(
-                                        child: InstructionPill(
-                                          text:
-                                              'Place right edge of the card to frame boundaries',
+                                    if (viewModel.side == DocumentSide.front && widget.docType == DocumentType.identity)
+                                      Positioned(
+                                        bottom: 80,
+                                        left: 0,
+                                        right: 0,
+                                        child: Center(
+                                          child: InstructionPill(
+                                            text:
+                                                'Place right edge of the card to frame boundaries',
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    CircularContinueButton(
-                      onPressed: () => shootAndCrop(previewKey),
-                    ),
-                    const SizedBox(height: 2),
-                    SizedBox(
-                      height: 60.0,
-                      width: double.infinity,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: TextButton(
-                          onPressed: viewModel.pickAndUploadDocument,
-                          child: Text(
-                            'Upload document',
-                            style: TextStyle(
-                              color: AppColors.black,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'Figtree',
-                              package: 'dataspikemobilesdk',
+                                  ],
+                                );
+                              },
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
+                      const SizedBox(height: 32),
+                      CircularContinueButton(
+                        onPressed: () => shootAndCrop(previewKey),
+                      ),
+                      const SizedBox(height: 2),
+                      SizedBox(
+                        height: 60.0,
+                        width: double.infinity,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: TextButton(
+                            onPressed: viewModel.pickAndUploadDocument,
+                            child: Text(
+                              'Upload document',
+                              style: TextStyle(
+                                color: AppColors.black,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Figtree',
+                                package: 'dataspikemobilesdk',
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
                 ),
               ),
             );

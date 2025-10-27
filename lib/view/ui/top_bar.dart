@@ -2,18 +2,32 @@ import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../timer/timer_box.dart';
+import 'package:dataspikemobilesdk/view/ui/warning_popup.dart';
 
 class TopBar extends StatelessWidget {
   final bool hasTimer;
   final bool isBackButtonHidden;
-  final bool popToRoot;
+  final bool isShowingWarningPopup;
 
   const TopBar({
     super.key,
     required this.hasTimer,
     this.isBackButtonHidden = false,
-    this.popToRoot = true,
+    this.isShowingWarningPopup = true,
   });
+
+  void showWarningPopup(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: AppColors.clear,
+      barrierColor: AppColors.clear,
+      builder: (_) => WarningPopup(parentContext: context),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +47,10 @@ class TopBar extends StatelessWidget {
                     color: AppColors.darkIndigo,
                   ),
                   onPressed: () {
-                    if (popToRoot) {
-                      Navigator.of(context, rootNavigator: true).popUntil((r) => r.isFirst);
+                    if (isShowingWarningPopup) {
+                      showWarningPopup(context);
                     } else {
-                      Navigator.of(context).maybePop();
+                      Navigator.of(context).pop();
                     }
                   },
                 ),
@@ -47,24 +61,27 @@ class TopBar extends StatelessWidget {
                   : (showCenterLogo ? const _Logo() : const SizedBox.shrink()),
             ),
           ),
-          GestureDetector(
-            onTap: () {},
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SvgPicture.asset(
-                  'packages/dataspikemobilesdk/assets/images/flags_ae.svg',
-                  height: 15,
-                  width: 20,
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(width: 4),
-                const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  size: 18,
-                  color: AppColors.darkIndigo,
-                ),
-              ],
+          Opacity(
+            opacity: 0.0,
+            child: GestureDetector(
+              onTap: () {},
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SvgPicture.asset(
+                    'packages/dataspikemobilesdk/assets/images/flags_ae.svg',
+                    height: 15,
+                    width: 20,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 18,
+                    color: AppColors.darkIndigo,
+                  ),
+                ],
+              ),
             ),
           ),
         ],

@@ -23,6 +23,7 @@ enum DataspikeStep {
   personalData,
   documentInstruction,
   selfieInstruction,
+  poaInstruction,
   documentCamera,
   selfieCamera,
   address,
@@ -140,6 +141,7 @@ class DataspikeCoordinator {
       case DataspikeStep.documentCamera:
         Navigator.of(context).push(
           MaterialPageRoute(
+            maintainState: false,
             builder: (_) =>
                 const LiveCropCamera(docType: DocumentType.identity),
           ),
@@ -153,14 +155,28 @@ class DataspikeCoordinator {
           ),
         );
         break;
+      case DataspikeStep.poaInstruction:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                const InstructionScreen(type: InstructionType.poa),
+          ),
+        );
+        break;
       case DataspikeStep.selfieCamera:
         Navigator.of(
           context,
-        ).push(MaterialPageRoute(builder: (_) => const LiveAvatarCamera()));
+        ).push(
+          MaterialPageRoute(
+            maintainState: false,
+            builder: (_) => const LiveAvatarCamera()
+          )
+        );
         break;
       case DataspikeStep.address:
         Navigator.of(context).push(
           MaterialPageRoute(
+            maintainState: false,
             builder: (_) => const LiveCropCamera(docType: DocumentType.address),
           ),
         );
@@ -220,7 +236,11 @@ class DataspikeCoordinator {
       steps.add(DataspikeStep.selfieInstruction);
       steps.add(DataspikeStep.selfieCamera);
     }
-    if (requiresAddress) steps.add(DataspikeStep.address);
+    if (requiresAddress) {
+      steps.add(DataspikeStep.poaInstruction);
+      steps.add(DataspikeStep.address);
+    }
+
     steps.add(DataspikeStep.verificationCompleted);
     return steps;
   }
@@ -276,10 +296,16 @@ class DataspikeCoordinator {
     BuildContext context,
     InstructionType type,
   ) {
-    if (type == InstructionType.poi) {
-      showNextStep(context, DataspikeStep.documentInstruction);
-    } else if (type == InstructionType.liveness) {
-      showNextStep(context, DataspikeStep.selfieInstruction);
+    switch (type) {
+      case InstructionType.poi:
+        showNextStep(context, DataspikeStep.documentInstruction);
+        break;
+      case InstructionType.liveness:
+        showNextStep(context, DataspikeStep.selfieInstruction);
+        break;
+      case InstructionType.poa:
+        showNextStep(context, DataspikeStep.poaInstruction);
+        break;
     }
   }
 

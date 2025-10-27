@@ -18,24 +18,24 @@ class SwipableView extends StatefulWidget {
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/poi_instruction_1.png',
       hint:
-          'Front-side only. Follow the instructions below to make sure your document photo is accepted.',
+          'Front side only. Follow the instructions below to make sure your document photo is accepted.',
     ),
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/poi_instruction_2.png',
-      hint: 'No blurry image, glare, reflection, low contrast',
+      hint: 'Avoid blur, glare, reflections, or low contrast.',
     ),
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/poi_instruction_3.png',
       hint:
-          'No incomplete document, faded text, obstructed information or incorrect perspective',
+          'Avoid faded text, cut corners, or tilted angles.',
     ),
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/poi_instruction_4.png',
       hint:
-          'No watermarks or stamps covering crucial details, non-standard or expired.',
+          'Avoid watermarks, stickers, or anything covering details.',
     ),
   ];
 
@@ -43,18 +43,38 @@ class SwipableView extends StatefulWidget {
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/liveness_instruction_1.png',
-      hint: 'Place your face fully to mask for recognition',
+      hint: 'Look straight at the camera with your face centered in the frame.',
     ),
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/liveness_instruction_2.png',
-      hint: 'Place your face fully to mask for recognition',
+      hint: 'Center your face in the frame so we can recognize it clearly.',
     ),
   ];
 
-  List<_InstructionSlide> get _slides => (type == InstructionType.liveness)
-      ? _defaultLivenessSlides
-      : _defaultPoiSlides;
+  final List<_InstructionSlide> _defaultPoaSlides = const [
+    _InstructionSlide(
+      imageAsset:
+          'packages/dataspikemobilesdk/assets/images/poa_instruction_1.png',
+      hint: 'You can use a bank statement, utility bill, or lease agreement.',
+    ),
+    _InstructionSlide(
+      imageAsset:
+          'packages/dataspikemobilesdk/assets/images/poa_instruction_2.png',
+      hint: 'Documents should be actual — last 3 months for utility bills, bank statements or an active lease agreement.',
+    ),
+    _InstructionSlide(
+      imageAsset:
+          'packages/dataspikemobilesdk/assets/images/poa_instruction_3.png',
+      hint: 'Make sure your name and address match those on your identity document.',
+    ),
+  ];
+
+  List<_InstructionSlide> get _slides => switch (type) {
+        InstructionType.liveness => _defaultLivenessSlides,
+        InstructionType.poi  => _defaultPoiSlides,
+        InstructionType.poa  => _defaultPoaSlides,
+      };
 
   @override
   State<SwipableView> createState() => _SwipableViewState();

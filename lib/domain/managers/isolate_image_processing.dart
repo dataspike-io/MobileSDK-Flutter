@@ -10,8 +10,7 @@ class CameraCropParams {
   final double previewH;
   final double screenW;
   final double screenH;
-  final double cropWidthFactor;
-  final double cropHeightFactor;
+  final bool isVertical;
   final int jpegQuality;
 
   const CameraCropParams({
@@ -22,8 +21,7 @@ class CameraCropParams {
     required this.previewH,
     required this.screenW,
     required this.screenH,
-    this.cropWidthFactor = 0.85,
-    this.cropHeightFactor = 0.3,
+    required this.isVertical,
     this.jpegQuality = 85,
   });
 }
@@ -58,8 +56,11 @@ Future<Uint8List> processCameraShotInIsolate(CameraCropParams p) async {
   final offsetX = (p.containerW - displayW) / 2.0;
   final offsetY = (p.containerH - displayH) / 2.0;
 
-  final cropW = p.screenW * p.cropWidthFactor;
-  final cropH = p.screenH * p.cropHeightFactor;
+  final cropWidthFactor = p.isVertical ? 0.6 : 0.85;
+  final cropHeightFactor = p.isVertical ? 0.5 : 0.3;
+
+  final cropW = p.screenW * cropWidthFactor;
+  final cropH = p.screenH * cropHeightFactor;
   final cropLeftInWidget = (p.containerW - cropW) / 2.0;
   final cropTopInWidget = (p.containerH - cropH) / 2.0;
 

@@ -51,6 +51,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
   @override
   void dispose() {
     ctrl?.dispose();
+    ctrl = null;
     super.dispose();
   }
 
@@ -131,6 +132,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
           previewH: previewH,
           screenW: screenSize.width,
           screenH: screenSize.height,
+          isVertical: documentType == DocumentType.address,
         ),
       );
 
