@@ -111,11 +111,11 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
     final previewKey = GlobalKey();
     final screenSize = MediaQuery.of(context).size;
 
-    final cropWidth = screenSize.width * 0.85;
-    final cropHeight = screenSize.height * 0.3;
-
     final camWidth = screenSize.width;
     final camHeight = screenSize.height * 0.65;
+
+    final cropWidth = screenSize.width * (widget.docType == DocumentType.identity ? 0.85 : 0.6);
+    final cropHeight = screenSize.height * (widget.docType == DocumentType.identity ? 0.3 : 0.5);
 
     return FutureBuilder(
       future: viewModel.init,
@@ -254,7 +254,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                                           : const SizedBox.shrink(),
                                     ),
                                     Positioned(
-                                      top: 100,
+                                      top: widget.docType == DocumentType.identity ? 100 : 24,
                                       left: 0,
                                       right: 0,
                                       child: Center(
@@ -288,7 +288,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                                         ),
                                       ),
 
-                                    if (viewModel.side == DocumentSide.front)
+                                    if (viewModel.side == DocumentSide.front && widget.docType == DocumentType.identity)
                                       Positioned(
                                         bottom: 80,
                                         left: 0,

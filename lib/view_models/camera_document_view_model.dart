@@ -132,6 +132,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
           previewH: previewH,
           screenW: screenSize.width,
           screenH: screenSize.height,
+          isVertical: documentType == DocumentType.address,
         ),
       );
 
