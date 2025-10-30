@@ -9,6 +9,10 @@ import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart'
 import 'package:dataspikemobilesdk/view/ui/camera/side_toggle_pill.dart';
 import 'package:dataspikemobilesdk/domain/models/document_type.dart';
 import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
+import 'package:dataspikemobilesdk/data/models/request/image_document_request_body.dart';
+import 'dart:io' show File;
+import 'package:file_picker/file_picker.dart';
+import 'dart:convert';
 
 class CameraDocumentViewModel extends ChangeNotifier {
 
@@ -161,8 +165,9 @@ class CameraDocumentViewModel extends ChangeNotifier {
       showError?.call('Processing error', 'Failed to process the image.', false);
     }
   }
-
-  Future<void> pickAndUploadDocument() async {
+  
+  // DEPRECATED: OLD METHOD - REMOVE LATER
+  Future<void> pickAndUploadImage() async {
     final picker = ImagePicker();
     showLoader?.call();
     notifyListeners();
@@ -201,6 +206,75 @@ class CameraDocumentViewModel extends ChangeNotifier {
       }
     } else if (result is UploadImageError) {
       showError?.call(result.title, result.message, result.withInstruction);
+    }
+  }
+
+  Future<void> pickAndUploadDocument() async {
+    showLoader?.call();
+    notifyListeners();
+
+    final FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowMultiple: false,
+      type: FileType.custom,
+      allowedExtensions: documentType == DocumentType.address
+          ? ['jpg', 'jpeg', 'png', 'heic', 'pdf']
+          : ['jpg', 'jpeg', 'png', 'heic'],
+      withData: true,
+    );
+
+    if (result == null || result.files.isEmpty) {
+      hideLoader?.call();
+      notifyListeners();
+      return;
+    }
+
+    final PlatformFile f = result.files.first;
+    final String ext = (f.extension ?? '').toLowerCase();
+
+    final Uint8List bytes =
+        f.bytes ?? await File(f.path!).readAsBytes();
+
+    const imgExts = {'jpg', 'jpeg', 'png', 'heic'};
+    final bool isImage = imgExts.contains(ext);
+
+    Uint8List uploadBytes = bytes;
+
+    if (isImage) {
+      uploadBytes = await compute<GalleryProcessParams, Uint8List>(
+        processGalleryImageInIsolate,
+        GalleryProcessParams(imageBytes: bytes),
+      );
+    } 
+
+    final resultUpload = isImage 
+    ? await _setUseCase.call(
+      documentType: documentType.value,
+      imageBytes: uploadBytes,
+      fileName: 'document.jpg',
+    ) 
+    : await _setUseCase.callDocument(
+      body: ImageDocumentRequestBody(
+        encodedFileContent: base64Encode(uploadBytes),
+        documentType: documentType.value,
+      ),
+    );
+
+    hideLoader?.call();
+    notifyListeners();
+
+    if (resultUpload is UploadImageSuccess) {
+      if (resultUpload.detectedTwoSideDocument && side == DocumentSide.front) {
+        side = DocumentSide.back;
+        notifyListeners();
+      } else {
+        onProceed?.call();
+      }
+    } else if (resultUpload is UploadImageError) {
+      showError?.call(
+        resultUpload.title,
+        resultUpload.message,
+        resultUpload.withInstruction,
+      );
     }
   }
 }

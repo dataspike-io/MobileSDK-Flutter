@@ -1,6 +1,7 @@
 enum DataspikeEndpoint {
   getVerification,
   uploadImage,
+  // uploadDocument,
   setCountry,
   getCountries,
   proceedWithVerification,
@@ -14,6 +15,8 @@ extension DataspikeEndpointPath on DataspikeEndpoint {
         return 'api/v3/sdk/${shortId ?? ''}';
       case DataspikeEndpoint.uploadImage:
         return 'api/v3/upload/sdk/${shortId ?? ''}';
+      // case DataspikeEndpoint.uploadDocument:
+      //   return 'api/v3/sdk/${shortId ?? ''}/upload';
       case DataspikeEndpoint.setCountry:
         return 'api/v3/sdk/${shortId ?? ''}/set_country';
       case DataspikeEndpoint.getCountries:
@@ -31,6 +34,7 @@ extension DataspikeEndpointPath on DataspikeEndpoint {
       case DataspikeEndpoint.getCountries:
         return 'GET';
       case DataspikeEndpoint.uploadImage:
+      // case DataspikeEndpoint.uploadDocument:
       case DataspikeEndpoint.setCountry:
       case DataspikeEndpoint.proceedWithVerification:
       case DataspikeEndpoint.setProfileFields:

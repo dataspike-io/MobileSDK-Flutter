@@ -11,6 +11,7 @@ import 'package:dataspikemobilesdk/data/api/dataspike_endpoint.dart';
 import 'package:dataspikemobilesdk/data/models/response/upload_image_error_response.dart';
 import 'package:dataspikemobilesdk/data/models/response/dataspike_profile_fields_response.dart';
 import 'package:dataspikemobilesdk/data/models/request/profile_fields_request_body.dart';
+import 'package:dataspikemobilesdk/data/models/request/image_document_request_body.dart';
 import 'package:http_parser/http_parser.dart';
 
 abstract class IDataspikeApiService {
@@ -20,6 +21,10 @@ abstract class IDataspikeApiService {
     String documentType,
     List<int> fileBytes,
     String fileName,
+  );
+  Future<UploadImageResponse> uploadDocument(
+    String shortId,
+    ImageDocumentRequestBody body,
   );
   Future<DataspikeEmptyResponse> setCountry(
     String shortId,
@@ -87,6 +92,38 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
 
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 200) {
+      final jsonBody = json.decode(response.body) as Map<String, dynamic>;
+      return UploadImageResponse.fromJson(jsonBody);
+    } else {
+      try {
+        final errorJson = json.decode(response.body) as Map<String, dynamic>;
+        final errorResponse = UploadImageErrorResponse.fromJson(errorJson);
+        throw errorResponse;
+      } on UploadImageErrorResponse {
+        rethrow;
+      } catch (_) {
+        throw Exception('Failed to upload image: ${response.statusCode}');
+      }
+    }
+  }
+
+  @override
+  Future<UploadImageResponse> uploadDocument(
+    String shortId,
+    ImageDocumentRequestBody body,
+  ) async {
+    final url = Uri.parse(
+      '$baseUrl${DataspikeEndpoint.uploadImage.path(shortId: shortId)}',
+    );
+    final headers = DataspikeEndpoint.uploadImage.headers(apiToken);
+
+    final response = await http.post( 
+      url,
+      headers: headers,
+      body: json.encode(body.toJson()),
+    );
 
     if (response.statusCode == 200) {
       final jsonBody = json.decode(response.body) as Map<String, dynamic>;

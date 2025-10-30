@@ -11,6 +11,7 @@ import 'package:dataspikemobilesdk/domain/mappers/countries_response_mapper.dart
 import 'package:dataspikemobilesdk/domain/mappers/empty_response_mapper.dart';
 import 'package:dataspikemobilesdk/domain/mappers/proceed_with_verification_response_mapper.dart';
 import 'package:dataspikemobilesdk/data/models/request/country_request_body.dart';
+import 'package:dataspikemobilesdk/data/models/request/image_document_request_body.dart';
 import 'package:dataspikemobilesdk/data/models/request/profile_fields_request_body.dart';
 import 'package:dataspikemobilesdk/domain/mappers/message_response_mapper.dart';
 import 'package:dataspikemobilesdk/data/models/response/upload_image_error_response.dart';
@@ -22,6 +23,9 @@ abstract class IDataspikeRepository {
     required String documentType,
     required List<int> imageBytes,
     required String fileName,
+  });
+  Future<UploadImageState> uploadDocument({
+    required ImageDocumentRequestBody body,
   });
   Future<CountriesState> getCountries();
   Future<EmptyState> setCountry({required CountryRequestBody body});
@@ -83,6 +87,26 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
         documentType,
         imageBytes,
         fileName,
+      );
+      return uploadImageResponseMapper.map(response: response, error: null);
+    } on UploadImageErrorResponse catch (e) {
+      return uploadImageResponseMapper.map(response: null, error: e);
+    } catch (e) {
+      return uploadImageResponseMapper.map(
+        response: null,
+        error: e is Exception ? e : Exception(e.toString()),
+      );
+    }
+  }
+
+  @override
+  Future<UploadImageState> uploadDocument({
+    required ImageDocumentRequestBody body,
+  }) async {
+    try {
+      final response = await apiService.uploadDocument(
+        shortId,
+        body
       );
       return uploadImageResponseMapper.map(response: response, error: null);
     } on UploadImageErrorResponse catch (e) {
