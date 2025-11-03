@@ -7,6 +7,7 @@ import 'package:dataspikemobilesdk/domain/models/manual_custom_field_type.dart';
 import 'package:dataspikemobilesdk/domain/models/manual_custom_field_option_type.dart';
 import 'dart:convert';
 import 'package:dataspikemobilesdk/domain/models/states/message_state.dart';
+import '/dependencies_provider/dataspike_injector.dart';
 
 class PersonalDataViewModel extends ChangeNotifier {
 
@@ -69,7 +70,7 @@ class PersonalDataViewModel extends ChangeNotifier {
           phone = raw;
           break;
         case ManualCustomFieldType.country:
-          country = raw;
+          country = _getCountry(raw);
           break;
         case ManualCustomFieldType.dob:
           dob = raw;
@@ -78,7 +79,7 @@ class PersonalDataViewModel extends ChangeNotifier {
           gender = _normalizeGender(raw);
           break;
         case ManualCustomFieldType.citizenship:
-          citizenship = raw;
+          citizenship = _getCountry(raw);
           break;
         case ManualCustomFieldType.address:
           address = raw;
@@ -140,5 +141,15 @@ class PersonalDataViewModel extends ChangeNotifier {
     if (lower.startsWith('m')) return 'M';
     if (lower.startsWith('f')) return 'F';
     return g;
+  }
+
+  String _getCountry(String rawValue) {
+    final countries = DataspikeInjector.component.verificationManager.countries;
+
+    final i = countries.indexWhere(
+      (c) => c.name.toLowerCase() == rawValue.trim().toLowerCase()
+    );
+
+    return i == -1 ? rawValue : countries[i].alphaTwo;
   }
 }

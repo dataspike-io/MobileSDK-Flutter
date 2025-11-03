@@ -31,7 +31,12 @@ class ManualFieldsSettingsResponse {
   });
 
   factory ManualFieldsSettingsResponse.fromJson(Map<String, dynamic>? json) {
-    ManualFieldResponse? field(dynamic v) => ManualFieldResponse.fromJson(v);
+    ManualFieldResponse? field(dynamic v) {
+      if (v is Map<String, dynamic>) {
+        return ManualFieldResponse.fromJson(v);
+      }
+      return null;
+    }
 
     final customList =
         (json?['custom_fields'] as List<dynamic>?)
