@@ -312,8 +312,6 @@ class FieldLine extends StatelessWidget {
         return TextInputType.emailAddress;
       case ManualCustomFieldType.phone:
         return TextInputType.phone;
-      case ManualCustomFieldType.dob:
-        return TextInputType.datetime;
       default:
         return TextInputType.text;
     }
