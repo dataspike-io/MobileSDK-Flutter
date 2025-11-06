@@ -312,6 +312,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                         onPressed: () => shootAndCrop(previewKey),
                       ),
                       const SizedBox(height: 2),
+                      if (viewModel.isUploadButtonVisible)
                       SizedBox(
                         height: 60.0,
                         width: double.infinity,

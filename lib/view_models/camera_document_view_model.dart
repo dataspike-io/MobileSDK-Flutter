@@ -26,6 +26,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
   CameraDescription? backCam;
   CameraDescription? frontCam;
   bool _useFront = false;
+  final bool _allowPoiManualUploads;
 
   VoidCallback? onProceed;
   VoidCallback? showLoader;
@@ -46,8 +47,10 @@ class CameraDocumentViewModel extends ChangeNotifier {
 
   CameraDocumentViewModel({
     required UploadImageUseCase setUseCase,
+    required bool allowPoiManualUploads,
     required DocumentType docType,
   }) : _setUseCase = setUseCase,
+       _allowPoiManualUploads = allowPoiManualUploads,
        documentType = docType {
     init = _setup();
   }
@@ -57,6 +60,15 @@ class CameraDocumentViewModel extends ChangeNotifier {
     ctrl?.dispose();
     ctrl = null;
     super.dispose();
+  }
+
+  bool get isUploadButtonVisible {
+    switch (documentType) {
+      case DocumentType.identity:
+        return _allowPoiManualUploads;
+      case DocumentType.address:
+        return true;
+    }
   }
 
   String get hint {
@@ -140,9 +152,10 @@ class CameraDocumentViewModel extends ChangeNotifier {
         ),
       );
 
-      final result = await _setUseCase.call(
+      final result = await _setUseCase.uploadImage(
         documentType: documentType.value,
         imageBytes: processed,
+        ext: 'jpg',
         fileName: 'document.jpg',
       );
 
@@ -188,9 +201,10 @@ class CameraDocumentViewModel extends ChangeNotifier {
       ),
     );
 
-    final result = await _setUseCase.call(
+    final result = await _setUseCase.uploadImage(
       documentType: documentType.value,
       imageBytes: processed,
+      ext: 'jpg',
       fileName: 'document.jpg',
     );
 
@@ -247,12 +261,13 @@ class CameraDocumentViewModel extends ChangeNotifier {
     } 
 
     final resultUpload = isImage 
-    ? await _setUseCase.call(
+    ? await _setUseCase.uploadImage(
       documentType: documentType.value,
       imageBytes: uploadBytes,
+      ext: 'jpg',
       fileName: 'document.jpg',
     ) 
-    : await _setUseCase.callDocument(
+    : await _setUseCase.uploadDocument(
       body: ImageDocumentRequestBody(
         encodedFileContent: base64Encode(uploadBytes),
         documentType: documentType.value,

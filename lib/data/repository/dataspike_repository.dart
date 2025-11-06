@@ -1,4 +1,5 @@
 import 'package:dataspikemobilesdk/domain/models/states/message_state.dart';
+import 'package:dataspikemobilesdk/domain/models/states/upload_manual_file_state.dart';
 import 'package:dataspikemobilesdk/domain/models/states/verification_state.dart';
 import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart';
 import 'package:dataspikemobilesdk/domain/models/states/countries_state.dart';
@@ -16,16 +17,24 @@ import 'package:dataspikemobilesdk/data/models/request/profile_fields_request_bo
 import 'package:dataspikemobilesdk/domain/mappers/message_response_mapper.dart';
 import 'package:dataspikemobilesdk/data/models/response/upload_image_error_response.dart';
 import 'package:dataspikemobilesdk/data/models/response/proceed_with_verification_error_response.dart';
+import 'package:dataspikemobilesdk/domain/mappers/upload_manual_file_response_mapper.dart';
 
 abstract class IDataspikeRepository {
   Future<VerificationState> getVerification({required bool darkModeIsEnabled});
   Future<UploadImageState> uploadImage({
     required String documentType,
     required List<int> imageBytes,
+    required String ext,
     required String fileName,
   });
   Future<UploadImageState> uploadDocument({
     required ImageDocumentRequestBody body,
+  });
+  Future<UploadManualFileState> uploadManualFile({
+    required String type,
+    required List<int> imageBytes,
+    required String fileName,
+    required String ext,
   });
   Future<CountriesState> getCountries();
   Future<EmptyState> setCountry({required CountryRequestBody body});
@@ -38,6 +47,7 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
   final String shortId;
   final VerificationResponseMapper verificationResponseMapper;
   final UploadImageResponseMapper uploadImageResponseMapper;
+  final UploadManualFileResponseMapper uploadManualFileResponseMapper;
   final CountriesResponseMapper countriesResponseMapper;
   final EmptyResponseMapper emptyResponseMapper;
   final ProceedWithVerificationResponseMapper
@@ -49,6 +59,7 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
     required this.shortId,
     required this.verificationResponseMapper,
     required this.uploadImageResponseMapper,
+    required this.uploadManualFileResponseMapper,
     required this.countriesResponseMapper,
     required this.emptyResponseMapper,
     required this.proceedWithVerificationResponseMapper,
@@ -79,6 +90,7 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
   Future<UploadImageState> uploadImage({
     required String documentType,
     required List<int> imageBytes,
+    required String ext,
     required String fileName,
   }) async {
     try {
@@ -86,6 +98,7 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
         shortId,
         documentType,
         imageBytes,
+        ext,
         fileName,
       );
       return uploadImageResponseMapper.map(response: response, error: null);
@@ -113,6 +126,32 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
       return uploadImageResponseMapper.map(response: null, error: e);
     } catch (e) {
       return uploadImageResponseMapper.map(
+        response: null,
+        error: e is Exception ? e : Exception(e.toString()),
+      );
+    }
+  }
+
+  @override
+  Future<UploadManualFileState> uploadManualFile({
+    required String type,
+    required List<int> imageBytes,
+    required String ext,
+    required String fileName,
+  }) async {
+    try {
+      final response = await apiService.uploadManualFile(
+        shortId,
+        type,
+        imageBytes,
+        ext,
+        fileName,
+      );
+      return uploadManualFileResponseMapper.map(response: response, error: null);
+    } on UploadManualFileStateError catch (e) {
+      return uploadManualFileResponseMapper.map(response: null, error: e);
+    } catch (e) {
+      return uploadManualFileResponseMapper.map(
         response: null,
         error: e is Exception ? e : Exception(e.toString()),
       );

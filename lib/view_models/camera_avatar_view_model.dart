@@ -104,9 +104,10 @@ class CameraAvatarViewModel extends ChangeNotifier {
         ),
       );
 
-      final result = await _setUseCase.call(
+      final result = await _setUseCase.uploadImage(
         documentType: 'liveness_photo',
         imageBytes: processed,
+        ext: 'jpg',
         fileName: 'selfie.jpg',
       );
 

@@ -9,6 +9,7 @@ class VerificationManager {
     poiIsRequired: false,
     livenessIsRequired: false,
     poaIsRequired: false,
+    allowPoiManualUploads: false,
     personalDataRequired: false,
     manualFields: null,
   );
@@ -31,6 +32,7 @@ class VerificationManager {
       poiIsRequired: settings.poiRequired,
       livenessIsRequired: settings.faceComparisonRequired,
       poaIsRequired: settings.poaRequired,
+      allowPoiManualUploads: settings.allowPoiManualUploads,
       personalDataRequired: settings.manualFields.enabled,
       manualFields: settings.manualFields,
     );

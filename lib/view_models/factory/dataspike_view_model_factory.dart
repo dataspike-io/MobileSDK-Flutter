@@ -62,10 +62,13 @@ class DataspikeViewModelFactory {
   CameraDocumentViewModel createCameraDocumentViewModel({
     required DocumentType docType
   }) {
+    final dataspikeComponent = DataspikeInjector.component;
+    
     return CameraDocumentViewModel(
       setUseCase: UploadImageUseCase(
-        dataspikeRepository: DataspikeInjector.component.dataspikeRepository,
+        dataspikeRepository: dataspikeComponent.dataspikeRepository,
       ),
+      allowPoiManualUploads: dataspikeComponent.verificationManager.checks.allowPoiManualUploads,
       docType: docType,
     );
   }

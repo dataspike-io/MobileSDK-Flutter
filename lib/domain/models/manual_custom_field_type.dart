@@ -7,6 +7,8 @@ enum ManualCustomFieldType {
   gender,
   citizenship,
   address,
+  certificateOfIncorporation,
+  ownershipDocument,
   custom;
 
   String get raw {
@@ -27,6 +29,10 @@ enum ManualCustomFieldType {
         return 'citizenship';
       case ManualCustomFieldType.address:
         return 'address';
+      case ManualCustomFieldType.certificateOfIncorporation:
+        return 'kyb_certificate_of_incorporation';
+      case ManualCustomFieldType.ownershipDocument:
+        return 'kyb_ownership_document';
       case ManualCustomFieldType.custom:
         return 'custom';
     }

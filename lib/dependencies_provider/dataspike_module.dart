@@ -7,6 +7,7 @@ import 'package:dataspikemobilesdk/domain/mappers/upload_image_response_mapper.d
 import 'package:dataspikemobilesdk/domain/mappers/countries_response_mapper.dart';
 import 'package:dataspikemobilesdk/domain/mappers/empty_response_mapper.dart';
 import 'package:dataspikemobilesdk/domain/mappers/proceed_with_verification_response_mapper.dart';
+import 'package:dataspikemobilesdk/domain/mappers/upload_manual_file_response_mapper.dart';
 import 'package:dataspikemobilesdk/domain/mappers/message_response_mapper.dart';
 import 'package:dataspikemobilesdk/domain/managers/dataspike_personal_data_fields_manager.dart';
 import 'package:dataspikemobilesdk/domain/managers/permission_service.dart';
@@ -39,6 +40,7 @@ class DataspikeModuleImpl implements DataspikeModule {
       shortId: dependencies.shortId,
       verificationResponseMapper: VerificationResponseMapper(),
       uploadImageResponseMapper: UploadImageResponseMapper(),
+      uploadManualFileResponseMapper: UploadManualFileResponseMapper(),
       countriesResponseMapper: CountriesResponseMapper(),
       emptyResponseMapper: EmptyResponseMapper(),
       proceedWithVerificationResponseMapper: ProceedWithVerificationResponseMapper(),

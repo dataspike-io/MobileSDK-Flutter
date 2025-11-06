@@ -54,16 +54,19 @@ class FieldLine extends StatelessWidget {
           InkWell(
             onTap: () async {
               final type = field.options.attachmentTypePreset;
-              FileType pickerType = FileType.any;
+              FileType pickerType = FileType.custom;
               List<String>? allowed;
 
               if (type == 'image') {
-                pickerType = FileType.image;
+                allowed = ['jpg', 'jpeg', 'png', 'heic', 'jpe'];
               } else if (type == 'video') {
-                pickerType = FileType.video;
-              } else if (type == 'document' || type == 'file') {
-                pickerType = FileType.custom;
+                allowed =  ['mp4', 'mp4v', 'mpg4', 'mpeg', 'mpg', 'mpe', 'm1v', 'm2v'];
+              } else if (type == 'document') {
                 allowed = ['pdf'];
+              } else if (type == 'image&document') {
+                allowed = ['jpg', 'jpeg', 'png', 'heic', 'jpe', 'pdf'];
+              } else {
+                pickerType = FileType.any;
               }
 
               final rootNav = Navigator.of(context, rootNavigator: true);

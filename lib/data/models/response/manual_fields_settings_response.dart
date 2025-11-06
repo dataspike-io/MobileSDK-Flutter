@@ -13,6 +13,8 @@ class ManualFieldsSettingsResponse {
   final ManualFieldResponse? gender;
   final ManualFieldResponse? citizenship;
   final ManualFieldResponse? address;
+  final ManualFieldResponse? certificateOfIncorporation;
+  final ManualFieldResponse? ownershipDocument;
 
   final List<ManualCustomFieldResponse>? customFields;
 
@@ -27,6 +29,8 @@ class ManualFieldsSettingsResponse {
     this.gender,
     this.citizenship,
     this.address,
+    this.certificateOfIncorporation,
+    this.ownershipDocument,
     this.customFields,
   });
 
@@ -59,6 +63,8 @@ class ManualFieldsSettingsResponse {
       gender: field(json?['gender']),
       citizenship: field(json?['citizenship']),
       address: field(json?['address']),
+      certificateOfIncorporation: field(json?['certificate_of_incorporation']),
+      ownershipDocument: field(json?['ownership_document']),
       customFields: customList,
     );
   }
@@ -74,6 +80,8 @@ class ManualFieldsSettingsResponse {
     'gender': gender?.toJson(),
     'citizenship': citizenship?.toJson(),
     'address': address?.toJson(),
+    'certificate_of_incorporation': certificateOfIncorporation?.toJson(),
+    'ownership_document': ownershipDocument?.toJson(),
     'custom_fields': customFields?.map((e) => e.toJson()).toList(),
   };
 }

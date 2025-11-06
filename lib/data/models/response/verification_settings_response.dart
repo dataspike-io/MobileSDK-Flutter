@@ -7,6 +7,7 @@ class VerificationSettingsResponse {
   final bool? faceComparisonRequired;
   final List<String>? faceComparisonAllowedDocuments;
   final bool? poaRequired;
+  final bool? allowPoiManualUploads;
   final List<String>? poaAllowedDocuments;
   final List<String>? countries;
   final ManualFieldsSettingsResponse? manualFields;
@@ -19,6 +20,7 @@ class VerificationSettingsResponse {
     this.faceComparisonRequired,
     this.faceComparisonAllowedDocuments,
     this.poaRequired,
+    this.allowPoiManualUploads,
     this.poaAllowedDocuments,
     this.countries,
     this.manualFields,
@@ -37,6 +39,7 @@ class VerificationSettingsResponse {
           ? List<String>.from(json['face_comparison_allowed_documents'] as List)
           : null,
       poaRequired: json['poa_required'] as bool?,
+      allowPoiManualUploads: json['allow_poi_manual_uploads'] as bool?,
       poaAllowedDocuments: json['poa_allowed_documents'] != null
           ? List<String>.from(json['poa_allowed_documents'] as List)
           : null,

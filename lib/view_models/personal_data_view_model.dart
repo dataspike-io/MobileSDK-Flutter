@@ -1,3 +1,4 @@
+import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/data/use_cases/set_profile_use_case.dart';
@@ -5,12 +6,11 @@ import 'package:dataspikemobilesdk/data/models/request/profile_fields_request_bo
 import 'package:dataspikemobilesdk/domain/models/manual_custom_representation_type.dart';
 import 'package:dataspikemobilesdk/domain/models/manual_custom_field_type.dart';
 import 'package:dataspikemobilesdk/domain/models/manual_custom_field_option_type.dart';
-import 'dart:convert';
 import 'package:dataspikemobilesdk/domain/models/states/message_state.dart';
 import '/dependencies_provider/dataspike_injector.dart';
+import 'package:dataspikemobilesdk/domain/models/states/upload_manual_file_state.dart';
 
 class PersonalDataViewModel extends ChangeNotifier {
-
   List<ManualCustomFieldRepresentationModel> personalDataFields = [];
   final SetProfileUseCase _setProfileUseCase;
 
@@ -39,6 +39,8 @@ class PersonalDataViewModel extends ChangeNotifier {
   void submitProfileData() async {
     if (isContinueButtonDisabled) return;
     final body = _buildRequestBody();
+    await _uploadAllCustomFields();
+    await _uploadAllPredefinedFields();
     final result = await _setProfileUseCase.call(body);
     if (result is! MessageStateSuccess) {
       throw Exception('Failed to submit profile data');
@@ -84,21 +86,18 @@ class PersonalDataViewModel extends ChangeNotifier {
         case ManualCustomFieldType.address:
           address = raw;
           break;
+        case ManualCustomFieldType.certificateOfIncorporation:
+        case ManualCustomFieldType.ownershipDocument:
+          break;
         case ManualCustomFieldType.custom:
           final key = f.label.isNotEmpty == true
               ? f.label
               : 'custom_${f.order}';
 
-          if (f.options.type == ManualCustomFieldOptionType.file) {
-            if (f.file?.bytes != null) {
-              final mime = _mimeFromExt(f.file!.extension);
-              final b64 = base64Encode(f.file!.bytes!);
-              custom[key] =
-                  'data:$mime;base64,$b64'; // TODO: CHANGE IF WILL BE NEEDED
-            }
-          } else {
+          if (f.options.type != ManualCustomFieldOptionType.file) {
             custom[key] = raw;
           }
+
           break;
       }
     }
@@ -116,23 +115,62 @@ class PersonalDataViewModel extends ChangeNotifier {
     );
   }
 
-  String _mimeFromExt(String? ext) {
-    switch ((ext ?? '').toLowerCase()) {
-      case 'jpg':
-      case 'jpeg':
-        return 'image/jpeg'; // FROM SERVER
-      case 'heif':
-        return 'image/heif';
-      case 'png':
-        return 'image/png'; // FROM SERVER
-      case 'mp4':
-        return 'video/mp4'; // FROM SERVER
-      case 'mpeg':
-        return 'video/mpeg'; // FROM SERVER
-      case 'pdf':
-        return 'application/pdf'; // FROM SERVER
-      default:
-        return 'application/octet-stream'; // generic binary data
+  Future<void> _uploadAllCustomFields() async {
+    for (final f in personalDataFields) {
+      if (f.fieldType == ManualCustomFieldType.custom &&
+          f.options.type == ManualCustomFieldOptionType.file &&
+          f.file != null) {
+        final bytes = f.file?.bytes;
+        final fileName = f.file?.name ?? 'custom_${f.order}';
+        final type = (f.label.isNotEmpty ? f.label : 'custom_${f.order}');
+
+        try {
+          final state = await _setProfileUseCase.uploadManualFile(
+            type: type,
+            imageBytes: bytes ?? [],
+            ext: f.file?.extension ?? '',
+            fileName: fileName,
+          );
+
+          if (state is! UploadManualFileStateSuccess) {
+            throw Exception('Upload failed for $fileName');
+          }
+        } catch (e) {
+          throw Exception('Upload failed for $fileName: $e');
+        }
+      }
+    }
+  }
+
+  Future<void> _uploadAllPredefinedFields() async {
+    for (final f in personalDataFields) {
+      switch (f.fieldType) {
+        case ManualCustomFieldType.certificateOfIncorporation:
+        case ManualCustomFieldType.ownershipDocument:
+          if (f.file != null) {
+            final bytes = f.file?.bytes;
+            final fileName = f.file?.name ?? 'custom_${f.order}';
+            final ext = f.file?.extension ?? '';
+            final type = f.fieldType.raw;
+
+            try {
+              final state = await _setProfileUseCase.uploadImage(
+                documentType: type,
+                imageBytes: bytes ?? [],
+                ext: ext,
+                fileName: fileName,
+              );
+
+              if (state is! UploadImageSuccess) {
+                throw Exception('Upload failed for $fileName');
+              }
+            } catch (e) {
+              throw Exception('Upload failed for $fileName: $e');
+            }
+          }
+        default:
+          continue;
+      }
     }
   }
 
@@ -147,7 +185,7 @@ class PersonalDataViewModel extends ChangeNotifier {
     final countries = DataspikeInjector.component.verificationManager.countries;
 
     final i = countries.indexWhere(
-      (c) => c.name.toLowerCase() == rawValue.trim().toLowerCase()
+      (c) => c.name.toLowerCase() == rawValue.trim().toLowerCase(),
     );
 
     return i == -1 ? rawValue : countries[i].alphaTwo;

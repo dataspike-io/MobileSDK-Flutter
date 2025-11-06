@@ -9,19 +9,21 @@ class UploadImageUseCase {
     required this.dataspikeRepository,
   });
 
-  Future<UploadImageState> call({
+  Future<UploadImageState> uploadImage({
     required String documentType,
     required List<int> imageBytes,
+    required String ext,
     required String fileName,
   }) async {
     return await dataspikeRepository.uploadImage(
       documentType: documentType,
       imageBytes: imageBytes,
+      ext: ext,
       fileName: fileName,
     );
   }
 
-  Future<UploadImageState> callDocument({
+  Future<UploadImageState> uploadDocument({
     required ImageDocumentRequestBody body,
   }) async {
     return await dataspikeRepository.uploadDocument(

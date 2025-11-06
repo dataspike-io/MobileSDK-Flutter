@@ -13,6 +13,8 @@ class ManualFieldsSettingsDomainModel {
   final ManualFieldDomainModel? gender;
   final ManualFieldDomainModel? citizenship;
   final ManualFieldDomainModel? address;
+  final ManualFieldDomainModel? certificateOfIncorporation;
+  final ManualFieldDomainModel? ownershipDocument;
 
   final List<ManualCustomFieldDomainModel>? customFields;
 
@@ -27,6 +29,8 @@ class ManualFieldsSettingsDomainModel {
     this.gender,
     this.citizenship,
     this.address,
+    this.certificateOfIncorporation,
+    this.ownershipDocument,
     this.customFields,
   });
 }

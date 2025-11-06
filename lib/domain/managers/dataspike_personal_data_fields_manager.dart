@@ -21,6 +21,8 @@ class PersonalDataManager {
     addGenderIfRequired(result, manualFields);
     addCitizenshipIfRequired(result, manualFields);
     addAddressIfRequired(result, manualFields);
+    addCertificateOfIncorporationIfRequired(result, manualFields);
+    addOwnershipDocumentIfRequired(result, manualFields);
 
     addCustomFieldsIfRequired(result, manualFields.customFields);
 
@@ -128,6 +130,36 @@ class PersonalDataManager {
       order: f.order ?? 0,
       options: ManualCustomFieldOptionsDomainModel(type: ManualCustomFieldOptionType.text),
       fieldType: ManualCustomFieldType.address,
+    ));
+  }
+
+  void addCertificateOfIncorporationIfRequired(List<ManualCustomFieldRepresentationModel> target, ManualFieldsSettingsDomainModel fields) {
+    final f = fields.certificateOfIncorporation;
+    if (f == null || !f.enabled || f.order == null) return;
+    target.add(ManualCustomFieldRepresentationModel(
+      label: 'Certificate of Incorporation',
+      order: f.order ?? 0,
+      options: ManualCustomFieldOptionsDomainModel(
+        type: ManualCustomFieldOptionType.file,
+        attachmentTypePreset: 'image&document',
+        allowedMimeTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+      ),
+      fieldType: ManualCustomFieldType.certificateOfIncorporation,
+    ));
+  }
+
+  void addOwnershipDocumentIfRequired(List<ManualCustomFieldRepresentationModel> target, ManualFieldsSettingsDomainModel fields) {
+    final f = fields.ownershipDocument;
+    if (f == null || !f.enabled || f.order == null) return;
+    target.add(ManualCustomFieldRepresentationModel(
+      label: 'Ownership Document',
+      order: f.order ?? 0,
+      options: ManualCustomFieldOptionsDomainModel(
+        type: ManualCustomFieldOptionType.file,
+        attachmentTypePreset: 'image&document',
+        allowedMimeTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+      ),
+      fieldType: ManualCustomFieldType.ownershipDocument,
     ));
   }
 

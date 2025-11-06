@@ -7,6 +7,7 @@ class VerificationSettingsDomainModel {
   final bool faceComparisonRequired;
   final List<String> faceComparisonAllowedDocuments;
   final bool poaRequired;
+  final bool allowPoiManualUploads;
   final List<String> poaAllowedDocuments;
   final List<String> countries;
   final ManualFieldsSettingsDomainModel manualFields;
@@ -20,6 +21,7 @@ class VerificationSettingsDomainModel {
     required this.faceComparisonRequired,
     required this.faceComparisonAllowedDocuments,
     required this.poaRequired,
+    required this.allowPoiManualUploads,
     required this.poaAllowedDocuments,
     required this.countries,
     required this.manualFields,

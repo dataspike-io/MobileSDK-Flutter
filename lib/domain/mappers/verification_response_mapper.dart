@@ -36,6 +36,8 @@ class VerificationResponseMapper {
             gender: field(f?.gender),
             citizenship: field(f?.citizenship),
             address: field(f?.address),
+            certificateOfIncorporation: field(f?.certificateOfIncorporation),
+            ownershipDocument: field(f?.ownershipDocument),
             customFields: f?.customFields?.map<ManualCustomFieldDomainModel>((
               c,
             ) {
@@ -130,6 +132,8 @@ class VerificationResponseMapper {
           faceComparisonAllowedDocuments:
               response.settings?.faceComparisonAllowedDocuments ?? [],
           poaRequired: response.settings?.poaRequired ?? false,
+          allowPoiManualUploads:
+              response.settings?.allowPoiManualUploads ?? false,
           poaAllowedDocuments: response.settings?.poaAllowedDocuments ?? [],
           countries: response.settings?.countries ?? [],
           manualFields: settingsField(response.settings?.manualFields),

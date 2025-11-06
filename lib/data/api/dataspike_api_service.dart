@@ -3,6 +3,7 @@ import 'package:dataspikemobilesdk/data/models/response/proceed_with_verificatio
 import 'package:http/http.dart' as http;
 import 'package:dataspikemobilesdk/data/models/response/verification_response.dart';
 import 'package:dataspikemobilesdk/data/models/response/upload_image_response.dart';
+import 'package:dataspikemobilesdk/data/models/response/upload_manual_file_response.dart';
 import 'package:dataspikemobilesdk/data/models/response/dataspike_empty_response.dart';
 import 'package:dataspikemobilesdk/data/models/request/country_request_body.dart';
 import 'package:dataspikemobilesdk/data/models/response/country_response.dart';
@@ -20,11 +21,19 @@ abstract class IDataspikeApiService {
     String shortId,
     String documentType,
     List<int> fileBytes,
+    String ext,
     String fileName,
   );
   Future<UploadImageResponse> uploadDocument(
     String shortId,
     ImageDocumentRequestBody body,
+  );
+  Future<UploadManualFileResponse> uploadManualFile(
+    String shortId,
+    String type,
+    List<int> fileBytes,
+    String ext,
+    String fileName,
   );
   Future<DataspikeEmptyResponse> setCountry(
     String shortId,
@@ -68,6 +77,7 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     String shortId,
     String documentType,
     List<int> fileBytes,
+    String ext,
     String fileName,
   ) async {
     final url = Uri.parse(
@@ -84,7 +94,7 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
         http.MultipartFile.fromBytes(
           'file',
           fileBytes,
-          contentType: MediaType('image', 'jpeg'),
+          contentType: _mimeFromExt(ext),
           filename: fileName,
         ),
       );
@@ -134,6 +144,52 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
         final errorResponse = UploadImageErrorResponse.fromJson(errorJson);
         throw errorResponse;
       } on UploadImageErrorResponse {
+        rethrow;
+      } catch (_) {
+        throw Exception('Failed to upload image: ${response.statusCode}');
+      }
+    }
+  }
+
+  @override
+  Future<UploadManualFileResponse> uploadManualFile(
+    String shortId,
+    String type,
+    List<int> fileBytes,
+    String ext,
+    String fileName,
+  ) async {
+    final url = Uri.parse(
+      '$baseUrl${DataspikeEndpoint.uploadManualDocument.path(shortId: shortId)}',
+    );
+    final headers = DataspikeEndpoint.uploadManualDocument.headers(apiToken);
+
+    var request = http.MultipartRequest('POST', url)
+      ..headers.addAll(headers);
+
+    if (fileBytes.isNotEmpty) {
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          type,
+          fileBytes,
+          contentType: _mimeFromExt(ext),
+          filename: fileName,
+        ),
+      );
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 200) {
+      final jsonBody = json.decode(response.body) as Map<String, dynamic>;
+      return UploadManualFileResponse.fromJson(jsonBody);
+    } else {
+      try {
+        final errorJson = json.decode(response.body) as Map<String, dynamic>;
+        final errorResponse = UploadManualFileResponse.fromJson(errorJson);
+        throw errorResponse;
+      } on UploadManualFileResponse {
         rethrow;
       } catch (_) {
         throw Exception('Failed to upload image: ${response.statusCode}');
@@ -232,6 +288,30 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
       return DataspikeProfileFieldsResponse.fromJson(jsonBody);
     } else {
       throw Exception('Failed to set profile fields: ${response.statusCode}');
+    }
+  }
+}
+
+extension DataspikeApiServiceImplExtensions on IDataspikeApiService {
+  MediaType _mimeFromExt(String? ext) {
+    switch ((ext ?? '').toLowerCase()) {
+      case 'jpg':
+      case 'jpeg':
+      case 'jpe':
+      case 'heic':
+      case 'heif':
+        return MediaType('image', 'jpeg');
+      case 'png':
+        return MediaType('image', 'png');
+      case 'mp4':
+      case 'mov':
+        return MediaType('video', 'mp4');
+      case 'mpeg':
+        return MediaType('video', 'mpeg'); 
+      case 'pdf':
+        return MediaType('application', 'pdf');
+      default:
+        return MediaType('application', 'octet-stream'); 
     }
   }
 }
