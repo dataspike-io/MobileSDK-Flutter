@@ -18,6 +18,7 @@ import 'package:dataspikemobilesdk/domain/mappers/message_response_mapper.dart';
 import 'package:dataspikemobilesdk/data/models/response/upload_image_error_response.dart';
 import 'package:dataspikemobilesdk/data/models/response/proceed_with_verification_error_response.dart';
 import 'package:dataspikemobilesdk/domain/mappers/upload_manual_file_response_mapper.dart';
+import 'package:dataspikemobilesdk/data/models/errors/common_errors.dart';
 
 abstract class IDataspikeRepository {
   Future<VerificationState> getVerification({required bool darkModeIsEnabled});
@@ -77,6 +78,8 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
         error: null,
         darkModeIsEnabled: darkModeIsEnabled,
       );
+    } on NoInternetException {
+      rethrow;
     } catch (e) {
       return verificationResponseMapper.map(
         response: null,
@@ -104,6 +107,8 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
       return uploadImageResponseMapper.map(response: response, error: null);
     } on UploadImageErrorResponse catch (e) {
       return uploadImageResponseMapper.map(response: null, error: e);
+    } on NoInternetException {
+      rethrow;
     } catch (e) {
       return uploadImageResponseMapper.map(
         response: null,
@@ -117,13 +122,12 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
     required ImageDocumentRequestBody body,
   }) async {
     try {
-      final response = await apiService.uploadDocument(
-        shortId,
-        body
-      );
+      final response = await apiService.uploadDocument(shortId, body);
       return uploadImageResponseMapper.map(response: response, error: null);
     } on UploadImageErrorResponse catch (e) {
       return uploadImageResponseMapper.map(response: null, error: e);
+    } on NoInternetException {
+      rethrow;
     } catch (e) {
       return uploadImageResponseMapper.map(
         response: null,
@@ -147,9 +151,14 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
         ext,
         fileName,
       );
-      return uploadManualFileResponseMapper.map(response: response, error: null);
+      return uploadManualFileResponseMapper.map(
+        response: response,
+        error: null,
+      );
     } on UploadManualFileStateError catch (e) {
       return uploadManualFileResponseMapper.map(response: null, error: e);
+    } on NoInternetException {
+      rethrow;
     } catch (e) {
       return uploadManualFileResponseMapper.map(
         response: null,
@@ -163,6 +172,8 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
     try {
       final response = await apiService.getCountries();
       return countriesResponseMapper.map(response: response, error: null);
+    } on NoInternetException {
+      rethrow;
     } catch (e) {
       return countriesResponseMapper.map(
         response: null,
@@ -176,6 +187,8 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
     try {
       final response = await apiService.setCountry(shortId, body);
       return emptyResponseMapper.map(response: response, error: null);
+    } on NoInternetException {
+      rethrow;
     } catch (e) {
       return emptyResponseMapper.map(
         response: null,
@@ -194,6 +207,8 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
       );
     } on ProceedWithVerificationErrorResponse catch (e) {
       return proceedWithVerificationResponseMapper.map(response: null, error: e);
+    } on NoInternetException {
+      rethrow;
     } catch (e) {
       return proceedWithVerificationResponseMapper.map(
         response: null,
@@ -207,6 +222,8 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
     try {
       final response = await apiService.setProfileFields(shortId, body);
       return messageResponseMapper.map(response: response, error: null);
+    } on NoInternetException {
+      rethrow;
     } catch (e) {
       return messageResponseMapper.map(
         response: null,

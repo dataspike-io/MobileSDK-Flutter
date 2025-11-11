@@ -15,6 +15,7 @@ import 'package:dataspikemobilesdk/view/ui/camera/side_toggle_pill.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/error_bottom_sheet.dart';
 import 'package:dataspikemobilesdk/domain/models/document_type.dart';
 import 'package:dataspikemobilesdk/domain/models/instruction_type.dart';
+import 'package:dataspikemobilesdk/view/ui/error/error_image_bottom_sheet.dart';
 
 class LiveCropCamera extends StatefulWidget {
   const LiveCropCamera({super.key, required this.docType});
@@ -40,6 +41,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
       hideLoader: hideLoader,
       showError: (title, msg, withInstruction) =>
           showError(title, msg, withInstruction),
+      showCommonError: (type) => _showCommonError(type),
     );
     super.initState();
   }
@@ -68,7 +70,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
   }
 
   void pickAndUploadDocument() async {
-    await viewModel.pickAndUploadDocument();
+    await viewModel.pickButtonTap();
   }
 
   void showLoader() async {
@@ -102,6 +104,25 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
         title: title,
         message: message,
         instruction: withInstruction ? InstructionType.poi : null,
+      ),
+    );
+  }
+
+   void _showCommonError(ErrorImageBottomSheetType type) {
+    if (!mounted) return;
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: AppColors.clear,
+      barrierColor: AppColors.clear,
+      builder: (_) => ErrorImageBottomSheet(
+        type: type,
+        onContinue: () {
+          Navigator.of(context, rootNavigator: true).pop();
+        },
       ),
     );
   }

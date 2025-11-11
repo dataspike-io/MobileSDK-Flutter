@@ -7,6 +7,8 @@ import 'package:dataspikemobilesdk/view/ui/loader.dart';
 import '/view_models/factory/dataspike_view_model_factory.dart';
 import 'package:dataspikemobilesdk/view/ui/personal_data/field_card.dart';
 import 'package:dataspikemobilesdk/main/coordinator/coordinator.dart';
+import 'package:dataspikemobilesdk/view/ui/error/error_image_bottom_sheet.dart';
+import 'package:dataspikemobilesdk/data/models/errors/common_errors.dart';
 
 class PersonalDataScreen extends StatefulWidget {
   const PersonalDataScreen({super.key});
@@ -31,6 +33,26 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
     super.dispose();
   }
 
+  void _showCommonError(ErrorImageBottomSheetType type) {
+    if (!mounted) return;
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: AppColors.clear,
+      barrierColor: AppColors.clear,
+      builder: (_) => ErrorImageBottomSheet(
+        type: type,
+        onContinue: () {
+          Navigator.of(context, rootNavigator: true).pop();
+          _onContinue();
+        },
+      ),
+    );
+  }
+
   void _onVmChanged() => setState(() {});
 
   Future<void> _onContinue() async {
@@ -49,9 +71,12 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
     try {
       await Future.sync(() => viewModel.submitProfileData());
       success = true;
+      rootNav.pop();
+    } on NoInternetException {
+      rootNav.pop();
+      _showCommonError(ErrorImageBottomSheetType.noInternet);
+      return;
     } catch (e) {
-      // TODO: Handle error if needed
-    } finally {
       rootNav.pop();
     }
 

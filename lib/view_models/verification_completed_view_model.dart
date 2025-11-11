@@ -36,7 +36,7 @@ class VerificationCompletedViewModel {
     if (settings?.enabled == true && t != null && t.isNotEmpty) {
       return t;
     }
-    return 'Well done! Verification completed';
+    return 'All set!\nVerification submitted';
   }
 
   String get subtitle {
@@ -45,7 +45,11 @@ class VerificationCompletedViewModel {
     if (settings?.enabled == true && t != null && t.isNotEmpty) {
       return t;
     }
-    return 'We’re now processing your documents for Company.';
+    return 'We’ve received your documents and are processing them for J.P. Morgan.';
+  }
+
+  String get submittedDocumentSubtitle {
+    return 'Information submitted';
   }
 
   String? get redirectWarning {

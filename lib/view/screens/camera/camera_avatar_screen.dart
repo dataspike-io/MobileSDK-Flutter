@@ -10,6 +10,7 @@ import 'package:dataspikemobilesdk/view_models/camera_avatar_view_model.dart';
 import '/main/coordinator/coordinator.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/error_bottom_sheet.dart';
 import 'package:dataspikemobilesdk/domain/models/instruction_type.dart';
+import 'package:dataspikemobilesdk/view/ui/error/error_image_bottom_sheet.dart';
 
 class LiveAvatarCamera extends StatefulWidget {
   const LiveAvatarCamera({super.key});
@@ -38,6 +39,7 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
       hideLoader: hideLoader,
       showError: (title, msg, instruction) =>
           showError(title, msg, instruction),
+      showCommonError: (type) => _showCommonError(type),
     );
     super.initState();
   }
@@ -91,6 +93,25 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
         title: title,
         message: message,
         instruction: withInstruction ? InstructionType.liveness : null,
+      ),
+    );
+  }
+
+  void _showCommonError(ErrorImageBottomSheetType type) {
+    if (!mounted) return;
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: AppColors.clear,
+      barrierColor: AppColors.clear,
+      builder: (_) => ErrorImageBottomSheet(
+        type: type,
+        onContinue: () {
+          Navigator.of(context, rootNavigator: true).pop();
+        },
       ),
     );
   }

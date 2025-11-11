@@ -13,9 +13,10 @@ import 'package:dataspikemobilesdk/data/models/request/image_document_request_bo
 import 'dart:io' show File;
 import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
+import 'package:dataspikemobilesdk/view/ui/error/error_image_bottom_sheet.dart';
+import 'package:dataspikemobilesdk/data/models/errors/common_errors.dart';
 
 class CameraDocumentViewModel extends ChangeNotifier {
-
   DocumentSide side = DocumentSide.front;
 
   final UploadImageUseCase _setUseCase;
@@ -31,17 +32,21 @@ class CameraDocumentViewModel extends ChangeNotifier {
   VoidCallback? onProceed;
   VoidCallback? showLoader;
   VoidCallback? hideLoader;
+  void Function(ErrorImageBottomSheetType type)? showCommonError;
   void Function(String title, String message, bool withInstruction)? showError;
 
   void attachCallbacks({
     VoidCallback? onProceed,
     VoidCallback? showLoader,
     VoidCallback? hideLoader,
-    void Function(String title, String message, bool withInstruction)? showError,
+    void Function(ErrorImageBottomSheetType type)? showCommonError,
+    void Function(String title, String message, bool withInstruction)?
+    showError,
   }) {
     this.onProceed = onProceed;
     this.showLoader = showLoader;
     this.hideLoader = hideLoader;
+    this.showCommonError = showCommonError;
     this.showError = showError;
   }
 
@@ -75,8 +80,8 @@ class CameraDocumentViewModel extends ChangeNotifier {
     switch (documentType) {
       case DocumentType.identity:
         return side == DocumentSide.front
-          ? 'Please make a photo of front side of ID'
-          : ''; //'Please make a photo of back side of ID',
+            ? 'Please make a photo of front side of ID'
+            : ''; //'Please make a photo of back side of ID',
       case DocumentType.address:
         return 'Please make a photo of residence proof';
     }
@@ -172,14 +177,32 @@ class CameraDocumentViewModel extends ChangeNotifier {
       } else if (result is UploadImageError) {
         showError?.call(result.title, result.message, result.withInstruction);
       }
+    } on NoInternetException {
+      hideLoader?.call();
+      notifyListeners();
+      showCommonError?.call(ErrorImageBottomSheetType.noInternet);
     } catch (e) {
       hideLoader?.call();
       notifyListeners();
-      showError?.call('Processing error', 'Failed to process the image.', false);
+      showError?.call(
+        'Processing error',
+        'Failed to process the image.',
+        false,
+      );
     }
   }
-  
-  // DEPRECATED: OLD METHOD - REMOVE LATER
+
+  Future<void> pickButtonTap() async {
+    switch (documentType) {
+      case DocumentType.identity:
+        await pickAndUploadImage();
+        break;
+      case DocumentType.address:
+        await pickAndUploadDocument();
+        break;
+    }
+  }
+
   Future<void> pickAndUploadImage() async {
     final picker = ImagePicker();
     showLoader?.call();
@@ -196,30 +219,42 @@ class CameraDocumentViewModel extends ChangeNotifier {
 
     final Uint8List processed = await compute<GalleryProcessParams, Uint8List>(
       processGalleryImageInIsolate,
-      GalleryProcessParams(
-        imageBytes: raw
-      ),
+      GalleryProcessParams(imageBytes: raw),
     );
 
-    final result = await _setUseCase.uploadImage(
-      documentType: documentType.value,
-      imageBytes: processed,
-      ext: 'jpg',
-      fileName: 'document.jpg',
-    );
+    try {
+      final result = await _setUseCase.uploadImage(
+        documentType: documentType.value,
+        imageBytes: processed,
+        ext: 'jpg',
+        fileName: 'document.jpg',
+      );
 
-    hideLoader?.call();
-    notifyListeners();
+      hideLoader?.call();
+      notifyListeners();
 
-    if (result is UploadImageSuccess) {
-      if (result.detectedTwoSideDocument && side == DocumentSide.front) {
-        side = DocumentSide.back;
-        notifyListeners();
-      } else {
-        onProceed?.call();
+      if (result is UploadImageSuccess) {
+        if (result.detectedTwoSideDocument && side == DocumentSide.front) {
+          side = DocumentSide.back;
+          notifyListeners();
+        } else {
+          onProceed?.call();
+        }
+      } else if (result is UploadImageError) {
+        showError?.call(result.title, result.message, result.withInstruction);
       }
-    } else if (result is UploadImageError) {
-      showError?.call(result.title, result.message, result.withInstruction);
+    } on NoInternetException {
+      hideLoader?.call();
+      notifyListeners();
+      showCommonError?.call(ErrorImageBottomSheetType.noInternet);
+    } catch (e) {
+      hideLoader?.call();
+      notifyListeners();
+      showError?.call(
+        'Processing error',
+        'Failed to process the image.',
+        false,
+      );
     }
   }
 
@@ -245,8 +280,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
     final PlatformFile f = result.files.first;
     final String ext = (f.extension ?? '').toLowerCase();
 
-    final Uint8List bytes =
-        f.bytes ?? await File(f.path!).readAsBytes();
+    final Uint8List bytes = f.bytes ?? await File(f.path!).readAsBytes();
 
     const imgExts = {'jpg', 'jpeg', 'png', 'heic'};
     final bool isImage = imgExts.contains(ext);
@@ -258,37 +292,52 @@ class CameraDocumentViewModel extends ChangeNotifier {
         processGalleryImageInIsolate,
         GalleryProcessParams(imageBytes: bytes),
       );
-    } 
+    }
 
-    final resultUpload = isImage 
-    ? await _setUseCase.uploadImage(
-      documentType: documentType.value,
-      imageBytes: uploadBytes,
-      ext: 'jpg',
-      fileName: 'document.jpg',
-    ) 
-    : await _setUseCase.uploadDocument(
-      body: ImageDocumentRequestBody(
-        encodedFileContent: base64Encode(uploadBytes),
-        documentType: documentType.value,
-      ),
-    );
+    try {
+      final resultUpload = isImage
+          ? await _setUseCase.uploadImage(
+              documentType: documentType.value,
+              imageBytes: uploadBytes,
+              ext: 'jpg',
+              fileName: 'document.jpg',
+            )
+          : await _setUseCase.uploadDocument(
+              body: ImageDocumentRequestBody(
+                encodedFileContent: base64Encode(uploadBytes),
+                documentType: documentType.value,
+              ),
+            );
 
-    hideLoader?.call();
-    notifyListeners();
+      hideLoader?.call();
+      notifyListeners();
 
-    if (resultUpload is UploadImageSuccess) {
-      if (resultUpload.detectedTwoSideDocument && side == DocumentSide.front) {
-        side = DocumentSide.back;
-        notifyListeners();
-      } else {
-        onProceed?.call();
+      if (resultUpload is UploadImageSuccess) {
+        if (resultUpload.detectedTwoSideDocument &&
+            side == DocumentSide.front) {
+          side = DocumentSide.back;
+          notifyListeners();
+        } else {
+          onProceed?.call();
+        }
+      } else if (resultUpload is UploadImageError) {
+        showError?.call(
+          resultUpload.title,
+          resultUpload.message,
+          resultUpload.withInstruction,
+        );
       }
-    } else if (resultUpload is UploadImageError) {
+    } on NoInternetException {
+      hideLoader?.call();
+      notifyListeners();
+      showCommonError?.call(ErrorImageBottomSheetType.noInternet);
+    } catch (e) {
+      hideLoader?.call();
+      notifyListeners();
       showError?.call(
-        resultUpload.title,
-        resultUpload.message,
-        resultUpload.withInstruction,
+        'Processing error',
+        'Failed to process the document.',
+        false,
       );
     }
   }

@@ -6,6 +6,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart';
 import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
 import 'package:flutter/foundation.dart';
+import 'package:dataspikemobilesdk/view/ui/error/error_image_bottom_sheet.dart';
+import 'package:dataspikemobilesdk/data/models/errors/common_errors.dart';
 
 class CameraAvatarViewModel extends ChangeNotifier {
 
@@ -17,6 +19,8 @@ class CameraAvatarViewModel extends ChangeNotifier {
   VoidCallback? onProceed;
   VoidCallback? showLoader;
   VoidCallback? hideLoader;
+  
+  void Function(ErrorImageBottomSheetType type)? showCommonError;
   void Function(String title, String message, bool withInstruction)? showError;
 
   static const double sideInsetPct = 0.10;
@@ -31,11 +35,13 @@ class CameraAvatarViewModel extends ChangeNotifier {
     VoidCallback? onProceed,
     VoidCallback? showLoader,
     VoidCallback? hideLoader,
+    void Function(ErrorImageBottomSheetType type)? showCommonError,
     void Function(String title, String message, bool withInstruction)? showError,
   }) {
     this.onProceed = onProceed;
     this.showLoader = showLoader;
     this.hideLoader = hideLoader;
+    this.showCommonError = showCommonError;
     this.showError = showError;
   }
 
@@ -119,6 +125,10 @@ class CameraAvatarViewModel extends ChangeNotifier {
       } else if (result is UploadImageError) {
         showError?.call(result.title, result.message, result.withInstruction);
       }
+    } on NoInternetException {
+      hideLoader?.call();
+      notifyListeners();
+      showCommonError?.call(ErrorImageBottomSheetType.noInternet);
     } catch (e) {
       hideLoader?.call();
       notifyListeners();

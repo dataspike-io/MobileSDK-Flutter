@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:async';
+import 'dart:io';
 import 'package:dataspikemobilesdk/data/models/response/proceed_with_verification_error_response.dart';
 import 'package:http/http.dart' as http;
 import 'package:dataspikemobilesdk/data/models/response/verification_response.dart';
@@ -14,6 +16,7 @@ import 'package:dataspikemobilesdk/data/models/response/dataspike_profile_fields
 import 'package:dataspikemobilesdk/data/models/request/profile_fields_request_body.dart';
 import 'package:dataspikemobilesdk/data/models/request/image_document_request_body.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:dataspikemobilesdk/data/models/errors/common_errors.dart';
 
 abstract class IDataspikeApiService {
   Future<VerificationResponse> getVerification(String shortId);
@@ -53,6 +56,8 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
   final String baseUrl;
   final String apiToken;
 
+  static const Duration _defaultTimeout = Duration(seconds: 20);
+
   DataspikeApiServiceImpl({required this.baseUrl, required this.apiToken});
 
   @override
@@ -62,14 +67,15 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     );
     final headers = DataspikeEndpoint.getVerification.headers(apiToken);
 
-    final response = await http.get(url, headers: headers);
-
-    if (response.statusCode == 200) {
-      final jsonBody = json.decode(response.body) as Map<String, dynamic>;
-      return VerificationResponse.fromJson(jsonBody);
-    } else {
-      throw Exception('Failed to load verification: ${response.statusCode}');
-    }
+    return _wrapNetworkErrors(() async {
+      final response = await http.get(url, headers: headers).timeout(_defaultTimeout);
+      if (response.statusCode == 200) {
+        final jsonBody = json.decode(response.body) as Map<String, dynamic>;
+        return VerificationResponse.fromJson(jsonBody);
+      } else {
+        throw Exception('Failed to load verification: ${response.statusCode}');
+      }
+    });
   }
 
   @override
@@ -100,23 +106,24 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
       );
     }
 
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
-
-    if (response.statusCode == 200) {
-      final jsonBody = json.decode(response.body) as Map<String, dynamic>;
-      return UploadImageResponse.fromJson(jsonBody);
-    } else {
-      try {
-        final errorJson = json.decode(response.body) as Map<String, dynamic>;
-        final errorResponse = UploadImageErrorResponse.fromJson(errorJson);
-        throw errorResponse;
-      } on UploadImageErrorResponse {
-        rethrow;
-      } catch (_) {
-        throw Exception('Failed to upload image: ${response.statusCode}');
+    return _wrapNetworkErrors(() async {
+      final streamedResponse = await request.send().timeout(_defaultTimeout);
+      final response = await http.Response.fromStream(streamedResponse);
+      if (response.statusCode == 200) {
+        final jsonBody = json.decode(response.body) as Map<String, dynamic>;
+        return UploadImageResponse.fromJson(jsonBody);
+      } else {
+        try {
+          final errorJson = json.decode(response.body) as Map<String, dynamic>;
+          final errorResponse = UploadImageErrorResponse.fromJson(errorJson);
+          throw errorResponse;
+        } on UploadImageErrorResponse {
+          rethrow;
+        } catch (_) {
+          throw Exception('Failed to upload image: ${response.statusCode}');
+        }
       }
-    }
+    });
   }
 
   @override
@@ -129,26 +136,25 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     );
     final headers = DataspikeEndpoint.uploadImage.headers(apiToken);
 
-    final response = await http.post( 
-      url,
-      headers: headers,
-      body: json.encode(body.toJson()),
-    );
-
-    if (response.statusCode == 200) {
-      final jsonBody = json.decode(response.body) as Map<String, dynamic>;
-      return UploadImageResponse.fromJson(jsonBody);
-    } else {
-      try {
-        final errorJson = json.decode(response.body) as Map<String, dynamic>;
-        final errorResponse = UploadImageErrorResponse.fromJson(errorJson);
-        throw errorResponse;
-      } on UploadImageErrorResponse {
-        rethrow;
-      } catch (_) {
-        throw Exception('Failed to upload image: ${response.statusCode}');
+    return _wrapNetworkErrors(() async {
+      final response = await http
+          .post(url, headers: headers, body: json.encode(body.toJson()))
+          .timeout(_defaultTimeout);
+      if (response.statusCode == 200) {
+        final jsonBody = json.decode(response.body) as Map<String, dynamic>;
+        return UploadImageResponse.fromJson(jsonBody);
+      } else {
+        try {
+          final errorJson = json.decode(response.body) as Map<String, dynamic>;
+          final errorResponse = UploadImageErrorResponse.fromJson(errorJson);
+          throw errorResponse;
+        } on UploadImageErrorResponse {
+          rethrow;
+        } catch (_) {
+          throw Exception('Failed to upload image: ${response.statusCode}');
+        }
       }
-    }
+    });
   }
 
   @override
@@ -178,23 +184,24 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
       );
     }
 
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
-
-    if (response.statusCode == 200) {
-      final jsonBody = json.decode(response.body) as Map<String, dynamic>;
-      return UploadManualFileResponse.fromJson(jsonBody);
-    } else {
-      try {
-        final errorJson = json.decode(response.body) as Map<String, dynamic>;
-        final errorResponse = UploadManualFileResponse.fromJson(errorJson);
-        throw errorResponse;
-      } on UploadManualFileResponse {
-        rethrow;
-      } catch (_) {
-        throw Exception('Failed to upload image: ${response.statusCode}');
+    return _wrapNetworkErrors(() async {
+      final streamedResponse = await request.send().timeout(_defaultTimeout);
+      final response = await http.Response.fromStream(streamedResponse);
+      if (response.statusCode == 200) {
+        final jsonBody = json.decode(response.body) as Map<String, dynamic>;
+        return UploadManualFileResponse.fromJson(jsonBody);
+      } else {
+        try {
+          final errorJson = json.decode(response.body) as Map<String, dynamic>;
+          final errorResponse = UploadManualFileResponse.fromJson(errorJson);
+          throw errorResponse;
+        } on UploadManualFileResponse {
+          rethrow;
+        } catch (_) {
+          throw Exception('Failed to upload image: ${response.statusCode}');
+        }
       }
-    }
+    });
   }
 
   @override
@@ -207,18 +214,17 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     );
     final headers = DataspikeEndpoint.setCountry.headers(apiToken);
 
-    final response = await http.post(
-      url,
-      headers: headers,
-      body: json.encode(body.toJson()),
-    );
-
-    if (response.statusCode == 200) {
-      final jsonBody = json.decode(response.body) as Map<String, dynamic>;
-      return DataspikeEmptyResponse.fromJson(jsonBody);
-    } else {
-      throw Exception('Failed to set country: ${response.statusCode}');
-    }
+    return _wrapNetworkErrors(() async {
+      final response = await http
+          .post(url, headers: headers, body: json.encode(body.toJson()))
+          .timeout(_defaultTimeout);
+      if (response.statusCode == 200) {
+        final jsonBody = json.decode(response.body) as Map<String, dynamic>;
+        return DataspikeEmptyResponse.fromJson(jsonBody);
+      } else {
+        throw Exception('Failed to set country: ${response.statusCode}');
+      }
+    });
   }
 
   @override
@@ -226,16 +232,17 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     final url = Uri.parse('$baseUrl${DataspikeEndpoint.getCountries.path()}');
     final headers = DataspikeEndpoint.getCountries.headers(apiToken);
 
-    final response = await http.get(url, headers: headers);
-
-    if (response.statusCode == 200) {
-      final jsonBody = json.decode(response.body) as List<dynamic>;
-      return jsonBody
-          .map((e) => CountryResponse.fromJson(e as Map<String, dynamic>))
-          .toList();
-    } else {
-      throw Exception('Failed to load countries: ${response.statusCode}');
-    }
+    return _wrapNetworkErrors(() async {
+      final response = await http.get(url, headers: headers).timeout(_defaultTimeout);
+      if (response.statusCode == 200) {
+        final jsonBody = json.decode(response.body) as List<dynamic>;
+        return jsonBody
+            .map((e) => CountryResponse.fromJson(e as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw Exception('Failed to load countries: ${response.statusCode}');
+      }
+    });
   }
 
   @override
@@ -247,24 +254,25 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     );
     final headers = DataspikeEndpoint.proceedWithVerification.headers(apiToken);
 
-    final response = await http.post(url, headers: headers);
-
-    if (response.statusCode == 200) {
-      final jsonBody = json.decode(response.body) as Map<String, dynamic>;
-      return ProceedWithVerificationResponse.fromJson(jsonBody);
-    } else {
-      try {
-        final errorJson = json.decode(response.body) as Map<String, dynamic>;
-        final errorResponse = ProceedWithVerificationErrorResponse.fromJson(errorJson);
-        throw errorResponse;
-      } on ProceedWithVerificationErrorResponse {
-        rethrow;
-      } catch (_) {
-        throw Exception(
-          'Failed to proceed with verification: ${response.statusCode}',
-        );
+    return _wrapNetworkErrors(() async {
+      final response = await http.post(url, headers: headers).timeout(_defaultTimeout);
+      if (response.statusCode == 200) {
+        final jsonBody = json.decode(response.body) as Map<String, dynamic>;
+        return ProceedWithVerificationResponse.fromJson(jsonBody);
+      } else {
+        try {
+          final errorJson = json.decode(response.body) as Map<String, dynamic>;
+          final errorResponse = ProceedWithVerificationErrorResponse.fromJson(errorJson);
+          throw errorResponse;
+        } on ProceedWithVerificationErrorResponse {
+          rethrow;
+        } catch (_) {
+          throw Exception(
+            'Failed to proceed with verification: ${response.statusCode}',
+          );
+        }
       }
-    }
+    });
   }
 
   @override
@@ -277,17 +285,27 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     );
     final headers = DataspikeEndpoint.setProfileFields.headers(apiToken);
 
-    final response = await http.post(
-      url,
-      headers: headers,
-      body: json.encode(body.toJson()),
-    );
+    return _wrapNetworkErrors(() async {
+      final response = await http
+          .post(url, headers: headers, body: json.encode(body.toJson()))
+          .timeout(_defaultTimeout);
+      if (response.statusCode == 200) {
+        final jsonBody = json.decode(response.body) as Map<String, dynamic>;
+        return DataspikeProfileFieldsResponse.fromJson(jsonBody);
+      } else {
+        throw Exception('Failed to set profile fields: ${response.statusCode}');
+      }
+    });
+  }
 
-    if (response.statusCode == 200) {
-      final jsonBody = json.decode(response.body) as Map<String, dynamic>;
-      return DataspikeProfileFieldsResponse.fromJson(jsonBody);
-    } else {
-      throw Exception('Failed to set profile fields: ${response.statusCode}');
+  // Wrap network errors to detect no internet and timeouts
+  Future<T> _wrapNetworkErrors<T>(Future<T> Function() run) async {
+    try {
+      return await run();
+    } on SocketException {
+      throw NoInternetException();
+    } on TimeoutException {
+      throw NoInternetException();
     }
   }
 }
