@@ -1,4 +1,5 @@
 import 'package:camera/camera.dart';
+import 'package:dataspikemobilesdk/view/ui/camera/detection/face_detector_view.dart';
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/view/ui/continue_circle_button.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/two_arcs_painter.dart';
@@ -11,6 +12,11 @@ import '/main/coordinator/coordinator.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/error_bottom_sheet.dart';
 import 'package:dataspikemobilesdk/domain/models/instruction_type.dart';
 import 'package:dataspikemobilesdk/view/ui/error/error_image_bottom_sheet.dart';
+import 'dart:io';
+import 'package:dataspikemobilesdk/view/ui/camera/detection/camera_view.dart';
+import 'package:camera/camera.dart';
+import 'package:google_mlkit_commons/google_mlkit_commons.dart';
+import 'package:flutter/services.dart';
 
 class LiveAvatarCamera extends StatefulWidget {
   const LiveAvatarCamera({super.key});
@@ -174,7 +180,9 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
                                 final previewAR = ps.height / ps.width;
                                 final containerAR = c.maxWidth / c.maxHeight;
                                 final coverScale = previewAR / containerAR;
-                                final coverScaleRation = coverScale >= 1 ? coverScale : 1 / coverScale;
+                                final coverScaleRation = coverScale >= 1
+                                    ? coverScale
+                                    : 1 / coverScale;
 
                                 return Stack(
                                   fit: StackFit.expand,
@@ -182,25 +190,11 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
                                     Transform.scale(
                                       scale: coverScaleRation,
                                       child: Center(
-                                        child: AspectRatio(
+                                        child: 
+                                        AspectRatio(
                                           aspectRatio: previewAR,
-                                          child: CameraPreview(viewModel.ctrl!),
+                                          child: FaceDetectorView(),
                                         ),
-                                      ),
-                                    ),
-
-                                    CustomPaint(
-                                      size: Size(c.maxWidth, c.maxHeight),
-                                      painter: TwoArcsPainter(
-                                        color: AppColors.white,
-                                        strokeWidth: _strokeWidth,
-                                        sideInsetPct: _sideInsetPct,
-                                        topApexPct: _topApexPct,
-                                        bottomApexFromBottomPct:
-                                            _bottomApexFromBottomPct,
-                                        topRisePx: _topRisePx,
-                                        bottomRisePx: _bottomRisePx,
-                                        ctrlXpx: _ctrlXpx,
                                       ),
                                     ),
                                   ],
