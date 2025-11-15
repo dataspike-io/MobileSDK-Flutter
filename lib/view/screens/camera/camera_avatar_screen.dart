@@ -1,8 +1,5 @@
-import 'package:camera/camera.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/detection/face_detector_view.dart';
 import 'package:flutter/material.dart';
-import 'package:dataspikemobilesdk/view/ui/continue_circle_button.dart';
-import 'package:dataspikemobilesdk/view/ui/camera/two_arcs_painter.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:dataspikemobilesdk/view/ui/loader.dart';
 import 'package:dataspikemobilesdk/view/ui/top_bar.dart';
@@ -12,11 +9,6 @@ import '/main/coordinator/coordinator.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/error_bottom_sheet.dart';
 import 'package:dataspikemobilesdk/domain/models/instruction_type.dart';
 import 'package:dataspikemobilesdk/view/ui/error/error_image_bottom_sheet.dart';
-import 'dart:io';
-import 'package:dataspikemobilesdk/view/ui/camera/detection/camera_view.dart';
-import 'package:camera/camera.dart';
-import 'package:google_mlkit_commons/google_mlkit_commons.dart';
-import 'package:flutter/services.dart';
 
 class LiveAvatarCamera extends StatefulWidget {
   const LiveAvatarCamera({super.key});
@@ -26,14 +18,6 @@ class LiveAvatarCamera extends StatefulWidget {
 }
 
 class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
-  static const double _sideInsetPct = 0.10;
-  static const double _topApexPct = 0.10;
-  static const double _bottomApexFromBottomPct = 0.20;
-  static const double _topRisePx = 120;
-  static const double _bottomRisePx = 120;
-  static const double _ctrlXpx = 80;
-  static const double _strokeWidth = 3;
-
   late final CameraAvatarViewModel viewModel;
 
   @override
@@ -62,10 +46,6 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
       context,
       after: DataspikeStep.selfieCamera,
     );
-  }
-
-  void shootAndCrop(GlobalKey previewKey) async {
-    await viewModel.shootAndCrop(previewKey, MediaQuery.of(context).size);
   }
 
   void showLoader() async {
@@ -124,100 +104,32 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
 
   @override
   Widget build(BuildContext context) {
-    final previewKey = GlobalKey();
-    final screenSize = MediaQuery.of(context).size;
-
-    final camWidth = screenSize.width;
-    final camHeight = screenSize.height * 0.65;
-
-    return FutureBuilder(
-      future: viewModel.init,
-      builder: (context, snap) {
-        if (snap.connectionState != ConnectionState.done) {
-          return PopScope(
-            canPop: false,
-            child: Scaffold(
-              backgroundColor: AppColors.white,
-              body: const Center(child: Loader(color: AppColors.slateGray)),
-            ),
-          );
-        }
-
-        return AnimatedBuilder(
-          animation: viewModel,
-          builder: (context, _) {
-            final ctrl = viewModel.ctrl;
-            final isReady = ctrl != null && ctrl.value.isInitialized;
-
-            if (!isReady) {
-              return PopScope(
-                canPop: false,
-                child: Scaffold(
-                  backgroundColor: AppColors.white,
-                  body: const Center(child: Loader(color: AppColors.slateGray)),
-                ),
-              );
-            }
-            return PopScope(
-              canPop: false,
-              child: Scaffold(
-                backgroundColor: AppColors.white,
-                body: SafeArea(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      TopBar(hasTimer: true),
-                      Center(
-                        child: SizedBox(
-                          key: previewKey,
-                          width: camWidth,
-                          height: camHeight,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(32),
-                            child: LayoutBuilder(
-                              builder: (context, c) {
-                                final ps = ctrl.value.previewSize!;
-                                final previewAR = ps.height / ps.width;
-                                final containerAR = c.maxWidth / c.maxHeight;
-                                final coverScale = previewAR / containerAR;
-                                final coverScaleRation = coverScale >= 1
-                                    ? coverScale
-                                    : 1 / coverScale;
-
-                                return Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    Transform.scale(
-                                      scale: coverScaleRation,
-                                      child: Center(
-                                        child: 
-                                        AspectRatio(
-                                          aspectRatio: previewAR,
-                                          child: FaceDetectorView(),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: AppColors.white,
+        body: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              TopBar(hasTimer: true),
+              Expanded(
+                child: FaceDetectorView(
+                  onShootCallback:
+                      (imageBytes, previewKeySize, screenSize, previewSize) =>
+                          viewModel.shootAndCrop(
+                            imageBytes,
+                            previewKeySize,
+                            screenSize,
+                            previewSize,
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      CircularContinueButton(
-                        onPressed: () => shootAndCrop(previewKey),
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-                  ),
                 ),
               ),
-            );
-          },
-        );
-      },
+              const SizedBox(height: 10),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

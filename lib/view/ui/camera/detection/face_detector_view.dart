@@ -1,10 +1,21 @@
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'detector_view.dart';
-import 'face_detector_painter.dart';
+import 'package:dataspikemobilesdk/view/ui/camera/two_arcs_painter.dart';
+import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
+import 'dart:typed_data';
 
 class FaceDetectorView extends StatefulWidget {
+  const FaceDetectorView({super.key, required this.onShootCallback});
+
+  final Future<void> Function(
+    Uint8List imageBytes,
+    Size previewKeySize,
+    Size screenSize,
+    Size previewSize,
+  )
+  onShootCallback;
+
   @override
   State<FaceDetectorView> createState() => _FaceDetectorViewState();
 }
@@ -12,15 +23,16 @@ class FaceDetectorView extends StatefulWidget {
 class _FaceDetectorViewState extends State<FaceDetectorView> {
   final FaceDetector _faceDetector = FaceDetector(
     options: FaceDetectorOptions(
+      enableClassification: true,
       enableContours: true,
       enableLandmarks: true,
+      minFaceSize: 0.3,
     ),
   );
   bool _canProcess = true;
   bool _isBusy = false;
   CustomPaint? _customPaint;
-  String? _text;
-  var _cameraLensDirection = CameraLensDirection.front;
+  AvatarDetectionStatus? _status;
 
   @override
   void dispose() {
@@ -32,44 +44,105 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   @override
   Widget build(BuildContext context) {
     return DetectorView(
-      title: 'Face Detector',
       customPaint: _customPaint,
-      text: _text,
       onImage: _processImage,
-      initialCameraLensDirection: _cameraLensDirection,
-      onCameraLensDirectionChanged: (value) => _cameraLensDirection = value,
+      onShootCallback: _onShootCallback,
+      status: _status,
     );
+  }
+
+  Future<void> _onShootCallback(
+    Uint8List imageBytes,
+    Size previewKeySize,
+    Size screenSize,
+    Size previewSize,
+  ) async {
+    widget.onShootCallback(imageBytes, previewKeySize, screenSize, previewSize);
   }
 
   Future<void> _processImage(InputImage inputImage) async {
     if (!_canProcess) return;
     if (_isBusy) return;
     _isBusy = true;
-    setState(() {
-      _text = '';
-    });
+
     final faces = await _faceDetector.processImage(inputImage);
+
+    AvatarDetectionStatus? status;
+
     if (inputImage.metadata?.size != null &&
         inputImage.metadata?.rotation != null) {
-      final painter = FaceDetectorPainter(
-        faces,
-        inputImage.metadata!.size,
-        inputImage.metadata!.rotation,
-        _cameraLensDirection,
+      status = _evaluateHeadPosition(
+        faces: faces,
+        imageSize: inputImage.metadata!.size,
+      );
+      _status = status;
+
+      final painter = TwoArcsPainter(
+        isTopArcHighlighted: status == AvatarDetectionStatus.tooHigh,
+        isBottomArcHighlighted: status == AvatarDetectionStatus.tooLow,
       );
       _customPaint = CustomPaint(painter: painter);
     } else {
-      String text = 'Faces found: ${faces.length}\n\n';
-      for (final face in faces) {
-        text += 'face: ${face.boundingBox}\n\n';
-      }
-      _text = text;
-      // TODO: set _customPaint to draw boundingRect on top of image
-      _customPaint = null;
+      _customPaint = CustomPaint(painter: TwoArcsPainter());
     }
     _isBusy = false;
     if (mounted) {
       setState(() {});
     }
   }
-} 
+
+  AvatarDetectionStatus _evaluateHeadPosition({
+    required List<Face> faces,
+    required Size imageSize,
+    double topFraction = 0.44, // 0.33
+    double bottomFraction = 0.56, // 0.66
+    double minFaceAreaFraction = 0.1,
+    double closedEyesProbabilityThreshold = 0.1,
+    double yRotationThreshold = 20,   // |Y| > → the face turned away on y AXES
+    double xRotationThreshold = 20, // |X| > → the face turned away on x AXES
+  }) {
+    if (faces.isEmpty || imageSize.height == 0 || imageSize.width == 0) {
+      return AvatarDetectionStatus.notVisible;
+    }
+
+    final Face primary = faces.reduce((a, b) {
+      final aArea = a.boundingBox.width * a.boundingBox.height;
+      final bArea = b.boundingBox.width * b.boundingBox.height;
+      return aArea >= bArea ? a : b;
+    });
+
+    final rect = primary.boundingBox;
+    final normalizedCenterY = rect.center.dy / imageSize.height;
+
+    if (
+      primary.leftEyeOpenProbability != null &&
+      primary.rightEyeOpenProbability != null
+    ) {
+      final leftEyeClosed = primary.leftEyeOpenProbability! < closedEyesProbabilityThreshold;
+      final rightEyeClosed = primary.rightEyeOpenProbability! < closedEyesProbabilityThreshold;
+      
+      if (leftEyeClosed || rightEyeClosed) {
+        return AvatarDetectionStatus.closedEyes;
+      }
+    }
+
+    final yaw = primary.headEulerAngleY;
+    final pitch = primary.headEulerAngleX;
+    if ((yaw != null && yaw.abs() > yRotationThreshold) || 
+        (pitch != null && pitch.abs() > xRotationThreshold)) {
+      return AvatarDetectionStatus.lookStraight; 
+    }
+
+    if (normalizedCenterY < topFraction) return AvatarDetectionStatus.tooHigh;
+    if (normalizedCenterY > bottomFraction) return AvatarDetectionStatus.tooLow;
+
+    final faceArea = rect.width * rect.height;
+    final frameArea = imageSize.width * imageSize.height;
+
+    if (frameArea > 0 && (faceArea / frameArea) < minFaceAreaFraction) {
+      return AvatarDetectionStatus.tooFar;
+    }
+
+    return AvatarDetectionStatus.ok;
+  }
+}
