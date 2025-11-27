@@ -4,6 +4,7 @@ import 'detector_view.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/two_arcs_painter.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
 import 'dart:typed_data';
+import 'package:dataspikemobilesdk/utils/camera/camera_variable_environments.dart';
 
 class FaceDetectorView extends StatefulWidget {
   const FaceDetectorView({super.key, required this.onShootCallback});
@@ -60,7 +61,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     widget.onShootCallback(imageBytes, previewKeySize, screenSize, previewSize);
   }
 
-  Future<void> _processImage(InputImage inputImage) async {
+  Future<void> _processImage(InputImage inputImage, double cropRatio) async {
     if (!_canProcess) return;
     if (_isBusy) return;
     _isBusy = true;
@@ -73,6 +74,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
         inputImage.metadata?.rotation != null) {
       status = _evaluateHeadPosition(
         faces: faces,
+        cropRatio: cropRatio,
         imageSize: inputImage.metadata!.size,
       );
       _status = status;
@@ -94,11 +96,12 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   AvatarDetectionStatus _evaluateHeadPosition({
     required List<Face> faces,
     required Size imageSize,
-    double topFraction = 0.44, // 0.33
-    double bottomFraction = 0.56, // 0.66
+    required double cropRatio,
+    double topFraction = 0.33, // old values 0.33
+    double bottomFraction = 0.56, // old values 0.66
     double minFaceAreaFraction = 0.1,
     double closedEyesProbabilityThreshold = 0.1,
-    double yRotationThreshold = 20,   // |Y| > → the face turned away on y AXES
+    double yRotationThreshold = 20, // |Y| > → the face turned away on y AXES
     double xRotationThreshold = 20, // |X| > → the face turned away on x AXES
   }) {
     if (faces.isEmpty || imageSize.height == 0 || imageSize.width == 0) {
@@ -111,16 +114,26 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
       return aArea >= bArea ? a : b;
     });
 
-    final rect = primary.boundingBox;
-    final normalizedCenterY = rect.center.dy / imageSize.height;
+    final bottomApexFromBottomPct = CameraConstants.avatarBottomApexFromBottomPct;
+    final topApexPct = CameraConstants.avatarTopApexPct;
+    final apexDiff = bottomApexFromBottomPct - topApexPct;
 
-    if (
-      primary.leftEyeOpenProbability != null &&
-      primary.rightEyeOpenProbability != null
-    ) {
-      final leftEyeClosed = primary.leftEyeOpenProbability! < closedEyesProbabilityThreshold;
-      final rightEyeClosed = primary.rightEyeOpenProbability! < closedEyesProbabilityThreshold;
-      
+    final rect = primary.boundingBox;
+    final double normalizedCenterY;
+
+    if (imageSize.aspectRatio < 1) {
+      normalizedCenterY = rect.center.dy / (imageSize.height) - apexDiff;
+    } else {
+      normalizedCenterY = (rect.center.dy / (imageSize.height)) - cropRatio - apexDiff;
+    }
+
+    if (primary.leftEyeOpenProbability != null &&
+        primary.rightEyeOpenProbability != null) {
+      final leftEyeClosed =
+          primary.leftEyeOpenProbability! < closedEyesProbabilityThreshold;
+      final rightEyeClosed =
+          primary.rightEyeOpenProbability! < closedEyesProbabilityThreshold;
+
       if (leftEyeClosed || rightEyeClosed) {
         return AvatarDetectionStatus.closedEyes;
       }
@@ -128,9 +141,9 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
 
     final yaw = primary.headEulerAngleY;
     final pitch = primary.headEulerAngleX;
-    if ((yaw != null && yaw.abs() > yRotationThreshold) || 
+    if ((yaw != null && yaw.abs() > yRotationThreshold) ||
         (pitch != null && pitch.abs() > xRotationThreshold)) {
-      return AvatarDetectionStatus.lookStraight; 
+      return AvatarDetectionStatus.lookStraight;
     }
 
     if (normalizedCenterY < topFraction) return AvatarDetectionStatus.tooHigh;

@@ -18,7 +18,7 @@ class CameraView extends StatefulWidget {
   }) : super(key: key);
 
   final CustomPaint? customPaint;
-  final Function(InputImage inputImage) onImage;
+  final Function(InputImage inputImage, double cropRatio) onImage;
   final Future<void> Function(
     Uint8List imageBytes,
     Size previewKeySize,
@@ -37,6 +37,7 @@ class _CameraViewState extends State<CameraView> {
   static List<CameraDescription> _cameras = [];
   CameraController? _controller;
   int _cameraIndex = -1;
+  double? _containerAR;
 
   @override
   void initState() {
@@ -84,10 +85,11 @@ class _CameraViewState extends State<CameraView> {
 
     return LayoutBuilder(
       builder: (context, c) {
+        _containerAR = camWidth / camHeight;
+
         final ps = _controller!.value.previewSize!;
         final previewAR = ps.height / ps.width;
-        final containerAR = camWidth / camHeight;
-        final coverScale = previewAR / containerAR;
+        final coverScale = previewAR / _containerAR!;
         final coverScaleRation = coverScale >= 1 ? coverScale : 1 / coverScale;
 
         return Column(
@@ -118,7 +120,7 @@ class _CameraViewState extends State<CameraView> {
 
                       if (widget.status != null)
                         Positioned(
-                          bottom: 20,
+                          bottom: 10,
                           left: 0,
                           right: 0,
                           child: Center(
@@ -135,7 +137,10 @@ class _CameraViewState extends State<CameraView> {
             const SizedBox(height: 32),
 
             CircularContinueButton(
-              onPressed: () => _shootImage(previewKey.currentContext?.size ?? Size.zero, screenSize),
+              onPressed: () => _shootImage(
+                previewKey.currentContext?.size ?? Size.zero,
+                screenSize,
+              ),
             ),
           ],
         );
@@ -195,10 +200,16 @@ class _CameraViewState extends State<CameraView> {
   void _processCameraImage(CameraImage image) {
     final inputImage = _inputImageFromCameraImage(image);
     if (inputImage == null) return;
-    widget.onImage(inputImage);
+
+    final ps = _controller!.value.previewSize!;
+    final previewAR = ps.height / ps.width;
+    final coverScale = previewAR / _containerAR!;
+    final fraction = 1 - coverScale;
+
+    widget.onImage(inputImage, fraction);
   }
 
-  final _orientations = { // TODO: Remove later
+  final _orientations = {
     DeviceOrientation.portraitUp: 0,
     DeviceOrientation.landscapeLeft: 90,
     DeviceOrientation.portraitDown: 180,

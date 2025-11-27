@@ -10,7 +10,6 @@ import '../../ui/verification_completed/info_card_with_subtitle.dart';
 import '../../ui/onboarding/stage_row.dart';
 import 'package:dataspikemobilesdk/main/coordinator/coordinator.dart';
 import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:dataspikemobilesdk/main/models/dataspike_verifications_status.dart';
 import 'package:dataspikemobilesdk/domain/models/states/proceed_with_verification_state.dart';
 import 'package:dataspikemobilesdk/view/ui/error/error_image_bottom_sheet.dart';

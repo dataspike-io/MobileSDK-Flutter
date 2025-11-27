@@ -101,6 +101,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
     ctrl = CameraController(initial, ResolutionPreset.max, enableAudio: false);
     await ctrl!.initialize();
     await ctrl!.lockCaptureOrientation(DeviceOrientation.portraitUp);
+    await ctrl!.setFlashMode(FlashMode.off);
     notifyListeners();
   }
 
