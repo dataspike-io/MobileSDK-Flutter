@@ -63,7 +63,7 @@ class _InstructionScreenState extends State<InstructionScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Flexible(
-                        flex: 6,
+                        flex: 9,
                         fit: FlexFit.tight,
                         child: SwipableView(type: widget.type),
                       ),
