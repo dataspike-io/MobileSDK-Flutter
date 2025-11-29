@@ -56,15 +56,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       TopBar(hasTimer: false, isBackButtonHidden: true),
-                      const SizedBox(height: 20),
-                      Container(
-                        height: 1,
-                        width: double.infinity,
-                        color: AppColors.snowyLilac,
-                      ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 8),
                       Text(
-                        'Verify your identity for Company',
+                        'Verify your identity',
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w600,
@@ -78,7 +72,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       const SizedBox(height: 12),
                       InfoCard(
                         title:
-                            'Company requests proof of address, proof of identity and liveness verifications.',
+                            'The company needs to confirm your identity and address.',
                       ),
                     ],
                   ),

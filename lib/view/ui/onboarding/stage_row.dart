@@ -6,7 +6,11 @@ class Stage {
   final String title;
   final String subtitle;
   final bool isCompleted;
-  const Stage({required this.title, required this.subtitle, required this.isCompleted});
+  const Stage({
+    required this.title,
+    required this.subtitle,
+    required this.isCompleted,
+  });
 }
 
 class StageRow extends StatelessWidget {
@@ -24,7 +28,9 @@ class StageRow extends StatelessWidget {
             width: 24,
             height: 24.0,
             decoration: BoxDecoration(
-              color: stage.isCompleted ? AppColors.mediumSeaGreen : AppColors.softLavender,
+              color: stage.isCompleted
+                  ? AppColors.mediumSeaGreen
+                  : AppColors.softLavender,
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
@@ -33,32 +39,37 @@ class StageRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          SizedBox(
-            height: 40,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  stage.title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.black,
-                    fontFamily: 'Figtree',
-                    package: 'dataspikemobilesdk',
+          Expanded(
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 40),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    stage.title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.black,
+                      fontFamily: 'Figtree',
+                      package: 'dataspikemobilesdk',
+                    ),
                   ),
-                ),
-                Text(
-                  stage.subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.darkIndigo,
-                    fontFamily: 'Figtree',
-                    package: 'dataspikemobilesdk',
+                  Text(
+                    stage.subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.darkIndigo,
+                      fontFamily: 'Figtree',
+                      package: 'dataspikemobilesdk',
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -66,4 +77,3 @@ class StageRow extends StatelessWidget {
     );
   }
 }
-

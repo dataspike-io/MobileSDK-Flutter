@@ -41,12 +41,6 @@ class _InstructionScreenState extends State<InstructionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final title = switch (widget.type) {
-      InstructionType.poi => 'Take a photo of your ID',
-      InstructionType.liveness => 'Take a selfie',
-      InstructionType.poa => 'Upload a document to prove your address',
-    };
-
     final ctaText = switch (widget.type) {
       InstructionType.poi => 'Add photo',
       InstructionType.liveness => 'Take a selfie',
@@ -68,18 +62,6 @@ class _InstructionScreenState extends State<InstructionScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        title,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.black,
-                          fontFamily: 'FunnelDisplay',
-                          package: 'dataspikemobilesdk',
-                        ),
-                      ),
-                      const SizedBox(height: 16),
                       Flexible(
                         flex: 6,
                         fit: FlexFit.tight,

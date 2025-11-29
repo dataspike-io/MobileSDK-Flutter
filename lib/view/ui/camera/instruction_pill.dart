@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class InstructionPill extends StatelessWidget {
   final String text;
@@ -12,7 +11,7 @@ class InstructionPill extends StatelessWidget {
     return SizedBox(
       width: 240,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: AppColors.black,
           borderRadius: BorderRadius.circular(24),
@@ -30,16 +29,10 @@ class InstructionPill extends StatelessWidget {
                   fontFamily: 'Figtree',
                   package: 'dataspikemobilesdk',
                 ),
+                textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-            ),
-            const SizedBox(width: 8),
-            SvgPicture.asset(
-              'packages/dataspikemobilesdk/assets/images/top_right_arrow.svg',
-              height: 24,
-              width: 24,
-              fit: BoxFit.contain,
             ),
           ],
         ),

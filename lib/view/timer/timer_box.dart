@@ -93,7 +93,7 @@ class _TimeLeftBoxState extends State<TimeBox> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'Remaining time: ${_format(_timeLeft)}',
+      'Session expires in ${_format(_timeLeft)}',
       style: TextStyle(
         color: widget.isTitle ? AppColors.darkIndigo : AppColors.royalPurple,
         fontFamily: 'Figtree',

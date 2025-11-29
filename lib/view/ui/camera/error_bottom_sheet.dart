@@ -60,7 +60,7 @@ class ErrorBottomSheet extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        color: AppColors.black,
+                        color: AppColors.lightRed,
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
                         fontFamily: 'Figtree',
@@ -72,7 +72,7 @@ class ErrorBottomSheet extends StatelessWidget {
                     Text(
                       message,
                       style: const TextStyle(
-                        color: AppColors.black,
+                        color: AppColors.lightRed,
                         fontSize: 12,
                         fontWeight: FontWeight.w400,
                         fontFamily: 'Figtree',
@@ -81,12 +81,17 @@ class ErrorBottomSheet extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
 
-                    if (instruction != null)
+                    if (instruction != null) ...[
                       const SizedBox(height: 32),
                       SizedBox(
-                        height: h * 0.6, 
-                        child: SwipableView(type: instruction!),
+                        height: h * 0.6,
+                        child: SwipableView(
+                          type: instruction!,
+                          isError: true,
+                          isShowingTitle: false,
+                        ),
                       ),
+                    ],
                   ],
                 ),
               ),

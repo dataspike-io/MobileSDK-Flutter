@@ -5,9 +5,9 @@ import 'package:dataspikemobilesdk/view_models/factory/dataspike_view_model_fact
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:dataspikemobilesdk/view/ui/loader.dart';
 import 'package:dataspikemobilesdk/view/ui/top_bar.dart';
-import '../../ui/verification_completed/stages_card.dart';
+import '../../ui/verification_completed/verification_stages_card.dart';
+import '../../ui/verification_completed/verification_stage_row.dart';
 import '../../ui/verification_completed/info_card_with_subtitle.dart';
-import '../../ui/onboarding/stage_row.dart';
 import 'package:dataspikemobilesdk/main/coordinator/coordinator.dart';
 import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
 import 'package:dataspikemobilesdk/main/models/dataspike_verifications_status.dart';
@@ -156,13 +156,11 @@ class _VerificationCompletedScreenState
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
                     sliver: SliverToBoxAdapter(
-                      child: StagesCard(
+                      child: VerificationStagesCard(
                         stages: viewModel.stages
                             .map(
-                              (s) => Stage(
-                                title: s.title,
-                                subtitle: s.subtitle,
-                                isCompleted: s.completed,
+                              (s) => VerificationStage(
+                                title: s.title
                               ),
                             )
                             .toList(),
@@ -241,13 +239,11 @@ class _VerificationCompletedScreenState
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
                   sliver: SliverToBoxAdapter(
-                    child: StagesCard(
+                    child: VerificationStagesCard(
                       stages: viewModel.stages
                           .map(
-                            (s) => Stage(
-                              title: s.title,
-                              subtitle: s.subtitle,
-                              isCompleted: s.completed,
+                            (s) => VerificationStage(
+                              title: s.title
                             ),
                           )
                           .toList(),
@@ -260,63 +256,5 @@ class _VerificationCompletedScreenState
         ),
       );
     }
-    // else {
-    //   // TODO: DEPRECATED - OLD SCREEN
-    //   return PopScope(
-    //     canPop: false,
-    //     child: Scaffold(
-    //       backgroundColor: AppColors.white,
-    //       body: SafeArea(
-    //         child: Padding(
-    //           padding: const EdgeInsets.symmetric(horizontal: 24),
-    //           child: Column(
-    //             crossAxisAlignment: CrossAxisAlignment.center,
-    //             children: [
-    //               const SizedBox(height: 64),
-    //               Icon(
-    //                 Icons.check_circle,
-    //                 color: AppColors.mediumSeaGreen,
-    //                 size: 56,
-    //               ),
-    //               const SizedBox(height: 24),
-    //               Text(
-    //                 'Thank you!',
-    //                 textAlign: TextAlign.center,
-    //                 style: TextStyle(
-    //                   fontSize: 28,
-    //                   fontWeight: FontWeight.w600,
-    //                   color: AppColors.black,
-    //                   fontFamily: 'FunnelDisplay',
-    //                   package: 'dataspikemobilesdk',
-    //                 ),
-    //               ),
-    //               const SizedBox(height: 8),
-    //               Text(
-    //                 'You have successfully uploaded all required documents.',
-    //                 textAlign: TextAlign.center,
-    //                 style: TextStyle(
-    //                   fontSize: 16,
-    //                   color: AppColors.darkIndigo,
-    //                   fontFamily: 'FunnelDisplay',
-    //                   package: 'dataspikemobilesdk',
-    //                 ),
-    //               ),
-    //               const Spacer(),
-    //               ContinueButton(onPressed: _onFinish, text: 'Continue'),
-    //               const SizedBox(height: 24),
-    //               SvgPicture.asset(
-    //                 'packages/dataspikemobilesdk/assets/images/dataspike_logo.svg',
-    //                 height: 16,
-    //                 width: 80,
-    //                 fit: BoxFit.contain,
-    //               ),
-    //               SizedBox(height: 24),
-    //             ],
-    //           ),
-    //         ),
-    //       ),
-    //     ),
-    //   );
-    // }
   }
 }

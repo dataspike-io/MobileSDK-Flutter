@@ -11,11 +11,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:dataspikemobilesdk/view/ui/loader.dart';
 import '/main/coordinator/coordinator.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/instruction_pill.dart';
-import 'package:dataspikemobilesdk/view/ui/camera/side_toggle_pill.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/error_bottom_sheet.dart';
 import 'package:dataspikemobilesdk/domain/models/document_type.dart';
 import 'package:dataspikemobilesdk/domain/models/instruction_type.dart';
 import 'package:dataspikemobilesdk/view/ui/error/error_image_bottom_sheet.dart';
+import 'package:dataspikemobilesdk/view/ui/camera/file_chooser_sheet.dart';
 
 class LiveCropCamera extends StatefulWidget {
   const LiveCropCamera({super.key, required this.docType});
@@ -39,6 +39,7 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
       onProceed: () => proceedNext(),
       showLoader: showLoader,
       hideLoader: hideLoader,
+      showChooserSheet: showFileChooserSheet,
       showError: (title, msg, withInstruction) =>
           showError(title, msg, withInstruction),
       showCommonError: (type) => _showCommonError(type),
@@ -67,10 +68,6 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
 
   void shootAndCrop(GlobalKey previewKey) async {
     await viewModel.shootAndCrop(previewKey, MediaQuery.of(context).size);
-  }
-
-  void pickAndUploadDocument() async {
-    await viewModel.pickButtonTap();
   }
 
   void showLoader() async {
@@ -108,7 +105,24 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
     );
   }
 
-   void _showCommonError(ErrorImageBottomSheetType type) {
+  void showFileChooserSheet() {
+    if (!mounted) return;
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: AppColors.clear,
+      barrierColor: AppColors.clear,
+      builder: (_) => FileChooserSheet(
+        onImagePressed: () => viewModel.pickAndUploadImage(),
+        onFilePressed: () => viewModel.pickAndUploadDocument(),
+      ),
+    );
+  }
+
+  void _showCommonError(ErrorImageBottomSheetType type) {
     if (!mounted) return;
     showModalBottomSheet<void>(
       context: context,
@@ -135,8 +149,12 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
     final camWidth = screenSize.width;
     final camHeight = screenSize.height * 0.65;
 
-    final cropWidth = screenSize.width * (widget.docType == DocumentType.identity ? 0.85 : 0.6);
-    final cropHeight = screenSize.height * (widget.docType == DocumentType.identity ? 0.3 : 0.5);
+    final cropWidth =
+        screenSize.width *
+        (widget.docType == DocumentType.identity ? 0.85 : 0.6);
+    final cropHeight =
+        screenSize.height *
+        (widget.docType == DocumentType.identity ? 0.3 : 0.5);
 
     return FutureBuilder(
       future: viewModel.init,
@@ -189,7 +207,9 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                                 final previewAR = ps.height / ps.width;
                                 final containerAR = c.maxWidth / c.maxHeight;
                                 final coverScale = previewAR / containerAR;
-                                final coverScaleRation = coverScale >= 1 ? coverScale : 1 / coverScale;
+                                final coverScaleRation = coverScale >= 1
+                                    ? coverScale
+                                    : 1 / coverScale;
 
                                 return Stack(
                                   fit: StackFit.expand,
@@ -274,50 +294,15 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                                             )
                                           : const SizedBox.shrink(),
                                     ),
-                                    Positioned(
-                                      top: widget.docType == DocumentType.identity ? 100 : 24,
-                                      left: 0,
-                                      right: 0,
-                                      child: Center(
-                                        child: Text(
-                                          viewModel.hint,
-                                          style: const TextStyle(
-                                            color: AppColors.white,
-                                            fontSize: 14,
-                                            fontFamily: 'Figtree',
-                                            package: 'dataspikemobilesdk',
-                                            fontWeight: FontWeight.w600,
-                                            decoration: TextDecoration.none,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                    ),
 
-                                    if (viewModel.side == DocumentSide.back)
+                                    if (widget.docType == DocumentType.identity)
                                       Positioned(
-                                        bottom: 24,
-                                        left: 0,
-                                        right: 0,
-                                        child: Center(
-                                          child: SideTogglePill(
-                                            value: viewModel.side,
-                                            onChanged: (v) => setState(
-                                              () => viewModel.side = v,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-
-                                    if (viewModel.side == DocumentSide.front && widget.docType == DocumentType.identity)
-                                      Positioned(
-                                        bottom: 80,
+                                        bottom: 60,
                                         left: 0,
                                         right: 0,
                                         child: Center(
                                           child: InstructionPill(
-                                            text:
-                                                'Place right edge of the card to frame boundaries',
+                                            text: viewModel.hint,
                                           ),
                                         ),
                                       ),
@@ -334,26 +319,26 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                       ),
                       const SizedBox(height: 2),
                       if (viewModel.isUploadButtonVisible)
-                      SizedBox(
-                        height: 60.0,
-                        width: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: TextButton(
-                            onPressed: viewModel.pickAndUploadDocument,
-                            child: Text(
-                              'Upload document',
-                              style: TextStyle(
-                                color: AppColors.black,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'Figtree',
-                                package: 'dataspikemobilesdk',
+                        SizedBox(
+                          height: 60.0,
+                          width: double.infinity,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: TextButton(
+                              onPressed: viewModel.pickButtonTap,
+                              child: Text(
+                                'Upload document',
+                                style: TextStyle(
+                                  color: AppColors.black,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'Figtree',
+                                  package: 'dataspikemobilesdk',
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
                       const SizedBox(height: 16),
                     ],
                   ),
