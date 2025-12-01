@@ -32,6 +32,14 @@ class ErrorBottomSheet extends StatelessWidget {
             topLeft: Radius.circular(30),
             topRight: Radius.circular(30),
           ),
+          boxShadow: [
+              BoxShadow(
+                color: AppColors.shadowBlack,
+                blurRadius: 30,
+                spreadRadius: 0,
+                offset: Offset(0, -14),
+              ),
+            ],
         ),
         child: Stack(
           children: [
