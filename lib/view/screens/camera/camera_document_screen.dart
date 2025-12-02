@@ -77,7 +77,10 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
       useRootNavigator: true,
       barrierDismissible: false,
       barrierColor: AppColors.slateGray,
-      builder: (_) => const Center(child: Loader()),
+      builder: (_) => Align(
+        alignment: const Alignment(0, -0.15), 
+        child: const Loader(),
+      ),
     );
   }
 
