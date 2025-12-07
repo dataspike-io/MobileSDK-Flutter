@@ -6,13 +6,13 @@ import 'dart:typed_data';
 
 class DetectorView extends StatefulWidget {
   const DetectorView({
-    Key? key,
+    super.key,
     required this.onImage,
     required this.onShootCallback,
     this.status,
     this.customPaint,
     this.onCameraFeedReady,
-  }) : super(key: key);
+  });
 
   final CustomPaint? customPaint;
   final Function(InputImage inputImage, double cropRatio) onImage;

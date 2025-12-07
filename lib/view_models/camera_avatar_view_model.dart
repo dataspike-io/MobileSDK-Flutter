@@ -41,10 +41,6 @@ class CameraAvatarViewModel extends ChangeNotifier {
 
   Future<void> _setup() async { }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
 
   Future<void> shootAndCrop(
     Uint8List imageBytes,

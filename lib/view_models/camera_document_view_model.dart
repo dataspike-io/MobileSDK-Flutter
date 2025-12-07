@@ -197,7 +197,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
   Future<void> pickButtonTap() async {
     switch (documentType) {
       case DocumentType.identity:
-        await pickAndUploadDocument();
+        await pickAndUploadImage();
         break;
       case DocumentType.address:
         showChooserSheet?.call();

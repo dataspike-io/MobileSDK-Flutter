@@ -8,14 +8,14 @@ import 'package:dataspikemobilesdk/view/ui/continue_circle_button.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
 
 class CameraView extends StatefulWidget {
-  CameraView({
-    Key? key,
+  const CameraView({
+    super.key,
     required this.customPaint,
     required this.onImage,
     required this.onShootCallback,
     this.status,
     this.onCameraFeedReady,
-  }) : super(key: key);
+  });
 
   final CustomPaint? customPaint;
   final Function(InputImage inputImage, double cropRatio) onImage;
