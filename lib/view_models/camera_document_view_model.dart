@@ -170,8 +170,8 @@ class CameraDocumentViewModel extends ChangeNotifier {
       notifyListeners();
 
       if (result is UploadImageSuccess) {
-        if (result.detectedTwoSideDocument && side == DocumentSide.front) {
-          side = DocumentSide.back;
+        if (result.detectedTwoSideDocument) {
+          side = result.isFront ? DocumentSide.back : DocumentSide.front;
           notifyListeners();
         } else {
           onProceed?.call();
@@ -236,8 +236,8 @@ class CameraDocumentViewModel extends ChangeNotifier {
       notifyListeners();
 
       if (result is UploadImageSuccess) {
-        if (result.detectedTwoSideDocument && side == DocumentSide.front) {
-          side = DocumentSide.back;
+        if (result.detectedTwoSideDocument) {
+          side = result.isFront ? DocumentSide.back : DocumentSide.front;
           notifyListeners();
         } else {
           onProceed?.call();
@@ -297,7 +297,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
     }
 
     try {
-      final resultUpload = isImage
+      final result = isImage
           ? await _setUseCase.uploadImage(
               documentType: documentType.value,
               imageBytes: uploadBytes,
@@ -314,19 +314,18 @@ class CameraDocumentViewModel extends ChangeNotifier {
       hideLoader?.call();
       notifyListeners();
 
-      if (resultUpload is UploadImageSuccess) {
-        if (resultUpload.detectedTwoSideDocument &&
-            side == DocumentSide.front) {
-          side = DocumentSide.back;
+      if (result is UploadImageSuccess) {
+        if (result.detectedTwoSideDocument) {
+          side = result.isFront ? DocumentSide.back : DocumentSide.front;
           notifyListeners();
         } else {
           onProceed?.call();
         }
-      } else if (resultUpload is UploadImageError) {
+      } else if (result is UploadImageError) {
         showError?.call(
-          resultUpload.title,
-          resultUpload.message,
-          resultUpload.withInstruction,
+          result.title,
+          result.message,
+          result.withInstruction,
         );
       }
     } on NoInternetException {

@@ -3,6 +3,7 @@ import 'package:dataspikemobilesdk/data/models/response/upload_image_error_respo
 import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart';
 import 'package:dataspikemobilesdk/domain/models/dataspike_error_domain_model.dart';
 import 'package:dataspikemobilesdk/data/models/response/dataspike_error_response.dart';
+import 'package:dataspikemobilesdk/domain/models/document_side.dart';
 
 class UploadImageResponseMapper {
   UploadImageState map({
@@ -13,7 +14,7 @@ class UploadImageResponseMapper {
       return UploadImageSuccess(
         documentId: response.documentId ?? "",
         detectedDocumentType: response.detectedDocumentType ?? "",
-        detectedDocumentSide: response.detectedDocumentSide ?? "",
+        detectedDocumentSide: DocumentSide.fromRaw(response.detectedDocumentSide),
         detectedTwoSideDocument: response.detectedTwoSideDocument ?? false,
         detectedCountry: response.detectedCountry ?? "",
         errors: response.errors?.map((errorResponse) {
