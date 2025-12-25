@@ -68,25 +68,34 @@ class ErrorBottomSheet extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        color: AppColors.lightRed,
+                        color: AppColors.black,
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
-                        fontFamily: 'Figtree',
+                        fontFamily: 'FunnelDisplay',
                         package: 'dataspikemobilesdk',
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 11),
-                    Text(
-                      message,
-                      style: const TextStyle(
-                        color: AppColors.lightRed,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        fontFamily: 'Figtree',
-                        package: 'dataspikemobilesdk',
+                    const SizedBox(height: 6),
+
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.transparentRed,
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      textAlign: TextAlign.center,
+                      width: double.infinity,
+                      child: Text(
+                        message,
+                        style: const TextStyle(
+                          color: AppColors.lightRed,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Figtree',
+                          package: 'dataspikemobilesdk',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
 
                     if (instruction != null) ...[

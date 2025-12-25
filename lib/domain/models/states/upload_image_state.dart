@@ -57,7 +57,7 @@ class UploadImageError extends UploadImageState {
   bool get withInstruction {
     switch (code) {
       default:
-        return true;
+        return false;
     }
   }
 }
