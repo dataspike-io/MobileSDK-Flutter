@@ -9,13 +9,14 @@ class OnboardingViewModel extends ChangeNotifier {
   bool dataAccepted = false;
 
   String verificationUrl = '';
-
+  bool requiresAddress = false;
 
   List<StageItem> stages = const [];
-  
+
   OnboardingViewModel() {
     buildStages();
-    verificationUrl = DataspikeInjector.component.verificationManager.verificationUrl;
+    verificationUrl =
+        DataspikeInjector.component.verificationManager.verificationUrl;
   }
 
   void buildStages() {
@@ -23,7 +24,9 @@ class OnboardingViewModel extends ChangeNotifier {
 
     final requiresDocument = vm.poiIsRequired;
     final requiresSelfie = vm.livenessIsRequired;
-    final requiresAddress = vm.poaIsRequired;
+
+    requiresAddress = vm.poaIsRequired;
+
     final personalData = vm.personalDataRequired;
     final personalDataDescription = vm.manualFields?.description;
 
@@ -32,7 +35,9 @@ class OnboardingViewModel extends ChangeNotifier {
         StageItem(
           id: 'personal',
           title: 'Complete your personal details',
-          subtitle: personalDataDescription?.isNotEmpty == true ? personalDataDescription! : 'No additional information needed.',
+          subtitle: personalDataDescription?.isNotEmpty == true
+              ? personalDataDescription!
+              : 'No additional information needed.',
           required: true,
           completed: false,
         ),
@@ -56,7 +61,8 @@ class OnboardingViewModel extends ChangeNotifier {
         const StageItem(
           id: 'address',
           title: 'Confirm your address',
-          subtitle: 'Upload a recent utility bill, bank statement, or other proof of address.',
+          subtitle:
+              'Upload a recent utility bill, bank statement, or other proof of address.',
           required: true,
           completed: false,
         ),
@@ -74,6 +80,12 @@ class OnboardingViewModel extends ChangeNotifier {
   void setDataAccepted(bool value) {
     dataAccepted = value;
     notifyListeners();
+  }
+
+  String get infoCardMessage {
+    return requiresAddress
+    ? 'The company needs to confirm your identity and address.'
+    : 'The company needs to confirm your identity.';
   }
 
   Future<void> openVerificationUrl() async {

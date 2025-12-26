@@ -70,10 +70,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       const SizedBox(height: 12),
                       Row(children: [TimeBox(isTitle: false)]),
                       const SizedBox(height: 12),
-                      InfoCard(
-                        title:
-                            'The company needs to confirm your identity and address.',
-                      ),
+                      InfoCard(title: viewModel.infoCardMessage),
                     ],
                   ),
                 ),
