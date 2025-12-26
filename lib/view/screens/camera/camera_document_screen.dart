@@ -305,17 +305,39 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                                         right: 0,
                                         child: Center(
                                           child: AnimatedSwitcher(
-                                            duration: const Duration(milliseconds: 300),
-                                            switchInCurve: Curves.easeOut,
-                                            switchOutCurve: Curves.easeIn,
-                                            transitionBuilder: (Widget child, Animation<double> animation) {
-                                              final fade = FadeTransition(opacity: animation, child: child);
-                                              final slide = Tween<Offset>(
-                                                begin: const Offset(0, 0.2),
-                                                end: Offset.zero,
-                                              ).animate(animation);
-                                              return SlideTransition(position: slide, child: fade);
-                                            },
+                                            duration: const Duration(
+                                              milliseconds: 650,
+                                            ),
+                                            switchInCurve: Curves.easeOutBack,
+                                            switchOutCurve: Curves.easeInBack,
+                                            transitionBuilder:
+                                                (
+                                                  Widget child,
+                                                  Animation<double> animation,
+                                                ) {
+                                                  final fade = FadeTransition(
+                                                    opacity: animation,
+                                                    child: child,
+                                                  );
+                                                  final slide = SlideTransition(
+                                                    position: Tween<Offset>(
+                                                      begin: const Offset(
+                                                        0,
+                                                        0.65,
+                                                      ),
+                                                      end: Offset.zero,
+                                                    ).animate(animation),
+                                                    child: fade,
+                                                  );
+                                                  final scale = ScaleTransition(
+                                                    scale: Tween<double>(
+                                                      begin: 0.5,
+                                                      end: 1.0,
+                                                    ).animate(animation),
+                                                    child: slide,
+                                                  );
+                                                  return scale;
+                                                },
                                             child: InstructionPill(
                                               key: ValueKey(viewModel.hint),
                                               text: viewModel.hint,
