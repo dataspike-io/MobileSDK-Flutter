@@ -39,7 +39,7 @@ class UploadImageError extends UploadImageState {
       case ERROR_TOO_MANY_ATTEMPTS:
         return 'Too many attempts to proceed liveness check';
       default:
-        return 'We are experiencing problems with photo';
+        return 'We’re having trouble with your document photo';
     }
   }
 

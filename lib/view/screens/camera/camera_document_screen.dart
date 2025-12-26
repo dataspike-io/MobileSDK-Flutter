@@ -304,8 +304,22 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                                         left: 0,
                                         right: 0,
                                         child: Center(
-                                          child: InstructionPill(
-                                            text: viewModel.hint,
+                                          child: AnimatedSwitcher(
+                                            duration: const Duration(milliseconds: 300),
+                                            switchInCurve: Curves.easeOut,
+                                            switchOutCurve: Curves.easeIn,
+                                            transitionBuilder: (Widget child, Animation<double> animation) {
+                                              final fade = FadeTransition(opacity: animation, child: child);
+                                              final slide = Tween<Offset>(
+                                                begin: const Offset(0, 0.2),
+                                                end: Offset.zero,
+                                              ).animate(animation);
+                                              return SlideTransition(position: slide, child: fade);
+                                            },
+                                            child: InstructionPill(
+                                              key: ValueKey(viewModel.hint),
+                                              text: viewModel.hint,
+                                            ),
                                           ),
                                         ),
                                       ),

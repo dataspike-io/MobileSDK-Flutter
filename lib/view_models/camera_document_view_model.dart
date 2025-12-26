@@ -29,6 +29,8 @@ class CameraDocumentViewModel extends ChangeNotifier {
   bool _useFront = false;
   final bool _allowPoiManualUploads;
 
+  bool _isFirstSideUploaded = false;
+
   VoidCallback? onProceed;
   VoidCallback? showLoader;
   VoidCallback? hideLoader;
@@ -170,8 +172,9 @@ class CameraDocumentViewModel extends ChangeNotifier {
       notifyListeners();
 
       if (result is UploadImageSuccess) {
-        if (result.detectedTwoSideDocument) {
+        if (result.detectedTwoSideDocument && !_isFirstSideUploaded) {
           side = result.isFront ? DocumentSide.back : DocumentSide.front;
+          _isFirstSideUploaded = true;
           notifyListeners();
         } else {
           onProceed?.call();

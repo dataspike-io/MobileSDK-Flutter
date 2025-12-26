@@ -25,7 +25,7 @@ class ErrorBottomSheet extends StatelessWidget {
       bottom: false,
       child: Container(
         width: double.infinity,
-        height: instruction == null ? h * 0.5 : h * 0.8,
+        // height: instruction == null ? h * 0.5 : h * 0.8,
         decoration: const BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.only(
@@ -33,13 +33,13 @@ class ErrorBottomSheet extends StatelessWidget {
             topRight: Radius.circular(30),
           ),
           boxShadow: [
-              BoxShadow(
-                color: AppColors.shadowBlack,
-                blurRadius: 30,
-                spreadRadius: 0,
-                offset: Offset(0, -14),
-              ),
-            ],
+            BoxShadow(
+              color: AppColors.shadowBlack,
+              blurRadius: 30,
+              spreadRadius: 0,
+              offset: Offset(0, -14),
+            ),
+          ],
         ),
         child: Stack(
           children: [
@@ -98,17 +98,19 @@ class ErrorBottomSheet extends StatelessWidget {
                       ),
                     ),
 
-                    if (instruction != null) ...[
-                      const SizedBox(height: 32),
-                      SizedBox(
-                        height: h * 0.6,
-                        child: SwipableView(
-                          type: instruction!,
-                          isError: true,
-                          isShowingTitle: false,
-                        ),
-                      ),
-                    ],
+                    const SizedBox(height: 32), // Add for case without instruction
+
+                    // if (instruction != null) ...[
+                    //   const SizedBox(height: 32),
+                    //   SizedBox(
+                    //     height: h * 0.6,
+                    //     child: SwipableView(
+                    //       type: instruction!,
+                    //       isError: true,
+                    //       isShowingTitle: false,
+                    //     ),
+                    //   ),
+                    // ],
                   ],
                 ),
               ),
