@@ -28,6 +28,7 @@ class LiveCropCamera extends StatefulWidget {
 
 class _LiveCropCameraState extends State<LiveCropCamera> {
   late final CameraDocumentViewModel viewModel;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -72,20 +73,20 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
 
   void showLoader() async {
     if (!mounted) return;
+    _isLoading = true;
     showDialog(
       context: context,
       useRootNavigator: true,
       barrierDismissible: false,
       barrierColor: AppColors.slateGray,
-      builder: (_) => Align(
-        alignment: const Alignment(0, -0.15), 
-        child: const Loader(),
-      ),
+      builder: (_) =>
+          Align(alignment: const Alignment(0, -0.15), child: const Loader()),
     );
   }
 
   void hideLoader() {
     if (!mounted) return;
+    _isLoading = false;
     final rootNav = Navigator.of(context, rootNavigator: true);
     rootNav.pop();
   }
@@ -338,10 +339,14 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                                                   );
                                                   return scale;
                                                 },
-                                            child: InstructionPill(
-                                              key: ValueKey(viewModel.hint),
-                                              text: viewModel.hint,
-                                            ),
+                                            child: _isLoading
+                                                ? const SizedBox.shrink()
+                                                : InstructionPill(
+                                                    key: ValueKey(
+                                                      viewModel.hint,
+                                                    ),
+                                                    text: viewModel.hint,
+                                                  ),
                                           ),
                                         ),
                                       ),
