@@ -106,7 +106,7 @@ class _StagesCardWithTermsState extends State<StagesCardWithTerms> {
                     TextSpan(
                       children: [
                         TextSpan(
-                          text: 'I agree to the ',
+                          text: 'I accept the ',
                           style: TextStyle(
                             fontSize: 12,
                             color: highlight ? AppColors.lightRed : AppColors.black,

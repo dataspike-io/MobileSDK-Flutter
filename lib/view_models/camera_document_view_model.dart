@@ -6,7 +6,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart';
-import 'package:dataspikemobilesdk/view/ui/camera/side_toggle_pill.dart';
 import 'package:dataspikemobilesdk/domain/models/document_type.dart';
 import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
 import 'package:dataspikemobilesdk/data/models/request/image_document_request_body.dart';
@@ -15,6 +14,7 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
 import 'package:dataspikemobilesdk/view/ui/error/error_image_bottom_sheet.dart';
 import 'package:dataspikemobilesdk/data/models/errors/common_errors.dart';
+import 'package:dataspikemobilesdk/domain/models/document_side.dart';
 
 class CameraDocumentViewModel extends ChangeNotifier {
   DocumentSide side = DocumentSide.front;
@@ -29,9 +29,12 @@ class CameraDocumentViewModel extends ChangeNotifier {
   bool _useFront = false;
   final bool _allowPoiManualUploads;
 
+  bool _isFirstSideUploaded = false;
+
   VoidCallback? onProceed;
   VoidCallback? showLoader;
   VoidCallback? hideLoader;
+  VoidCallback? showChooserSheet;
   void Function(ErrorImageBottomSheetType type)? showCommonError;
   void Function(String title, String message, bool withInstruction)? showError;
 
@@ -39,6 +42,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
     VoidCallback? onProceed,
     VoidCallback? showLoader,
     VoidCallback? hideLoader,
+    VoidCallback? showChooserSheet,
     void Function(ErrorImageBottomSheetType type)? showCommonError,
     void Function(String title, String message, bool withInstruction)?
     showError,
@@ -46,6 +50,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
     this.onProceed = onProceed;
     this.showLoader = showLoader;
     this.hideLoader = hideLoader;
+    this.showChooserSheet = showChooserSheet;
     this.showCommonError = showCommonError;
     this.showError = showError;
   }
@@ -77,13 +82,11 @@ class CameraDocumentViewModel extends ChangeNotifier {
   }
 
   String get hint {
-    switch (documentType) {
-      case DocumentType.identity:
-        return side == DocumentSide.front
-            ? 'Please make a photo of front side of ID'
-            : ''; //'Please make a photo of back side of ID',
-      case DocumentType.address:
-        return 'Please make a photo of residence proof';
+    switch (side) {
+      case DocumentSide.front:
+        return 'Take photo of front side';
+      case DocumentSide.back:
+        return 'Take photo of back side';
     }
   }
 
@@ -101,6 +104,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
     ctrl = CameraController(initial, ResolutionPreset.max, enableAudio: false);
     await ctrl!.initialize();
     await ctrl!.lockCaptureOrientation(DeviceOrientation.portraitUp);
+    await ctrl!.setFlashMode(FlashMode.off);
     notifyListeners();
   }
 
@@ -168,8 +172,9 @@ class CameraDocumentViewModel extends ChangeNotifier {
       notifyListeners();
 
       if (result is UploadImageSuccess) {
-        if (result.detectedTwoSideDocument && side == DocumentSide.front) {
-          side = DocumentSide.back;
+        if (result.detectedTwoSideDocument && !_isFirstSideUploaded) {
+          side = result.isFront ? DocumentSide.back : DocumentSide.front;
+          _isFirstSideUploaded = true;
           notifyListeners();
         } else {
           onProceed?.call();
@@ -198,7 +203,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
         await pickAndUploadImage();
         break;
       case DocumentType.address:
-        await pickAndUploadDocument();
+        showChooserSheet?.call();
         break;
     }
   }
@@ -234,8 +239,9 @@ class CameraDocumentViewModel extends ChangeNotifier {
       notifyListeners();
 
       if (result is UploadImageSuccess) {
-        if (result.detectedTwoSideDocument && side == DocumentSide.front) {
-          side = DocumentSide.back;
+        if (result.detectedTwoSideDocument && !_isFirstSideUploaded) {
+          side = result.isFront ? DocumentSide.back : DocumentSide.front;
+          _isFirstSideUploaded = true;
           notifyListeners();
         } else {
           onProceed?.call();
@@ -295,7 +301,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
     }
 
     try {
-      final resultUpload = isImage
+      final result = isImage
           ? await _setUseCase.uploadImage(
               documentType: documentType.value,
               imageBytes: uploadBytes,
@@ -312,19 +318,19 @@ class CameraDocumentViewModel extends ChangeNotifier {
       hideLoader?.call();
       notifyListeners();
 
-      if (resultUpload is UploadImageSuccess) {
-        if (resultUpload.detectedTwoSideDocument &&
-            side == DocumentSide.front) {
-          side = DocumentSide.back;
+      if (result is UploadImageSuccess) {
+        if (result.detectedTwoSideDocument && !_isFirstSideUploaded) {
+          side = result.isFront ? DocumentSide.back : DocumentSide.front;
+          _isFirstSideUploaded = true;
           notifyListeners();
         } else {
           onProceed?.call();
         }
-      } else if (resultUpload is UploadImageError) {
+      } else if (result is UploadImageError) {
         showError?.call(
-          resultUpload.title,
-          resultUpload.message,
-          resultUpload.withInstruction,
+          result.title,
+          result.message,
+          result.withInstruction,
         );
       }
     } on NoInternetException {

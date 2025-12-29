@@ -1,11 +1,12 @@
 import 'package:dataspikemobilesdk/domain/models/dataspike_error_domain_model.dart';
+import 'package:dataspikemobilesdk/domain/models/document_side.dart';
 
 abstract class UploadImageState {}
 
 class UploadImageSuccess extends UploadImageState {
   final String documentId;
   final String detectedDocumentType;
-  final String detectedDocumentSide;
+  final DocumentSide detectedDocumentSide;
   final bool detectedTwoSideDocument;
   final String detectedCountry;
   final List<DataspikeErrorDomainModel> errors;
@@ -18,6 +19,8 @@ class UploadImageSuccess extends UploadImageState {
     required this.detectedCountry,
     required this.errors,
   });
+
+    bool get isFront => detectedDocumentSide == DocumentSide.front;
 }
 
 class UploadImageError extends UploadImageState {
@@ -36,7 +39,7 @@ class UploadImageError extends UploadImageState {
       case ERROR_TOO_MANY_ATTEMPTS:
         return 'Too many attempts to proceed liveness check';
       default:
-        return 'We are experiencing problems with photo';
+        return 'We’re having trouble with your document photo';
     }
   }
 
@@ -54,7 +57,7 @@ class UploadImageError extends UploadImageState {
   bool get withInstruction {
     switch (code) {
       default:
-        return true;
+        return false;
     }
   }
 }

@@ -25,13 +25,21 @@ class ErrorBottomSheet extends StatelessWidget {
       bottom: false,
       child: Container(
         width: double.infinity,
-        height: instruction == null ? h * 0.5 : h * 0.8,
+        // height: instruction == null ? h * 0.5 : h * 0.8,
         decoration: const BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(30),
             topRight: Radius.circular(30),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadowBlack,
+              blurRadius: 30,
+              spreadRadius: 0,
+              offset: Offset(0, -14),
+            ),
+          ],
         ),
         child: Stack(
           children: [
@@ -63,30 +71,46 @@ class ErrorBottomSheet extends StatelessWidget {
                         color: AppColors.black,
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
-                        fontFamily: 'Figtree',
+                        fontFamily: 'FunnelDisplay',
                         package: 'dataspikemobilesdk',
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 11),
-                    Text(
-                      message,
-                      style: const TextStyle(
-                        color: AppColors.black,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        fontFamily: 'Figtree',
-                        package: 'dataspikemobilesdk',
+                    const SizedBox(height: 6),
+
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.transparentRed,
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      textAlign: TextAlign.center,
+                      width: double.infinity,
+                      child: Text(
+                        message,
+                        style: const TextStyle(
+                          color: AppColors.lightRed,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Figtree',
+                          package: 'dataspikemobilesdk',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
 
-                    if (instruction != null)
-                      const SizedBox(height: 32),
-                      SizedBox(
-                        height: h * 0.6, 
-                        child: SwipableView(type: instruction!),
-                      ),
+                    const SizedBox(height: 32), // Add for case without instruction
+
+                    // if (instruction != null) ...[
+                    //   const SizedBox(height: 32),
+                    //   SizedBox(
+                    //     height: h * 0.6,
+                    //     child: SwipableView(
+                    //       type: instruction!,
+                    //       isError: true,
+                    //       isShowingTitle: false,
+                    //     ),
+                    //   ),
+                    // ],
                   ],
                 ),
               ),

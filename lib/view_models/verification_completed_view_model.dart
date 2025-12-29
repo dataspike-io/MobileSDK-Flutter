@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:dataspikemobilesdk/data/use_cases/proceed_with_verification_use_case.dart';
 import 'package:dataspikemobilesdk/domain/models/finish_screen_settings_domain_model.dart';
 import 'package:dataspikemobilesdk/domain/models/states/proceed_with_verification_state.dart';
-import '/domain/models/stage_item.dart';
+import '/domain/models/verification_stage_item.dart';
 import '/dependencies_provider/dataspike_injector.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -28,7 +28,7 @@ class VerificationCompletedViewModel {
   }
 
   FinishScreenSettingsDomainModel? finishScreenSettings;
-  List<StageItem> stages = const [];
+  List<VerificationStageItem> stages = const [];
 
   String get title {
     final settings = finishScreenSettings;
@@ -45,7 +45,7 @@ class VerificationCompletedViewModel {
     if (settings?.enabled == true && t != null && t.isNotEmpty) {
       return t;
     }
-    return 'We’ve received your documents and are processing them for J.P. Morgan.';
+    return 'Company received your documents and processing them now';
   }
 
   String get submittedDocumentSubtitle {
@@ -87,41 +87,24 @@ class VerificationCompletedViewModel {
     final requiresSelfie = vm.checks.livenessIsRequired;
     final requiresAddress = vm.checks.poaIsRequired;
     final personalData = vm.checks.personalDataRequired;
-    final personalDataDescription = vm.checks.manualFields?.description;
     finishScreenSettings = vm.finishScreenSettings;
 
-    final list = <StageItem>[
+    final list = <VerificationStageItem>[
       if (personalData)
-        StageItem(
-          id: 'personal',
-          title: 'Fill in your details',
-          subtitle: personalDataDescription?.isNotEmpty == true ? personalDataDescription! : 'Nothing extra needed',
-          required: true,
-          completed: true,
+        VerificationStageItem(
+          title: 'Personal details',
         ),
       if (requiresDocument)
-        const StageItem(
-          id: 'document',
-          title: 'Scan your ID',
-          subtitle: 'You’ll need passport or ID to make photo.',
-          required: true,
-          completed: true,
+        const VerificationStageItem(
+          title: 'Identity Documents',
         ),
       if (requiresSelfie)
-        const StageItem(
-          id: 'selfie',
-          title: 'Take a selfie',
-          subtitle: 'Use a plain background and good lighting.',
-          required: true,
-          completed: true,
+        const VerificationStageItem(
+          title: 'Liveness check',
         ),
       if (requiresAddress)
-        const StageItem(
-          id: 'address',
-          title: 'Confirm your address',
-          subtitle: 'Upload a recent utility bill or bank statement.',
-          required: true,
-          completed: true,
+        const VerificationStageItem(
+          title: 'Proof of address',
         ),
     ];
 

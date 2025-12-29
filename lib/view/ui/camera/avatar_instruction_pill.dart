@@ -1,26 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
 
-class InstructionPill extends StatelessWidget {
-  final String text;
+class AvatarInstructionPill extends StatelessWidget {
+  final AvatarDetectionStatus status;
 
-  const InstructionPill({super.key, required this.text});
+  const AvatarInstructionPill({super.key, required this.status});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: 240,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: AppColors.black,
           borderRadius: BorderRadius.circular(24),
         ),
         child: Row(
           children: [
+            if (status.image != null) ...[
+              SvgPicture.asset(
+                status.image!,
+                height: 24,
+                width: 24,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(width: 8),
+            ],
             Expanded(
               child: Text(
-                text,
+                status.text,
                 style: const TextStyle(
                   color: AppColors.white,
                   fontSize: 14,
@@ -29,7 +40,6 @@ class InstructionPill extends StatelessWidget {
                   fontFamily: 'Figtree',
                   package: 'dataspikemobilesdk',
                 ),
-                textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),

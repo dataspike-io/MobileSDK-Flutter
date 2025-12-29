@@ -9,13 +9,14 @@ class OnboardingViewModel extends ChangeNotifier {
   bool dataAccepted = false;
 
   String verificationUrl = '';
-
+  bool requiresAddress = false;
 
   List<StageItem> stages = const [];
-  
+
   OnboardingViewModel() {
     buildStages();
-    verificationUrl = DataspikeInjector.component.verificationManager.verificationUrl;
+    verificationUrl =
+        DataspikeInjector.component.verificationManager.verificationUrl;
   }
 
   void buildStages() {
@@ -23,7 +24,9 @@ class OnboardingViewModel extends ChangeNotifier {
 
     final requiresDocument = vm.poiIsRequired;
     final requiresSelfie = vm.livenessIsRequired;
-    final requiresAddress = vm.poaIsRequired;
+
+    requiresAddress = vm.poaIsRequired;
+
     final personalData = vm.personalDataRequired;
     final personalDataDescription = vm.manualFields?.description;
 
@@ -31,16 +34,18 @@ class OnboardingViewModel extends ChangeNotifier {
       if (personalData)
         StageItem(
           id: 'personal',
-          title: 'Fill in your details',
-          subtitle: personalDataDescription?.isNotEmpty == true ? personalDataDescription! : 'Nothing extra needed',
+          title: 'Complete your personal details',
+          subtitle: personalDataDescription?.isNotEmpty == true
+              ? personalDataDescription!
+              : 'No additional information needed.',
           required: true,
           completed: false,
         ),
       if (requiresDocument)
         const StageItem(
           id: 'document',
-          title: 'Scan your ID',
-          subtitle: 'You’ll need passport or ID to make photo.',
+          title: 'Verify your documents',
+          subtitle: 'Have your passport or national ID ready.',
           required: true,
           completed: false,
         ),
@@ -48,7 +53,7 @@ class OnboardingViewModel extends ChangeNotifier {
         const StageItem(
           id: 'selfie',
           title: 'Take a selfie',
-          subtitle: 'Use a plain background and good lighting.',
+          subtitle: 'Use good lighting and a clear background.',
           required: true,
           completed: false,
         ),
@@ -56,7 +61,8 @@ class OnboardingViewModel extends ChangeNotifier {
         const StageItem(
           id: 'address',
           title: 'Confirm your address',
-          subtitle: 'Upload a recent utility bill or bank statement.',
+          subtitle:
+              'Upload a recent utility bill, bank statement, or other proof of address.',
           required: true,
           completed: false,
         ),
@@ -74,6 +80,12 @@ class OnboardingViewModel extends ChangeNotifier {
   void setDataAccepted(bool value) {
     dataAccepted = value;
     notifyListeners();
+  }
+
+  String get infoCardMessage {
+    return requiresAddress
+    ? 'The company needs to confirm your identity and address.'
+    : 'The company needs to confirm your identity.';
   }
 
   Future<void> openVerificationUrl() async {

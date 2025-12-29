@@ -4,38 +4,52 @@ import 'package:dataspikemobilesdk/domain/models/instruction_type.dart';
 
 class _InstructionSlide {
   final String imageAsset;
+  final String title;
   final String hint;
-  const _InstructionSlide({required this.imageAsset, required this.hint});
+  const _InstructionSlide({
+    required this.imageAsset,
+    required this.title,
+    required this.hint,
+  });
 }
 
 class SwipableView extends StatefulWidget {
   final InstructionType type;
+  final bool isError;
+  final bool isShowingTitle;
 
-  const SwipableView({super.key, required this.type});
+  const SwipableView({
+    super.key,
+    required this.type,
+    this.isError = false,
+    this.isShowingTitle = true,
+  });
 
   final List<_InstructionSlide> _defaultPoiSlides = const [
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/poi_instruction_1.png',
+      title: 'Take a photo of your ID',
       hint:
           'Front side only. Follow the instructions below to make sure your document photo is accepted.',
     ),
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/poi_instruction_2.png',
+      title: 'The image must be of good quality',
       hint: 'Avoid blur, glare, reflections, or low contrast.',
     ),
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/poi_instruction_3.png',
-      hint:
-          'Avoid faded text, cut corners, or tilted angles.',
+      title: 'Ensure the entire document is visible',
+      hint: 'Avoid faded text, cut corners, or tilted angles.',
     ),
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/poi_instruction_4.png',
-      hint:
-          'Avoid watermarks, stickers, or anything covering details.',
+      title: 'Use a valid, original document',
+      hint: 'Avoid watermarks, stickers, or anything covering details.',
     ),
   ];
 
@@ -43,11 +57,13 @@ class SwipableView extends StatefulWidget {
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/liveness_instruction_1.png',
+      title: 'Take a selfie',
       hint: 'Look straight at the camera with your face centered in the frame.',
     ),
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/liveness_instruction_2.png',
+      title: 'How to place',
       hint: 'Center your face in the frame so we can recognize it clearly.',
     ),
   ];
@@ -56,25 +72,30 @@ class SwipableView extends StatefulWidget {
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/poa_instruction_1.png',
+      title: 'Upload a document to prove your address',
       hint: 'You can use a bank statement, utility bill, or lease agreement.',
     ),
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/poa_instruction_2.png',
-      hint: 'Documents should be actual — last 3 months for utility bills, bank statements or an active lease agreement.',
+      title: 'Be careful and use actual documents',
+      hint:
+          'Documents should be actual — last 3 months for utility bills, bank statements or an active lease agreement.',
     ),
     _InstructionSlide(
       imageAsset:
           'packages/dataspikemobilesdk/assets/images/poa_instruction_3.png',
-      hint: 'Make sure your name and address match those on your identity document.',
+      title: 'Check data on your documents',
+      hint:
+          'Make sure your name and address match those on your identity document.',
     ),
   ];
 
   List<_InstructionSlide> get _slides => switch (type) {
-        InstructionType.liveness => _defaultLivenessSlides,
-        InstructionType.poi  => _defaultPoiSlides,
-        InstructionType.poa  => _defaultPoaSlides,
-      };
+    InstructionType.liveness => _defaultLivenessSlides,
+    InstructionType.poi => _defaultPoiSlides,
+    InstructionType.poa => _defaultPoaSlides,
+  };
 
   @override
   State<SwipableView> createState() => _SwipableViewState();
@@ -112,18 +133,31 @@ class _SwipableViewState extends State<SwipableView> {
               final slide = slides[index];
               return Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      slide.hint,
+                  if (widget.isShowingTitle) ...[
+                    Text(
+                      slide.title,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 20,
                         fontWeight: FontWeight.w600,
                         color: AppColors.black,
-                        fontFamily: 'Figtree',
+                        fontFamily: 'FunnelDisplay',
                         package: 'dataspikemobilesdk',
                       ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  Text(
+                    slide.hint,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: widget.isError
+                          ? AppColors.lightRed
+                          : AppColors.black,
+                      fontFamily: 'Figtree',
+                      package: 'dataspikemobilesdk',
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -141,9 +175,9 @@ class _SwipableViewState extends State<SwipableView> {
         ),
         const SizedBox(height: 12),
         Padding(
-          padding:  const EdgeInsets.symmetric(horizontal: 20),
-          child:  _DotsIndicator(count: slides.length, index: _page),
-        )
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: _DotsIndicator(count: slides.length, index: _page),
+        ),
       ],
     );
   }

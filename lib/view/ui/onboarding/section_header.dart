@@ -10,7 +10,7 @@ class SectionHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Follow this steps',
+          'Follow these steps',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -20,7 +20,7 @@ class SectionHeader extends StatelessWidget {
           ),
         ),
         Text(
-          'Here’s what you’ll need',
+          'Here’s what you’ll need:',
           style: TextStyle(
             fontSize: 12,
             fontFamily: 'Figtree',
