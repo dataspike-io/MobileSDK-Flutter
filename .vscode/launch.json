@@ -40,6 +40,46 @@
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:dataspikemobilesdk}/example",
+            "name": "Debug mihailtiranov (example)",
+            "target": "mihailtiranov",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug mihailtiranov (example)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:dataspikemobilesdk}/example",
+            "name": "Release mihailtiranov (example)",
+            "target": "mihailtiranov",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release mihailtiranov (example)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:dataspikemobilesdk}/dataspike_module",
+            "name": "Debug mihailtiranov (dataspike_module)",
+            "target": "mihailtiranov",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug mihailtiranov (dataspike_module)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:dataspikemobilesdk}/dataspike_module",
+            "name": "Release mihailtiranov (dataspike_module)",
+            "target": "mihailtiranov",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release mihailtiranov (dataspike_module)"
         }
     ]
 }
