@@ -42,7 +42,7 @@ class _HostScreenState extends State<_HostScreen> {
             dependencies: deps,
             callback: (result) async {
               await DataspikeHostChannel.sendCompleted({
-                "statusыы": result?.toJson(),
+                "status": result?.toJson(),
               });
             },
           );
