@@ -1,15 +1,199 @@
-# dataspikemobilesdk
+# DataspikeMobile SDK — iOS
 
-A new Flutter plugin project.
+This repository contains the **iOS implementation** of **DataspikeMobile SDK**
+based on an embedded **Flutter module**.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter
-[plug-in package](https://flutter.dev/to/develop-plugins),
-a specialized package that includes platform-specific implementation code for
-Android and/or iOS.
+## Install Flutter
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Install Flutter on your computer using the official documentation:
+
+https://docs.flutter.dev/install
+
+---
+
+## Implementation Guide (iOS)
+
+Follow these steps to integrate DataspikeMobile SDK into your iOS project.
+
+### Step 1 — Add Flutter Module (Git submodule)
+
+From your iOS project root:
+
+```bash
+mkdir -p DataspikeModule
+git submodule add -b main https://github.com/dataspike-io/MobileSDK-Flutter.git DataspikeModule/dataspike_module
+git submodule update --init --recursive
+cd DataspikeModule/dataspike_module/dataspike_module
+flutter pub get
+cd -
+```
+
+### Step 2 — Install Podfile
+See the [example Podfile](https://github.com/dataspike-io/MobileSDK-Flutter-iOS/blob/master/Podfile) or check the [Update your Podfile guide](https://docs.flutter.dev/add-to-app/ios/project-setup#update-your-podfile).
+
+```bash
+pod install --repo-update
+```
+
+#### Required Build Settings (Mandatory)
+
+The following permissions **must be enabled** in your `Podfile` build settings.
+Without these flags, the verification flow will not work correctly.
+
+```ruby
+'PERMISSION_CAMERA=1',
+'PERMISSION_PHOTOS=1',
+'PERMISSION_MEDIA_LIBRARY=1',
+```
+
+### Step 3 — Update submodule
+```bash
+git submodule update --init --recursive
+```
+
+### Step 4 — Commit Flutter Module (optional)
+```bash
+cd DataspikeModule/dataspike_module
+git fetch
+git checkout <commit_or_tag>
+cd -
+git add DataspikeModule/dataspike_module
+git commit -m "Update DataspikeModule"
+```
+
+## Implement in the iOS Project (Example)
+
+### Step 1 - Disable User Script Sandboxing
+
+Open **Xcode → Target → Build Settings** and set:
+
+- **User Script Sandboxing** = **NO**
+
+### Step 2 - Add Permissions (Camera + Local Network)
+
+Add the following keys to your `Info.plist` (ensure they are present for the configuration you run — e.g. both Debug and Release plists if you use separate files):
+
+- `NSCameraUsageDescription`
+- `NSPhotoLibraryUsageDescription`
+- `NSMotionUsageDescription`
+- `NSLocalNetworkUsageDescription` (Debug only)
+
+- `NSBonjourServices` (Debug only): `_dartVmService._tcp`, `_googlecast._tcp`
+
+### Step 3 - Implement in Code
+
+You can check [our example](https://github.com/dataspike-io/MobileSDK-Flutter-iOS/blob/master/flutteriosexample/SomeViewController.swift) or use the official Flutter guides: [Create a FlutterEngine](https://docs.flutter.dev/add-to-app/ios/add-flutter-screen#create-a-flutterengine).
+
+### Step 4 — Setup API
+
+1) **Get your API token**
+
+Create an account and get your API token here:  
+https://dash.dataspike.io/api/settings
+
+2) **Create a new verification and obtain `verification_url_id`**
+
+Send a request to create a verification according to the API documentation:  
+https://docs.dataspike.io/api-reference/verifications/create-new-verification
+
+The response will contain `verification_url_id`.
+
+3) **Use `verification_url_id` in DataspikeMobile SDK**
+
+Pass the received `verification_url_id` with API token to our API / SDK as required by your integration.
+
+### Step 5 — Open Verification Flow (Example)
+
+Below is an example of how to start the Dataspike verification flow from the iOS host app.
+
+- To **open the flow**, use your **API token** and **shortId**
+- To **receive the result**, handle the `onVerificationCompleted` callback
+
+### Example (Swift)
+
+```swift
+channel.setMethodCallHandler { call, result in
+  if call.method == "onVerificationCompleted" {
+    if let args = call.arguments as? [String: String] {
+      if args["status"] == "Completed" {
+        flutterVC.dismiss(animated: true, completion: nil)
+      }
+    }
+    result(nil)
+  } else {
+    result(FlutterMethodNotImplemented)
+  }
+}
+
+present(flutterVC, animated: true) {
+  channel.invokeMethod("startDataspikeFlow", arguments: [
+    "dsApiToken": "your_token",
+    "shortId": "your_short_id",
+    "isDebug": true // set to false for production
+  ])
+}
+```
+
+### Verification Statuses
+The onVerificationCompleted callback can return the following statuses: "Completed", "Expired", "Failed"
+
+## Known Issues & Troubleshooting
+
+### LLDB initialization issues
+
+In some cases, Flutter debugging may not work correctly due to missing LLDB configuration.
+
+Follow the official Flutter guide to set up the LLDB init file:
+https://docs.flutter.dev/add-to-app/ios/project-setup#set-lldb-init-file
+
+This step is required to properly attach the debugger when running Flutter inside a native iOS app.
+
+In some cases, you may also need to explicitly set the iOS platform version
+in the Flutter module podspec:
+```ruby
+s.platform = :ios, '16.0' // Minimum version iOS 16.0
+```
+
+---
+
+### Local Network permission issues
+
+Flutter tools may require access to the local network (for example, for the Dart VM Service).
+
+If you encounter issues related to local network permissions, follow the official documentation:
+https://docs.flutter.dev/add-to-app/ios/project-setup#set-local-network-privacy-permissions
+
+Make sure the required Local Network permissions are added to your `Info.plist`
+and allowed in iOS system settings.
+
+---
+
+### Apple Silicon build issues
+
+On Apple Silicon Macs, you may encounter build issues related to simulator architectures.
+
+To mitigate known issues, follow the official Flutter guide:
+https://docs.flutter.dev/add-to-app/ios/project-setup#mitigate-known-issue-with-apple-silicon-macs
+
+This typically involves excluding the `arm64` architecture for iOS simulators
+or adjusting CocoaPods build settings.
+
+## Current Limitations
+
+- **Device-only verification**  
+  At the moment, verification is fully supported **only on real devices**.  
+  Verification on iOS simulators may not work.  
+  We are aware of this limitation and plan to improve simulator support in future releases.
+
+- **Slow image loading in Debug builds**  
+  In **Debug** configuration, image loading during the verification flow may take significantly longer than expected.  
+  For a smoother and more accurate verification experience, we recommend testing the flow using the **Release** build configuration.
+
+
+
+
+
+
 
