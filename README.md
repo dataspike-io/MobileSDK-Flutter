@@ -242,7 +242,7 @@ apply(from = File(filePath))
 ### Step 3 — Update build.gradle
 See the [example build.gradle](https://github.com/dataspike-io/MobileSDK-Flutter-iOS/blob/master/Podfile) or check the [Updating build.gradle](https://docs.flutter.dev/add-to-app/android/project-setup#updating-appbuild-gradle).
 
-## Implement in the iOS Project (Example)
+## Implement in the Android Project (Example)
 
 ### Step 1 - Implement in Code
 
@@ -313,18 +313,3 @@ Flutter supports AOT builds only for:
 
 Please ensure that the Android project uses only supported ABIs and follow the official Flutter documentation:  
 https://docs.flutter.dev/deployment/android#android-app-bundles-and-apk-splitting
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
