@@ -222,6 +222,23 @@ cd -
 ### Step 2 — Install settings.gradle
 See the [example settings.gradle](https://github.com/dataspike-io/MobileSDK-Flutter-iOS/blob/master/Podfile) or check the [Updating settings.gradle](https://docs.flutter.dev/add-to-app/android/project-setup#updating-settings-gradle).
 
+For this implementation, the `settings.gradle.kts` file **must** be configured as shown below to properly include the Flutter module into the existing Android project:
+
+```kotlin
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "ImplementationFlutterExample"
+include(":app")
+val filePath = settingsDir.toString() + "/DataspikeModule/dataspike_module/dataspike_module/.android/include_flutter.groovy"
+apply(from = File(filePath))
+```
+
 ### Step 3 — Update build.gradle
 See the [example build.gradle](https://github.com/dataspike-io/MobileSDK-Flutter-iOS/blob/master/Podfile) or check the [Updating build.gradle](https://docs.flutter.dev/add-to-app/android/project-setup#updating-appbuild-gradle).
 
