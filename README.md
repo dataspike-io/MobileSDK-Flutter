@@ -3,6 +3,11 @@
 This repository contains the **iOS, Android, Flutter implementation** of **DataspikeMobile SDK**
 based on an embedded **Flutter module**.
 
+Supported platforms:
+
+* **Android:** minSdk 21+
+* **iOS:** 16 or later
+  
 ---
 
 ## Install Flutter
