@@ -220,7 +220,7 @@ cd -
 ```
 
 ### Step 2 — Install settings.gradle
-See the [example settings.gradle](https://github.com/dataspike-io/MobileSDK-Flutter-iOS/blob/master/Podfile) or check the [Updating settings.gradle](https://docs.flutter.dev/add-to-app/android/project-setup#updating-settings-gradle).
+See the [example settings.gradle](https://github.com/dataspike-io/MobileSDK-Flutter-Android/blob/master/settings.gradle.kts) or check the [Updating settings.gradle](https://docs.flutter.dev/add-to-app/android/project-setup#updating-settings-gradle).
 
 For this implementation, the `settings.gradle.kts` file **must** be configured as shown below to properly include the Flutter module into the existing Android project:
 
@@ -240,13 +240,13 @@ apply(from = File(filePath))
 ```
 
 ### Step 3 — Update build.gradle
-See the [example build.gradle](https://github.com/dataspike-io/MobileSDK-Flutter-iOS/blob/master/Podfile) or check the [Updating build.gradle](https://docs.flutter.dev/add-to-app/android/project-setup#updating-appbuild-gradle).
+See the [example build.gradle](https://github.com/dataspike-io/MobileSDK-Flutter-Android/blob/master/app/build.gradle.kts) or check the [Updating build.gradle](https://docs.flutter.dev/add-to-app/android/project-setup#updating-appbuild-gradle).
 
 ## Implement in the Android Project (Example)
 
 ### Step 1 - Implement in Code
 
-You can check [our example](https://github.com/dataspike-io/MobileSDK-Flutter-iOS/blob/master/flutteriosexample/SomeViewController.swift) or use the official Flutter guides: [Create a single Flutter Screen](https://docs.flutter.dev/add-to-app/android/add-flutter-screen#add-a-normal-flutter-screen) & [Create a Flutter Fragment](https://docs.flutter.dev/add-to-app/android/add-flutter-fragment#add-a-flutterfragment-to-an-activity-with-a-new-flutterengine).
+You can check [our example](https://github.com/dataspike-io/MobileSDK-Flutter-Android/blob/master/app/src/main/java/com/example/implementationflutterexample/MainActivity.kt) or use the official Flutter guides: [Create a single Flutter Screen](https://docs.flutter.dev/add-to-app/android/add-flutter-screen#add-a-normal-flutter-screen) & [Create a Flutter Fragment](https://docs.flutter.dev/add-to-app/android/add-flutter-fragment#add-a-flutterfragment-to-an-activity-with-a-new-flutterengine).
 
 ### Step 2 — Setup API
 
