@@ -369,10 +369,6 @@ _dataspikemobilesdkPlugin.startDataspikeFlow(
 You can use:
 [Our example inside the current repository to see more detailed implementation](https://github.com/dataspike-io/MobileSDK-Flutter/blob/main/example/lib/main.dart) or use [our example in separate project](https://github.com/dataspike-io/MobileSDK-Flutter-App) 
 
-
-### Step 3 — Update build.gradle
-See the [example build.gradle](https://github.com/dataspike-io/MobileSDK-Flutter-Android/blob/master/app/build.gradle.kts) or check the [Updating build.gradle](https://docs.flutter.dev/add-to-app/android/project-setup#updating-appbuild-gradle).
-
 ### Permissions (IOS)
 
 Add the following keys to your `Info.plist` (ensure they are present for the configuration you run — e.g. both Debug and Release plists if you use separate files):
