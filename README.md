@@ -304,7 +304,7 @@ channel.invokeMethod(
   mapOf(
     "dsApiToken": "your_token",
     "shortId": "your_short_id",
-    "isDebug" to true
+    "isDebug" // set to false for production
   )
 )
 ```
@@ -357,7 +357,7 @@ final _dataspikemobilesdkPlugin = Dataspikemobilesdk();
 _dataspikemobilesdkPlugin.startDataspikeFlow(
   context: context,
   dependencies: .new(
-    isDebug: true,
+    isDebug: true, // set to false for production
     "dsApiToken": "your_token",
     "shortId": "your_short_id",
   ),
