@@ -302,8 +302,8 @@ channel.setMethodCallHandler { call, result ->
 channel.invokeMethod(
   "startDataspikeFlow",
   mapOf(
-    "dsApiToken" to "your_api_token",
-    "shortId" to "your_shoty_id",
+    "dsApiToken": "your_token",
+    "shortId": "your_short_id",
     "isDebug" to true
   )
 )
@@ -358,8 +358,8 @@ _dataspikemobilesdkPlugin.startDataspikeFlow(
   context: context,
   dependencies: .new(
     isDebug: true,
-    dsApiToken: '',
-    shortId: '',
+    "dsApiToken": "your_token",
+    "shortId": "your_short_id",
   ),
   callback: (status) {},
 );
