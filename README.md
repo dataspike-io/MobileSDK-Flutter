@@ -54,7 +54,6 @@ Without these flags, the verification flow will not work correctly.
 ```ruby
 'PERMISSION_CAMERA=1',
 'PERMISSION_PHOTOS=1',
-'PERMISSION_MEDIA_LIBRARY=1',
 ```
 
 ### Step 3 — Update submodule
@@ -384,7 +383,6 @@ Without these flags, the verification flow will not work correctly.
 ```ruby
 'PERMISSION_CAMERA=1',
 'PERMISSION_PHOTOS=1',
-'PERMISSION_MEDIA_LIBRARY=1',
 ```
 
 ### Permissions (ANDROID)
