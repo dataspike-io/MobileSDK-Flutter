@@ -273,6 +273,17 @@ Below is an example of how to start the Dataspike verification flow from the iOS
 - To **open the flow**, use your **API token** and **shortId**
 - To **receive the result**, handle the `onVerificationCompleted` callback
 
+### Android permissions
+
+```kotlin
+<uses-permission android:name="android.permission.CAMERA"/>
+<uses-permission android:name="android.permission.INTERNET"/>
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+<uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+<uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+```
+
 ### Example (Kotlin)
 
 ```swift
@@ -313,3 +324,86 @@ Flutter supports AOT builds only for:
 
 Please ensure that the Android project uses only supported ABIs and follow the official Flutter documentation:  
 https://docs.flutter.dev/deployment/android#android-app-bundles-and-apk-splitting
+
+---
+
+## Implementation Guide (Flutter)
+
+Follow these steps to integrate DataspikeMobile SDK into your Flutter project.
+
+### Step 1 — Add Flutter Module (Git dependency)
+
+From your Android project root:
+
+```bash
+dependencies:
+  flutter:
+    sdk: flutter
+  
+dataspikemobilesdk:
+  git:
+    url: https://github.com/dataspike-io/MobileSDK-Flutter
+    ref: 1.0.0
+```
+
+### Step 2 — Start DataSpike flow from Flutter
+
+The DataSpike verification flow is started directly from Flutter using the SDK API.
+
+```dart
+import 'package:dataspikemobilesdk/dataspikemobilesdk.dart';
+
+final _dataspikemobilesdkPlugin = Dataspikemobilesdk();
+
+_dataspikemobilesdkPlugin.startDataspikeFlow(
+  context: context,
+  dependencies: .new(
+    isDebug: true,
+    dsApiToken: '',
+    shortId: '',
+  ),
+  callback: (status) {},
+);
+```
+
+You can use:
+[Our example inside the current repository to see more detailed implementation](https://github.com/dataspike-io/MobileSDK-Flutter/blob/main/example/lib/main.dart) or use [our example in separate project](https://github.com/dataspike-io/MobileSDK-Flutter-App) 
+
+
+### Step 3 — Update build.gradle
+See the [example build.gradle](https://github.com/dataspike-io/MobileSDK-Flutter-Android/blob/master/app/build.gradle.kts) or check the [Updating build.gradle](https://docs.flutter.dev/add-to-app/android/project-setup#updating-appbuild-gradle).
+
+### Permissions (IOS)
+
+Add the following keys to your `Info.plist` (ensure they are present for the configuration you run — e.g. both Debug and Release plists if you use separate files):
+
+- `NSCameraUsageDescription`
+- `NSPhotoLibraryUsageDescription`
+- `NSMotionUsageDescription`
+- `NSLocalNetworkUsageDescription` (Debug only)
+
+The following permissions **must be enabled** in your `Podfile` build settings. [Look example](https://github.com/dataspike-io/MobileSDK-Flutter/blob/main/example/ios/Podfile) 
+Without these flags, the verification flow will not work correctly.
+
+```ruby
+'PERMISSION_CAMERA=1',
+'PERMISSION_PHOTOS=1',
+'PERMISSION_MEDIA_LIBRARY=1',
+```
+
+### Permissions (ANDROID)
+
+```kotlin
+<uses-permission android:name="android.permission.CAMERA"/>
+<uses-permission android:name="android.permission.INTERNET"/>
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+<uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+<uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+```
+
+### Verification Statuses
+The onVerificationCompleted callback can return the following statuses: Completed, Expired, Failed
+
+### Limitations iOS 
+https://github.com/dataspike-io/MobileSDK-Flutter#apple-silicon-build-issues
