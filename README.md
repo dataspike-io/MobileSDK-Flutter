@@ -358,8 +358,8 @@ _dataspikemobilesdkPlugin.startDataspikeFlow(
   context: context,
   dependencies: .new(
     isDebug: true, // set to false for production
-    "dsApiToken": "your_token",
-    "shortId": "your_short_id",
+    dsApiToken: "your_token",
+    shortId: "your_short_id",
   ),
   callback: (status) {},
 );
