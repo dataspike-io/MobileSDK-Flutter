@@ -40,7 +40,8 @@ cd -
 ```
 
 ### Step 2 — Install Podfile
-See the [example Podfile](https://github.com/dataspike-io/MobileSDK-Flutter-iOS/blob/master/Podfile) or check the [Update your Podfile guide](https://docs.flutter.dev/add-to-app/ios/project-setup#update-your-podfile).
+See the [example Podfile](https://github.com/dataspike-io/MobileSDK-Flutter-iOS/blob/master/Podfile) or check the [Update your Podfile guide](https://docs.flutter.dev/add-to-app/ios/project-setup#update-your-podfile). 
+We strongly recommend reviewing the [limitations](https://github.com/dataspike-io/MobileSDK-Flutter/edit/main/README.md#current-limitations) described above and configuring a separate iOS target (with its own scheme and Pod configuration) dedicated to verification, in order to safely test the SDK in Release mode on real devices without affecting simulator builds or the main application target.
 
 ```bash
 pod install --repo-update
@@ -198,6 +199,40 @@ or adjusting CocoaPods build settings.
 - **Slow image loading in Debug builds**  
   In **Debug** configuration, image loading during the verification flow may take significantly longer than expected.  
   For a smoother and more accurate verification experience, we recommend testing the flow using the **Release** build configuration.
+
+- **Target & Pod Configuration Recommendation**  
+  To prevent simulator build failures and debugging conflicts, the verification SDK should be isolated at the target level.
+
+  The recommended setup is:
+  - Create a separate iOS target dedicated to verification.
+  - Create a corresponding scheme for that target.
+  - Add the verification Pod only to this new target.
+  - Do not include the main application target inside the verification Pod block.
+  
+    Example:
+    ```bash
+    target 'MainApp' do
+    # Regular pods only
+    end
+
+    target 'MainAppVerification' do
+    pod 'DataSpikeMobileSDK'
+    end
+    ```
+
+  This ensures:
+  - The main Debug build (including simulator builds) remains stable.
+  - Device-only dependencies are not linked into unsupported configurations.
+  - CI pipelines and local development builds are not affected.
+    
+  Release Mode Testing Requirement:
+  - Verification should always be tested on a real device using the Release build configuration of the dedicated verification target.
+    
+  This guarantees:
+  - Accurate image processing performance
+  - Proper camera and ML execution timing
+  - Behavior consistent with production environments
+  - Testing verification in Debug mode or on simulators may lead to misleading performance characteristics and unreliable results.
 
 ---
 
@@ -400,4 +435,4 @@ Without these flags, the verification flow will not work correctly.
 The onVerificationCompleted callback can return the following statuses: Completed, Expired, Failed
 
 ### Limitations iOS 
-https://github.com/dataspike-io/MobileSDK-Flutter#apple-silicon-build-issues
+Due to certain iOS platform [limitations](https://github.com/dataspike-io/MobileSDK-Flutter#apple-silicon-build-issues), Flutter-based integration may require running Xcode and related tooling under Rosetta on Apple Silicon machines for proper testing and dependency compatibility.
