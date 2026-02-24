@@ -13,15 +13,15 @@ Supported platforms:
 ## Documentation
 
 iOS integration guide: [iOS Integration Instructions](https://github.com/dataspike-io/MobileSDK-Flutter#implementation-guide-ios)
-Example project: [Sample iOS Project Repository](https://github.com/dataspike-io/MobileSDK-Flutter-iOS)
+- Example project: [Sample iOS Project Repository](https://github.com/dataspike-io/MobileSDK-Flutter-iOS)
 
 
 Android integration guide: [Android Integration Instructions](https://github.com/dataspike-io/MobileSDK-Flutter#implementation-guide-android)
-Example project: [Sample Android Project Repository](https://github.com/dataspike-io/MobileSDK-Flutter-Android)
+- Example project: [Sample Android Project Repository](https://github.com/dataspike-io/MobileSDK-Flutter-Android)
 
 
 Flutter integration guide: [Flutter Integration Instructions](https://github.com/dataspike-io/MobileSDK-Flutter#implementation-guide-flutter)
-Example project: [Sample Flutter Project Repository](https://github.com/dataspike-io/MobileSDK-Flutter-App)
+- Example project: [Sample Flutter Project Repository](https://github.com/dataspike-io/MobileSDK-Flutter-App)
 
 ---
 
