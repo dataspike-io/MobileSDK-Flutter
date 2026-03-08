@@ -31,19 +31,19 @@ enum DataspikeStep {
   verificationCompleted,
   cameraAccess,
   cameraDenied,
-  verificationExpired
+  verificationExpired,
 }
 
 class DataspikeCoordinator {
   static BuildContext? _flowContext;
   static Timer? _verificationExpiryTimer;
-  
+
   static bool _lifecycleObserverAttached = false;
   static final WidgetsBindingObserver _lifecycleObserver =
       _CoordinatorLifecycleObserver(_onAppResumed);
 
   static void _bindFlowContext(BuildContext context) {
-      _flowContext = Navigator.of(context).context;
+    _flowContext = Navigator.of(context).context;
   }
 
   static void _cancelVerificationExpiryWatch({bool clearContext = false}) {
@@ -108,7 +108,7 @@ class DataspikeCoordinator {
           MaterialPageRoute(builder: (_) => const OnboardingScreen()),
           (route) => false,
         );
-        
+
         // TODO: IN CASE OF REMOVING ONBOARDING CHANGE PLACE OF CALLING
         _bindFlowContext(context);
         scheduleVerificationExpiryWatch();
@@ -194,16 +194,14 @@ class DataspikeCoordinator {
       case DataspikeStep.verificationExpired:
         _cancelVerificationExpiryWatch(clearContext: true);
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (_) => const VerificationExpiredScreen(),
-          ),
+          MaterialPageRoute(builder: (_) => const VerificationExpiredScreen()),
           (route) => false,
         );
-        break;  
+        break;
     }
   }
 
-  static List<DataspikeStep> _requiredSteps()  {
+  static List<DataspikeStep> _requiredSteps() {
     final vm = DataspikeInjector.component.verificationManager.checks;
 
     final requiresDocument = vm.poiIsRequired;
@@ -215,7 +213,9 @@ class DataspikeCoordinator {
     if (personalData) steps.add(DataspikeStep.personalData);
 
     if (requiresDocument || requiresSelfie) {
-      final cameraStatus = DataspikeInjector.component.permissionService.initialStatus;
+      DataspikeInjector.component.permissionService.requestCameraStatus();
+      final cameraStatus =
+          DataspikeInjector.component.permissionService.initialStatus;
 
       switch (cameraStatus) {
         case PermissionStatus.restricted:
@@ -264,7 +264,14 @@ class DataspikeCoordinator {
     }
 
     if (next != null) {
-      showNextStep(context, next);
+      if (after == DataspikeStep.cameraAccess) {
+        Navigator.of(context).pop();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          showNextStep(context, next!);
+        });
+      } else {
+        showNextStep(context, next);
+      }
     } else {
       showNextStep(context, DataspikeStep.verificationCompleted);
     }
