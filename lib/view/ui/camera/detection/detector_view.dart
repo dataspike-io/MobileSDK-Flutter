@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'camera_view.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
 import 'dart:typed_data';
+import 'package:image/image.dart' as img;
 
 class DetectorView extends StatefulWidget {
   const DetectorView({
@@ -15,7 +15,7 @@ class DetectorView extends StatefulWidget {
   });
 
   final CustomPaint? customPaint;
-  final Function(InputImage inputImage, double cropRatio) onImage;
+  final Function(img.Image inputImage, double cropRatio) onImage;
   final Future<void> Function(
     Uint8List imageBytes,
     Size previewKeySize, 

@@ -1,6 +1,14 @@
-enum AvatarDetectionStatus { 
-  ok, tooHigh, tooLow, tooFar, closedEyes, notVisible, lookStraight;
-  
+enum AvatarDetectionStatus {
+  ok,
+  tooHigh,
+  tooLow,
+  tooFar,
+  closedEyes,
+  notVisible,
+  lookStraight,
+  tooBright,
+  tooDark;
+
   String get text {
     switch (this) {
       case AvatarDetectionStatus.ok:
@@ -17,6 +25,10 @@ enum AvatarDetectionStatus {
         return 'Your eyes are closed. Please make sure they are open.';
       case AvatarDetectionStatus.lookStraight:
         return 'Please look straight at the camera.';
+      case AvatarDetectionStatus.tooBright:
+        return 'The image is too bright.';
+      case AvatarDetectionStatus.tooDark:
+        return 'The image is too dark.';
     }
   }
 

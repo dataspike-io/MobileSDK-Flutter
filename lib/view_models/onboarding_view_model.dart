@@ -84,8 +84,8 @@ class OnboardingViewModel extends ChangeNotifier {
 
   String get infoCardMessage {
     return requiresAddress
-    ? 'The company needs to confirm your identity and address.'
-    : 'The company needs to confirm your identity.';
+        ? 'The company needs to confirm your identity and address.'
+        : 'The company needs to confirm your identity.';
   }
 
   Future<void> openVerificationUrl() async {

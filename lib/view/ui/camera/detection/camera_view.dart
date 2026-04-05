@@ -3,9 +3,9 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/avatar_instruction_pill.dart';
-import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:dataspikemobilesdk/view/ui/continue_circle_button.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
+import 'package:image/image.dart' as img;
 
 class CameraView extends StatefulWidget {
   const CameraView({
@@ -18,7 +18,7 @@ class CameraView extends StatefulWidget {
   });
 
   final CustomPaint? customPaint;
-  final Function(InputImage inputImage, double cropRatio) onImage;
+  final Function(img.Image inputImage, double cropRatio) onImage;
   final Future<void> Function(
     Uint8List imageBytes,
     Size previewKeySize,
@@ -155,7 +155,7 @@ class _CameraViewState extends State<CameraView> {
       ResolutionPreset.high,
       enableAudio: false,
       imageFormatGroup: Platform.isAndroid
-          ? ImageFormatGroup.nv21
+          ? ImageFormatGroup.yuv420
           : ImageFormatGroup.bgra8888,
     );
     _controller?.initialize().then((_) {
@@ -198,59 +198,108 @@ class _CameraViewState extends State<CameraView> {
   }
 
   void _processCameraImage(CameraImage image) {
-    final inputImage = _inputImageFromCameraImage(image);
-    if (inputImage == null) return;
+    if (_containerAR == null) return;
+
+    final imgImage = _convertCameraImage(image);
+    if (imgImage == null) return;
+
+    // final imgImage = _convertCameraImage(image);
+    // if (imgImage == null) return;
 
     final ps = _controller!.value.previewSize!;
     final previewAR = ps.height / ps.width;
     final coverScale = previewAR / _containerAR!;
     final fraction = 1 - coverScale;
 
-    widget.onImage(inputImage, fraction);
+    widget.onImage(imgImage, fraction);
   }
 
-  final _orientations = {
-    DeviceOrientation.portraitUp: 0,
-    DeviceOrientation.landscapeLeft: 90,
-    DeviceOrientation.portraitDown: 180,
-    DeviceOrientation.landscapeRight: 270,
-  };
-
-  InputImage? _inputImageFromCameraImage(CameraImage image) {
-    if (_controller == null) return null;
-
-    final camera = _cameras[_cameraIndex];
-    final sensorOrientation = camera.sensorOrientation;
-    InputImageRotation? rotation;
-    if (Platform.isIOS) {
-      rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
-    } else if (Platform.isAndroid) {
-      var rotationCompensation =
-          _orientations[_controller!.value.deviceOrientation];
-      if (rotationCompensation == null) return null;
-      rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
-      rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
+  img.Image? _convertCameraImage(CameraImage image) {
+    if (Platform.isAndroid) {
+      // NV21 → img.Image
+      return _convertYUV420(image);
+    } else if (Platform.isIOS) {
+      // BGRA8888 → img.Image
+      return _convertBGRA(image);
     }
-    if (rotation == null) return null;
+    return null;
+  }
 
-    final format = InputImageFormatValue.fromRawValue(image.format.raw);
-    if (format == null ||
-        (Platform.isAndroid && format != InputImageFormat.nv21) ||
-        (Platform.isIOS && format != InputImageFormat.bgra8888)) {
-      return null;
-    }
-
-    if (image.planes.length != 1) return null;
-    final plane = image.planes.first;
-
-    return InputImage.fromBytes(
-      bytes: plane.bytes,
-      metadata: InputImageMetadata(
-        size: Size(image.width.toDouble(), image.height.toDouble()),
-        rotation: rotation,
-        format: format,
-        bytesPerRow: plane.bytesPerRow,
-      ),
+  img.Image _convertBGRA(CameraImage image) {
+    return img.Image.fromBytes(
+      width: image.width,
+      height: image.height,
+      bytes: image.planes[0].bytes.buffer,
+      order: img.ChannelOrder.bgra,
     );
   }
+
+  img.Image _convertYUV420(CameraImage image) {
+    final width = image.width;
+    final height = image.height;
+    final yPlane = image.planes[0].bytes;
+    final uPlane = image.planes[1].bytes;
+    final vPlane = image.planes[2].bytes;
+
+    final rgbImage = img.Image(width: width, height: height);
+
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        final yValue = yPlane[y * width + x] & 0xFF;
+        final uvIndex = (y ~/ 2) * (width ~/ 2) + (x ~/ 2);
+        final u = (uPlane[uvIndex] & 0xFF) - 128;
+        final v = (vPlane[uvIndex] & 0xFF) - 128;
+
+        final r = (yValue + 1.402 * v).clamp(0, 255).toInt();
+        final g = (yValue - 0.344136 * u - 0.714136 * v).clamp(0, 255).toInt();
+        final b = (yValue + 1.772 * u).clamp(0, 255).toInt();
+
+        rgbImage.setPixelRgb(x, y, r, g, b);
+      }
+    }
+
+    return img.copyRotate(rgbImage, angle: 90);
+  }
+
+  // CHECK LATER WHICH IS FASTER
+  // img.Image _convertYUV420(CameraImage image) {
+  // final width = image.width;
+  // final height = image.height;
+  // final yPlane = image.planes[0].bytes;
+  // final uPlane = image.planes[1].bytes;
+  // final vPlane = image.planes[2].bytes;
+  // final uvRowStride = image.planes[1].bytesPerRow;
+  // final uvPixelStride = image.planes[1].bytesPerPixel ?? 1;
+
+  // // Create RGBA buffer directly
+  // final rgba = Uint8List(width * height * 4);
+
+  // for (int y = 0; y < height; y++) {
+  //   for (int x = 0; x < width; x++) {
+  //     final yValue = yPlane[y * image.planes[0].bytesPerRow + x] & 0xFF;
+  //     final uvIndex = (y ~/ 2) * uvRowStride + (x ~/ 2) * uvPixelStride;
+  //     final u = (uPlane[uvIndex] & 0xFF) - 128;
+  //     final v = (vPlane[uvIndex] & 0xFF) - 128;
+
+  //     final r = (yValue + 1.402 * v).clamp(0, 255).toInt();
+  //     final g = (yValue - 0.344136 * u - 0.714136 * v).clamp(0, 255).toInt();
+  //     final b = (yValue + 1.772 * u).clamp(0, 255).toInt();
+
+  //     final idx = (y * width + x) * 4;
+  //     rgba[idx] = r;
+  //     rgba[idx + 1] = g;
+  //     rgba[idx + 2] = b;
+  //     rgba[idx + 3] = 255;
+  //   }
+  // }
+
+//   final rgbImage = img.Image.fromBytes(
+//     width: width,
+//     height: height,
+//     bytes: rgba.buffer,
+//     order: img.ChannelOrder.rgba,
+//   );
+
+//   return img.copyRotate(rgbImage, angle: 90);
+// }
 }

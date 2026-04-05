@@ -1,10 +1,14 @@
+import 'package:dataspikemobilesdk/face_detector/pipeline/facepipeline.dart';
 import 'package:flutter/material.dart';
-import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+// import 'package:image/image.dart';
 import 'detector_view.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/two_arcs_painter.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
 import 'dart:typed_data';
 import 'package:dataspikemobilesdk/utils/camera/camera_variable_environments.dart';
+import 'package:image/image.dart' as img;
+import 'package:dataspikemobilesdk/face_detector/models/face_analyst_result.dart';
+import 'package:dataspikemobilesdk/face_detector/ml_processing/brightness_checker/brightness_checker.dart';
 
 class FaceDetectorView extends StatefulWidget {
   const FaceDetectorView({super.key, required this.onShootCallback});
@@ -22,23 +26,27 @@ class FaceDetectorView extends StatefulWidget {
 }
 
 class _FaceDetectorViewState extends State<FaceDetectorView> {
-  final FaceDetector _faceDetector = FaceDetector(
-    options: FaceDetectorOptions(
-      enableClassification: true,
-      enableContours: true,
-      enableLandmarks: true,
-      minFaceSize: 0.3,
-    ),
-  );
+  FacePipeline? _facePipeline;
+
+  @override
+  void initState() {
+    super.initState();
+    _initPipeline();
+  }
+
+  Future<void> _initPipeline() async {
+    _facePipeline = await FacePipeline.create();
+  }
+
+  bool _isProcessing = false;
   bool _canProcess = true;
-  bool _isBusy = false;
   CustomPaint? _customPaint;
   AvatarDetectionStatus? _status;
 
   @override
   void dispose() {
     _canProcess = false;
-    _faceDetector.close();
+    _facePipeline?.dispose();
     super.dispose();
   }
 
@@ -61,22 +69,62 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     widget.onShootCallback(imageBytes, previewKeySize, screenSize, previewSize);
   }
 
-  Future<void> _processImage(InputImage inputImage, double cropRatio) async {
+  DateTime? _lastProcessed;
+  Duration _throttleDuration = Duration(milliseconds: 500);
+
+  Future<void> _processImage(img.Image image, double cropRatio) async {
     if (!_canProcess) return;
-    if (_isBusy) return;
-    _isBusy = true;
+    if (_isProcessing) return;
+    if (_facePipeline == null) return;
 
-    final faces = await _faceDetector.processImage(inputImage);
+    final now = DateTime.now();
+    if (_lastProcessed != null &&
+        now.difference(_lastProcessed!) < _throttleDuration) {
+      return;
+    }
 
-    AvatarDetectionStatus? status;
+    _lastProcessed = now;
+    _isProcessing = true;
 
-    if (inputImage.metadata?.size != null &&
-        inputImage.metadata?.rotation != null) {
-      status = _evaluateHeadPosition(
-        faces: faces,
+    final brightness = BrightnessChecker.check(image);
+    final isTooDark = BrightnessChecker.isTooDark(brightness);
+    final isTooBright = BrightnessChecker.isTooBright(brightness);
+
+    if (isTooBright) {
+      _status = AvatarDetectionStatus.tooBright;
+      _isProcessing = false; 
+      if (mounted) setState(() {});
+      return;
+    }
+
+    if (isTooDark) {
+      _status = AvatarDetectionStatus.tooDark;
+      _isProcessing = false; 
+      if (mounted) setState(() {});
+      return;
+    }
+
+    try {
+      final result = await _facePipeline?.analyze(image);
+
+      if (result == null) {
+        final painter = TwoArcsPainter(
+          isTopArcHighlighted: false,
+          isBottomArcHighlighted: false
+        );
+        _customPaint = CustomPaint(painter: painter);
+        _status = null;
+        _isProcessing = false;
+        if (mounted) setState(() {});
+        return;
+      }
+
+      final status = _evaluateHeadPosition(
+        result: result,
         cropRatio: cropRatio,
-        imageSize: inputImage.metadata!.size,
+        imageSize: Size(image.width.toDouble(), image.height.toDouble()),
       );
+
       _status = status;
 
       final painter = TwoArcsPainter(
@@ -84,76 +132,53 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
         isBottomArcHighlighted: status == AvatarDetectionStatus.tooLow,
       );
       _customPaint = CustomPaint(painter: painter);
-    } else {
-      _customPaint = CustomPaint(painter: TwoArcsPainter());
-    }
-    _isBusy = false;
-    if (mounted) {
-      setState(() {});
+      _isProcessing = false;
+
+      if (mounted) setState(() {});
+    } catch (e, stack) {
+      print('CRASH: $e');
+      print('STACK: $stack');
+    } finally {
+      _isProcessing = false;
     }
   }
 
   AvatarDetectionStatus _evaluateHeadPosition({
-    required List<Face> faces,
+    required FaceAnalysisResult result,
     required Size imageSize,
     required double cropRatio,
-    double topFraction = 0.33, // old values 0.33
-    double bottomFraction = 0.56, // old values 0.66
+    double topFraction = 0.33,
+    double bottomFraction = 0.56,
     double minFaceAreaFraction = 0.1,
-    double closedEyesProbabilityThreshold = 0.1,
-    double yRotationThreshold = 20, // |Y| > → the face turned away on y AXES
-    double xRotationThreshold = 20, // |X| > → the face turned away on x AXES
   }) {
-    if (faces.isEmpty || imageSize.height == 0 || imageSize.width == 0) {
-      return AvatarDetectionStatus.notVisible;
-    }
-
-    final Face primary = faces.reduce((a, b) {
-      final aArea = a.boundingBox.width * a.boundingBox.height;
-      final bArea = b.boundingBox.width * b.boundingBox.height;
-      return aArea >= bArea ? a : b;
-    });
-
-    final bottomApexFromBottomPct = CameraConstants.avatarBottomApexFromBottomPct;
+    final box = result.boundingBox;
+    final bottomApexFromBottomPct =
+        CameraConstants.avatarBottomApexFromBottomPct;
     final topApexPct = CameraConstants.avatarTopApexPct;
     final apexDiff = bottomApexFromBottomPct - topApexPct;
 
-    final rect = primary.boundingBox;
     final double normalizedCenterY;
-
     if (imageSize.aspectRatio < 1) {
-      normalizedCenterY = rect.center.dy / (imageSize.height) - apexDiff;
+      normalizedCenterY = box.centerY / imageSize.height - apexDiff;
     } else {
-      normalizedCenterY = (rect.center.dy / (imageSize.height)) - cropRatio - apexDiff;
-    }
-
-    if (primary.leftEyeOpenProbability != null &&
-        primary.rightEyeOpenProbability != null) {
-      final leftEyeClosed =
-          primary.leftEyeOpenProbability! < closedEyesProbabilityThreshold;
-      final rightEyeClosed =
-          primary.rightEyeOpenProbability! < closedEyesProbabilityThreshold;
-
-      if (leftEyeClosed || rightEyeClosed) {
-        return AvatarDetectionStatus.closedEyes;
-      }
-    }
-
-    final yaw = primary.headEulerAngleY;
-    final pitch = primary.headEulerAngleX;
-    if ((yaw != null && yaw.abs() > yRotationThreshold) ||
-        (pitch != null && pitch.abs() > xRotationThreshold)) {
-      return AvatarDetectionStatus.lookStraight;
+      normalizedCenterY = box.centerY / imageSize.height - cropRatio - apexDiff;
     }
 
     if (normalizedCenterY < topFraction) return AvatarDetectionStatus.tooHigh;
     if (normalizedCenterY > bottomFraction) return AvatarDetectionStatus.tooLow;
 
-    final faceArea = rect.width * rect.height;
+    final faceArea = box.width * box.height;
     final frameArea = imageSize.width * imageSize.height;
-
     if (frameArea > 0 && (faceArea / frameArea) < minFaceAreaFraction) {
       return AvatarDetectionStatus.tooFar;
+    }
+    if (!result.isHeadPoseAcceptable) {
+      return AvatarDetectionStatus.lookStraight;
+    }
+
+    final eyeStatus = result.eyeStatus;
+    if (eyeStatus['leftEyeClosed']! || eyeStatus['rightEyeClosed']!) {
+      return AvatarDetectionStatus.closedEyes;
     }
 
     return AvatarDetectionStatus.ok;
