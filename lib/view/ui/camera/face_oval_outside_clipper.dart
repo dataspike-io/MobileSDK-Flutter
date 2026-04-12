@@ -1,29 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:dataspikemobilesdk/utils/camera/camera_variable_environments.dart';
 
-class TwoArcsPainter extends CustomPainter {
-  const TwoArcsPainter({
-    this.color = AppColors.white,
-    this.highlightColor = AppColors.lightRed,
-    this.topRisePx = 110,
-    this.bottomRisePx = 110,
-    this.ctrlXpx = 60,
-    this.isTopArcHighlighted = false,
-    this.isBottomArcHighlighted = false,
+class FaceOvalOutsideClipper extends CustomClipper<Path> {
+  const FaceOvalOutsideClipper({
+    this.topRisePx = 110.0,
+    this.bottomRisePx = 110.0,
+    this.ctrlXpx = 60.0,
   });
-
-  final Color color;
-  final Color highlightColor;
 
   final double topRisePx;
   final double bottomRisePx;
   final double ctrlXpx;
-  final bool isTopArcHighlighted;
-  final bool isBottomArcHighlighted;
 
   @override
-  void paint(Canvas canvas, Size size) {
+  Path getClip(Size size) {
+    final fullRect = Path()..addRect(Offset.zero & size);
+    final oval = buildFaceOvalPath(
+      size,
+      topRisePx: topRisePx,
+      bottomRisePx: bottomRisePx,
+      ctrlXpx: ctrlXpx,
+    );
+    return Path.combine(PathOperation.difference, fullRect, oval);
+  }
+
+  @override
+  bool shouldReclip(covariant FaceOvalOutsideClipper old) =>
+      topRisePx != old.topRisePx ||
+      bottomRisePx != old.bottomRisePx ||
+      ctrlXpx != old.ctrlXpx;
+
+  Path buildFaceOvalPath(
+    Size size, {
+    double topRisePx = 110.0,
+    double bottomRisePx = 110.0,
+    double ctrlXpx = 60.0,
+  }) {
     final w = size.width;
     final h = size.height;
     final margin = CameraConstants.avatarStrokeWidth / 2 + 0.5;
@@ -49,19 +61,7 @@ class TwoArcsPainter extends CustomPainter {
     final bottomRise = bottomRisePx.clamp(0, maxBottomRise);
     final bottomLineY = bottomApexY - bottomRise;
 
-    final topPaintLine = Paint()
-      ..color = isTopArcHighlighted ? highlightColor : color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = CameraConstants.avatarStrokeWidth
-      ..strokeCap = StrokeCap.round;
-
-    final bottomPaintLine = Paint()
-      ..color = isBottomArcHighlighted ? highlightColor : color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = CameraConstants.avatarStrokeWidth
-      ..strokeCap = StrokeCap.round;
-
-    final topPath = Path()
+    return Path()
       ..moveTo(leftX, topLineY)
       ..cubicTo(
         leftX,
@@ -78,10 +78,8 @@ class TwoArcsPainter extends CustomPainter {
         topLineY - topRise * 0.6,
         rightX,
         topLineY,
-      );
-
-    final bottomPath = Path()
-      ..moveTo(rightX, bottomLineY)
+      )
+      ..lineTo(rightX, bottomLineY)
       ..cubicTo(
         rightX,
         bottomLineY + bottomRise * 0.6,
@@ -97,18 +95,7 @@ class TwoArcsPainter extends CustomPainter {
         bottomLineY + bottomRise * 0.6,
         leftX,
         bottomLineY,
-      );
-
-    canvas.drawPath(topPath, topPaintLine);
-    canvas.drawPath(bottomPath, bottomPaintLine);
+      )
+      ..close();
   }
-
-  @override
-  bool shouldRepaint(covariant TwoArcsPainter old) =>
-      color != old.color ||
-      topRisePx != old.topRisePx ||
-      bottomRisePx != old.bottomRisePx ||
-      ctrlXpx != old.ctrlXpx ||
-      isTopArcHighlighted != old.isTopArcHighlighted ||
-      isBottomArcHighlighted != old.isBottomArcHighlighted;
 }

@@ -5,6 +5,7 @@ class AppColors {
   static const Color black = Color(0xFF000000);
   static const Color shadowBlack = Color(0x40000000);
   static const Color blackTransparent = Color(0x4D000000);
+  static const Color blackBlur = Color(0x33040404);
 
   // RED
   static const Color transparentRed = Color(0xFFFCDCD5);
@@ -30,6 +31,7 @@ class AppColors {
 
   // GREEN
   static const Color mediumSeaGreen = Color(0xFF49CA5D);
+  static const Color successGreen = Color(0xFF4EBF5F);
 
   // Clear
   static const Color clear = Colors.transparent;

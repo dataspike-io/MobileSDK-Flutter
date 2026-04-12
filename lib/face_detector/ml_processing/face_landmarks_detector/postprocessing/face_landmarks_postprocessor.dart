@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 class FaceLandmarksPostprocessor {
   // Parse raw output from face_landmarks_detector
   // Identity shape: [1, 1, 1, 1434] → 478 landmarks × 3 (x, y, z)
@@ -19,53 +21,35 @@ class FaceLandmarksPostprocessor {
     return {'landmarks': lms, 'facePresenceScore': scores[0]};
   }
 
-  // Extract specific landmark groups for convenience
-  static Map<String, dynamic> extractKeyGroups(
-    List<Map<String, double>> landmarks,
-  ) {
+  static const List<int> _leftEyeIdx = [362, 385, 387, 263, 373, 380];
+  static const List<int> _rightEyeIdx = [33, 160, 158, 133, 153, 144];
+
+  static Map<String, bool> checkEyesClosedFromPixels(
+    List<List<double>> lmOrig, {
+    double threshold = 0.2,
+  }) {
+    final leftEAR = _eyeAspectRatio(lmOrig, _leftEyeIdx);
+    final rightEAR = _eyeAspectRatio(lmOrig, _rightEyeIdx);
+    final avgEAR = (leftEAR + rightEAR) / 2.0;
+
     return {
-      // Eyes
-      'rightEye': landmarks[33],
-      'leftEye': landmarks[263],
-      'rightEyeInner': landmarks[133],
-      'leftEyeInner': landmarks[362],
-
-      // Eye blink landmarks
-      'rightEyeTop': landmarks[159],
-      'rightEyeBottom': landmarks[145],
-      'leftEyeTop': landmarks[386],
-      'leftEyeBottom': landmarks[374],
-
-      // Nose
-      'noseTip': landmarks[1],
-      'noseBottom': landmarks[2],
-
-      // Mouth
-      'mouthLeft': landmarks[61],
-      'mouthRight': landmarks[291],
-      'mouthTop': landmarks[13],
-      'mouthBottom': landmarks[14],
-
-      // Face contour
-      'chin': landmarks[152],
-      'foreHead': landmarks[10],
+      'leftEyeClosed': leftEAR < threshold,
+      'rightEyeClosed': rightEAR < threshold,
+      'bothEyesClosed': avgEAR < threshold,
     };
   }
 
-  static Map<String, bool> checkEyesClosed(
-    List<Map<String, double>> landmarks, {
-    double threshold = 0.030,
-  }) {
-    final rightHeight = (landmarks[159]['y']! - landmarks[145]['y']!).abs();
-    final rightClosed = rightHeight < threshold;
+  static double _eyeAspectRatio(List<List<double>> lm, List<int> idxs) {
+    double dist(List<double> a, List<double> b) {
+      final dx = a[0] - b[0];
+      final dy = a[1] - b[1];
+      return math.sqrt(dx * dx + dy * dy);
+    }
 
-    final leftHeight = (landmarks[386]['y']! - landmarks[374]['y']!).abs();
-    final leftClosed = leftHeight < threshold;
-    
-    return {
-      'leftEyeClosed': leftClosed,
-      'rightEyeClosed': rightClosed,
-      'bothEyesClosed': rightClosed && leftClosed,
-    };
+    final p2p6 = dist(lm[idxs[1]], lm[idxs[5]]);
+    final p3p5 = dist(lm[idxs[2]], lm[idxs[4]]);
+    final p1p4 = dist(lm[idxs[0]], lm[idxs[3]]);
+
+    return (p2p6 + p3p5) / (2.0 * p1p4 + 1e-6);
   }
 }

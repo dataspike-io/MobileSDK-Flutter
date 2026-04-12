@@ -1,6 +1,5 @@
 import 'package:dataspikemobilesdk/face_detector/pipeline/facepipeline.dart';
 import 'package:flutter/material.dart';
-// import 'package:image/image.dart';
 import 'detector_view.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/two_arcs_painter.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
@@ -41,7 +40,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   bool _isProcessing = false;
   bool _canProcess = true;
   CustomPaint? _customPaint;
-  AvatarDetectionStatus? _status;
+  AvatarDetectionStatus _status = AvatarDetectionStatus.notStarted;
 
   @override
   void dispose() {
@@ -70,7 +69,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   }
 
   DateTime? _lastProcessed;
-  Duration _throttleDuration = Duration(milliseconds: 500);
+  final Duration _throttleDuration = Duration(milliseconds: 400);
 
   Future<void> _processImage(img.Image image, double cropRatio) async {
     if (!_canProcess) return;
@@ -92,14 +91,14 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
 
     if (isTooBright) {
       _status = AvatarDetectionStatus.tooBright;
-      _isProcessing = false; 
+      _isProcessing = false;
       if (mounted) setState(() {});
       return;
     }
 
     if (isTooDark) {
       _status = AvatarDetectionStatus.tooDark;
-      _isProcessing = false; 
+      _isProcessing = false;
       if (mounted) setState(() {});
       return;
     }
@@ -108,13 +107,10 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
       final result = await _facePipeline?.analyze(image);
 
       if (result == null) {
-        final painter = TwoArcsPainter(
-          isTopArcHighlighted: false,
-          isBottomArcHighlighted: false
-        );
-        _customPaint = CustomPaint(painter: painter);
-        _status = null;
-        _isProcessing = false;
+        if (_customPaint != null) {
+          _customPaint = CustomPaint(painter: TwoArcsPainter());
+        }
+        _status = AvatarDetectionStatus.undetected;
         if (mounted) setState(() {});
         return;
       }
@@ -125,21 +121,38 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
         imageSize: Size(image.width.toDouble(), image.height.toDouble()),
       );
 
-      _status = status;
+      final isTopArcHighlighted =
+          status == AvatarDetectionStatus.tooHigh ||
+          status == AvatarDetectionStatus.success;
+      final isBottomArcHighlighted =
+          status == AvatarDetectionStatus.tooLow ||
+          status == AvatarDetectionStatus.success;
 
       final painter = TwoArcsPainter(
-        isTopArcHighlighted: status == AvatarDetectionStatus.tooHigh,
-        isBottomArcHighlighted: status == AvatarDetectionStatus.tooLow,
+        isTopArcHighlighted: isTopArcHighlighted,
+        isBottomArcHighlighted: isBottomArcHighlighted,
+        highlightColor: status.arcColor,
       );
-      _customPaint = CustomPaint(painter: painter);
-      _isProcessing = false;
 
-      if (mounted) setState(() {});
+      final paint = CustomPaint(painter: painter);
+
+      _setStateIfChanged(paint, status);
     } catch (e, stack) {
-      print('CRASH: $e');
-      print('STACK: $stack');
+      // print('CRASH: $e');
+      // print('STACK: $stack');
     } finally {
       _isProcessing = false;
+    }
+  }
+
+  void _setStateIfChanged(
+    CustomPaint? newPaint,
+    AvatarDetectionStatus newStatus,
+  ) {
+    if (newStatus != _status || newPaint?.painter != _customPaint?.painter) {
+      _status = newStatus;
+      _customPaint = newPaint;
+      if (mounted) setState(() {});
     }
   }
 

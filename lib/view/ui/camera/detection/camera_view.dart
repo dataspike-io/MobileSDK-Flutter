@@ -1,19 +1,24 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/avatar_instruction_pill.dart';
 import 'package:dataspikemobilesdk/view/ui/continue_circle_button.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
+import 'package:dataspikemobilesdk/view/ui/camera/face_oval_outside_clipper.dart';
+import 'package:dataspikemobilesdk/view/ui/camera/default_face_corner_painter.dart';
+
 import 'package:image/image.dart' as img;
+import 'dart:ui';
 
 class CameraView extends StatefulWidget {
   const CameraView({
     super.key,
-    required this.customPaint,
+    this.customPaint,
     required this.onImage,
     required this.onShootCallback,
-    this.status,
+    required this.status,
     this.onCameraFeedReady,
   });
 
@@ -27,7 +32,7 @@ class CameraView extends StatefulWidget {
   )
   onShootCallback;
   final VoidCallback? onCameraFeedReady;
-  final AvatarDetectionStatus? status;
+  final AvatarDetectionStatus status;
 
   @override
   State<CameraView> createState() => _CameraViewState();
@@ -38,6 +43,7 @@ class _CameraViewState extends State<CameraView> {
   CameraController? _controller;
   int _cameraIndex = -1;
   double? _containerAR;
+  final _previewKey = GlobalKey();
 
   @override
   void initState() {
@@ -73,7 +79,6 @@ class _CameraViewState extends State<CameraView> {
   }
 
   Widget _liveFeedBody(BuildContext context) {
-    final previewKey = GlobalKey();
     final screenSize = MediaQuery.of(context).size;
 
     final camWidth = screenSize.width;
@@ -97,7 +102,7 @@ class _CameraViewState extends State<CameraView> {
           children: [
             Center(
               child: SizedBox(
-                key: previewKey,
+                key: _previewKey,
                 width: camWidth,
                 height: camHeight,
                 child: ClipRRect(
@@ -110,22 +115,50 @@ class _CameraViewState extends State<CameraView> {
                         child: Center(
                           child: AspectRatio(
                             aspectRatio: previewAR,
-                            child: CameraPreview(
-                              _controller!,
-                              child: widget.customPaint,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                CameraPreview(_controller!),
+
+                                if (widget.customPaint != null)
+                                  ClipPath(
+                                    clipper: FaceOvalOutsideClipper(),
+                                    child: BackdropFilter(
+                                      filter: ImageFilter.blur(
+                                        sigmaX: 6,
+                                        sigmaY: 6,
+                                      ),
+                                      child: Container(
+                                        color: AppColors.blackBlur,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                         ),
                       ),
 
-                      if (widget.status != null)
+                      widget.customPaint != null
+                          ? Transform.scale(
+                              scale: coverScaleRation,
+                              child: Center(
+                                child: AspectRatio(
+                                  aspectRatio: previewAR,
+                                  child: widget.customPaint!,
+                                ),
+                              ),
+                            )
+                          : CustomPaint(painter: DefaultFaceCornersPainter()),
+
+                      if (widget.status.isVisible)
                         Positioned(
                           bottom: 10,
                           left: 0,
                           right: 0,
                           child: Center(
                             child: AvatarInstructionPill(
-                              status: widget.status!,
+                              status: widget.status,
                             ),
                           ),
                         ),
@@ -138,7 +171,7 @@ class _CameraViewState extends State<CameraView> {
 
             CircularContinueButton(
               onPressed: () => _shootImage(
-                previewKey.currentContext?.size ?? Size.zero,
+                _previewKey.currentContext?.size ?? Size.zero,
                 screenSize,
               ),
             ),
@@ -293,13 +326,13 @@ class _CameraViewState extends State<CameraView> {
   //   }
   // }
 
-//   final rgbImage = img.Image.fromBytes(
-//     width: width,
-//     height: height,
-//     bytes: rgba.buffer,
-//     order: img.ChannelOrder.rgba,
-//   );
+  //   final rgbImage = img.Image.fromBytes(
+  //     width: width,
+  //     height: height,
+  //     bytes: rgba.buffer,
+  //     order: img.ChannelOrder.rgba,
+  //   );
 
-//   return img.copyRotate(rgbImage, angle: 90);
-// }
+  //   return img.copyRotate(rgbImage, angle: 90);
+  // }
 }

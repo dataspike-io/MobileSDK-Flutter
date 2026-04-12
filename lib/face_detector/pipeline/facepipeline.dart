@@ -15,6 +15,13 @@ class FacePipeline {
   late Interpreter _faceDetector;
   late Interpreter _faceLandmarks;
 
+  late final List<List<List<double>>> _boxCoords1;
+  late final List<List<List<double>>> _boxCoords2;
+  late final List<List<List<double>>> _boxScores1;
+  late final List<List<List<double>>> _boxScores2;
+  late final List<List<List<double>>> _landmarksTensor;
+  late final List<double> _scoresTensor;
+
   List<List<double>> _canonical = [];
 
   // Initialize all models
@@ -29,6 +36,28 @@ class FacePipeline {
     );
 
     pipeline._canonical = await _loadCanonical();
+
+    pipeline._boxCoords1 = List.generate(
+      1,
+      (_) => List.generate(512, (_) => List.filled(16, 0.0)),
+    );
+    pipeline._boxCoords2 = List.generate(
+      1,
+      (_) => List.generate(384, (_) => List.filled(16, 0.0)),
+    );
+    pipeline._boxScores1 = List.generate(
+      1,
+      (_) => List.generate(512, (_) => List.filled(1, 0.0)),
+    );
+    pipeline._boxScores2 = List.generate(
+      1,
+      (_) => List.generate(384, (_) => List.filled(1, 0.0)),
+    );
+    pipeline._landmarksTensor = List.generate(
+      1,
+      (_) => List.generate(468, (_) => List.filled(3, 0.0)),
+    );
+    pipeline._scoresTensor = List.filled(1, 0.0);
 
     return pipeline;
   }
@@ -55,16 +84,11 @@ class FacePipeline {
   Future<FaceAnalysisResult?> analyze(img.Image inputImage) async {
     final detectorInput = FaceDetectorPreprocessor.preprocess(inputImage);
 
-    final boxCoords1 = List.filled(1, List.filled(512, List.filled(16, 0.0)));
-    final boxCoords2 = List.filled(1, List.filled(384, List.filled(16, 0.0)));
-    final boxScores1 = List.filled(1, List.filled(512, List.filled(1, 0.0)));
-    final boxScores2 = List.filled(1, List.filled(384, List.filled(1, 0.0)));
-
     _faceDetector.runForMultipleInputs(
       [
         detectorInput.reshape([1, 256, 256, 3]),
       ],
-      {0: boxCoords1, 1: boxCoords2, 2: boxScores1, 3: boxScores2},
+      {0: _boxCoords1, 1: _boxCoords2, 2: _boxScores1, 3: _boxScores2},
     );
 
     final origH = inputImage.height;
@@ -72,10 +96,10 @@ class FacePipeline {
     final scale = math.min(256 / origH, 256 / origW);
 
     final detectedFaces = FaceDetectorPostprocessor.postprocess(
-      boxCoords1,
-      boxCoords2,
-      boxScores1,
-      boxScores2,
+      _boxCoords1,
+      _boxCoords2,
+      _boxScores1,
+      _boxScores2,
       scale,
     );
 
@@ -97,25 +121,20 @@ class FacePipeline {
     );
 
     final landmarksInput = FaceLandmarksPreprocessor.preprocess(patch);
-    final landmarksTensor = List.filled(
-      1,
-      List.generate(468, (_) => List.filled(3, 0.0)),
-    );
-    final scoresTensor = List.filled(1, 0.0);
 
     _faceLandmarks.runForMultipleInputs(
       [
         landmarksInput.reshape([1, 192, 192, 3]),
       ],
-      {0: scoresTensor, 1: landmarksTensor},
+      {0: _scoresTensor, 1: _landmarksTensor},
     );
 
-    final facePresenceScore = scoresTensor[0];
+    final facePresenceScore = _scoresTensor[0];
     if (facePresenceScore < 0.5) return null;
 
     final landmarksResult = FaceLandmarksPostprocessor.postprocess(
-      landmarksTensor,
-      scoresTensor,
+      _landmarksTensor,
+      _scoresTensor,
     );
 
     final landmarks = landmarksResult['landmarks'] as List<Map<String, double>>;
@@ -131,12 +150,17 @@ class FacePipeline {
     );
 
     final isHeadPoseOk =
-        headPose != null &&
-        HeadPoseEstimator.isAcceptable(
-          headPose
-        );
+        headPose != null && HeadPoseEstimator.isAcceptable(headPose);
 
-    final eyeStatus = FaceLandmarksPostprocessor.checkEyesClosed(landmarks);
+    final lmOrig = HeadPoseEstimator.mapLandmarksToOriginal(
+      landmarks,
+      mInv,
+      ldW,
+      ldH,
+    );
+    final eyeStatus = FaceLandmarksPostprocessor.checkEyesClosedFromPixels(
+      lmOrig,
+    );
 
     final absoluteBox = FaceBoundingBox(
       xMin: box['xMin'] as double,

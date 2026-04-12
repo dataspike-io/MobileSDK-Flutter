@@ -9,7 +9,7 @@ class DetectorView extends StatefulWidget {
     super.key,
     required this.onImage,
     required this.onShootCallback,
-    this.status,
+    required this.status,
     this.customPaint,
     this.onCameraFeedReady,
   });
@@ -23,7 +23,7 @@ class DetectorView extends StatefulWidget {
     Size previewSize
   ) onShootCallback;
   final Function()? onCameraFeedReady;
-  final AvatarDetectionStatus? status;
+  final AvatarDetectionStatus status;
 
   @override
   State<DetectorView> createState() => _DetectorViewState();
