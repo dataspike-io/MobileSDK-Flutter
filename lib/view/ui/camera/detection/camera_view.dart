@@ -44,6 +44,7 @@ class _CameraViewState extends State<CameraView> {
   int _cameraIndex = -1;
   double? _containerAR;
   final _previewKey = GlobalKey();
+  DateTime? _lastFrameTime;
 
   @override
   void initState() {
@@ -157,9 +158,7 @@ class _CameraViewState extends State<CameraView> {
                           left: 0,
                           right: 0,
                           child: Center(
-                            child: AvatarInstructionPill(
-                              status: widget.status,
-                            ),
+                            child: AvatarInstructionPill(status: widget.status),
                           ),
                         ),
                     ],
@@ -231,6 +230,13 @@ class _CameraViewState extends State<CameraView> {
   }
 
   void _processCameraImage(CameraImage image) {
+    final now = DateTime.now();
+    if (_lastFrameTime != null &&
+        now.difference(_lastFrameTime!) < const Duration(milliseconds: 400)) {
+      return;
+    }
+    _lastFrameTime = now;
+
     if (_containerAR == null) return;
 
     final imgImage = _convertCameraImage(image);
@@ -273,13 +279,16 @@ class _CameraViewState extends State<CameraView> {
     final yPlane = image.planes[0].bytes;
     final uPlane = image.planes[1].bytes;
     final vPlane = image.planes[2].bytes;
+    final uvRowStride = image.planes[1].bytesPerRow;
+    final uvPixelStride = image.planes[1].bytesPerPixel ?? 1;
 
-    final rgbImage = img.Image(width: width, height: height);
+    // Create RGBA buffer directly
+    final rgba = Uint8List(width * height * 4);
 
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
-        final yValue = yPlane[y * width + x] & 0xFF;
-        final uvIndex = (y ~/ 2) * (width ~/ 2) + (x ~/ 2);
+        final yValue = yPlane[y * image.planes[0].bytesPerRow + x] & 0xFF;
+        final uvIndex = (y ~/ 2) * uvRowStride + (x ~/ 2) * uvPixelStride;
         final u = (uPlane[uvIndex] & 0xFF) - 128;
         final v = (vPlane[uvIndex] & 0xFF) - 128;
 
@@ -287,52 +296,21 @@ class _CameraViewState extends State<CameraView> {
         final g = (yValue - 0.344136 * u - 0.714136 * v).clamp(0, 255).toInt();
         final b = (yValue + 1.772 * u).clamp(0, 255).toInt();
 
-        rgbImage.setPixelRgb(x, y, r, g, b);
+        final idx = (y * width + x) * 4;
+        rgba[idx] = r;
+        rgba[idx + 1] = g;
+        rgba[idx + 2] = b;
+        rgba[idx + 3] = 255;
       }
     }
 
+    final rgbImage = img.Image.fromBytes(
+      width: width,
+      height: height,
+      bytes: rgba.buffer,
+      order: img.ChannelOrder.rgba,
+    );
+
     return img.copyRotate(rgbImage, angle: 90);
   }
-
-  // CHECK LATER WHICH IS FASTER
-  // img.Image _convertYUV420(CameraImage image) {
-  // final width = image.width;
-  // final height = image.height;
-  // final yPlane = image.planes[0].bytes;
-  // final uPlane = image.planes[1].bytes;
-  // final vPlane = image.planes[2].bytes;
-  // final uvRowStride = image.planes[1].bytesPerRow;
-  // final uvPixelStride = image.planes[1].bytesPerPixel ?? 1;
-
-  // // Create RGBA buffer directly
-  // final rgba = Uint8List(width * height * 4);
-
-  // for (int y = 0; y < height; y++) {
-  //   for (int x = 0; x < width; x++) {
-  //     final yValue = yPlane[y * image.planes[0].bytesPerRow + x] & 0xFF;
-  //     final uvIndex = (y ~/ 2) * uvRowStride + (x ~/ 2) * uvPixelStride;
-  //     final u = (uPlane[uvIndex] & 0xFF) - 128;
-  //     final v = (vPlane[uvIndex] & 0xFF) - 128;
-
-  //     final r = (yValue + 1.402 * v).clamp(0, 255).toInt();
-  //     final g = (yValue - 0.344136 * u - 0.714136 * v).clamp(0, 255).toInt();
-  //     final b = (yValue + 1.772 * u).clamp(0, 255).toInt();
-
-  //     final idx = (y * width + x) * 4;
-  //     rgba[idx] = r;
-  //     rgba[idx + 1] = g;
-  //     rgba[idx + 2] = b;
-  //     rgba[idx + 3] = 255;
-  //   }
-  // }
-
-  //   final rgbImage = img.Image.fromBytes(
-  //     width: width,
-  //     height: height,
-  //     bytes: rgba.buffer,
-  //     order: img.ChannelOrder.rgba,
-  //   );
-
-  //   return img.copyRotate(rgbImage, angle: 90);
-  // }
 }

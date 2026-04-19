@@ -14,7 +14,7 @@ enum AvatarDetectionStatus {
 
   undetected,
   notStarted,
-  
+
   success;
 
   String get title {
@@ -47,7 +47,7 @@ enum AvatarDetectionStatus {
 
   bool get isVisible {
     switch (this) {
-      case  AvatarDetectionStatus.notStarted:
+      case AvatarDetectionStatus.notStarted:
       case AvatarDetectionStatus.undetected:
         return false;
       default:
@@ -57,7 +57,7 @@ enum AvatarDetectionStatus {
 
   bool get isScaled {
     switch (this) {
-      case  AvatarDetectionStatus.notStarted:
+      case AvatarDetectionStatus.notStarted:
         return false;
       default:
         return true;
@@ -73,6 +73,15 @@ enum AvatarDetectionStatus {
         return AppColors.successGreen;
       default:
         return AppColors.white;
+    }
+  }
+
+  Color get backgroundColor {
+    switch (this) {
+      case AvatarDetectionStatus.success:
+        return AppColors.successGreen;
+      default:
+        return AppColors.black;
     }
   }
 
@@ -105,6 +114,8 @@ enum AvatarDetectionStatus {
 
   String? get image {
     switch (this) {
+      case AvatarDetectionStatus.success:
+        return 'packages/dataspikemobilesdk/assets/images/ok.svg';
       default:
         return null;
     }

@@ -15,7 +15,7 @@ class AvatarInstructionPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          color: AppColors.black,
+          color: status.backgroundColor,
           borderRadius: BorderRadius.circular(26),
           border: Border.all(color: AppColors.white.withOpacity(0.4), width: 1),
           boxShadow: [
@@ -35,6 +35,9 @@ class AvatarInstructionPill extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              mainAxisAlignment: status.subtitle == null
+                  ? MainAxisAlignment.center
+                  : MainAxisAlignment.start,
               children: [
                 if (status.image != null) ...[
                   SvgPicture.asset(
@@ -43,7 +46,7 @@ class AvatarInstructionPill extends StatelessWidget {
                     width: 24,
                     fit: BoxFit.contain,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                 ],
                 Text(
                   status.title,

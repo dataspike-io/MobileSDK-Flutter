@@ -24,18 +24,16 @@ class FacePipeline {
 
   List<List<double>> _canonical = [];
 
-  // Initialize all models
-  static Future<FacePipeline> create() async {
+  static Future<FacePipeline> createFromBytes({
+    required Uint8List detectorBytes,
+    required Uint8List landmarksBytes,
+    required String canonicalData,
+  }) async {
     final pipeline = FacePipeline();
 
-    pipeline._faceDetector = await Interpreter.fromAsset(
-      'packages/dataspikemobilesdk/assets/ml/mediapipe_face-facedetector-float.tflite',
-    );
-    pipeline._faceLandmarks = await Interpreter.fromAsset(
-      'packages/dataspikemobilesdk/assets/ml/mediapipe_face-facelandmarkdetector-float.tflite',
-    );
-
-    pipeline._canonical = await _loadCanonical();
+    pipeline._faceDetector = await Interpreter.fromBuffer(detectorBytes);
+    pipeline._faceLandmarks = await Interpreter.fromBuffer(landmarksBytes);
+    pipeline._canonical = await _parseCanonical(canonicalData);
 
     pipeline._boxCoords1 = List.generate(
       1,
@@ -62,10 +60,7 @@ class FacePipeline {
     return pipeline;
   }
 
-  static Future<List<List<double>>> _loadCanonical() async {
-    final data = await rootBundle.loadString(
-      'packages/dataspikemobilesdk/assets/ml/canonical_face_model.obj',
-    );
+  static Future<List<List<double>>> _parseCanonical(String data) async {
     final verts = <List<double>>[];
     for (final line in data.split('\n')) {
       if (line.startsWith('v ')) {
@@ -77,7 +72,6 @@ class FacePipeline {
         ]);
       }
     }
-    assert(verts.length == 468);
     return verts;
   }
 

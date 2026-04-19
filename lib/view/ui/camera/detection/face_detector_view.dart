@@ -8,6 +8,7 @@ import 'package:dataspikemobilesdk/utils/camera/camera_variable_environments.dar
 import 'package:image/image.dart' as img;
 import 'package:dataspikemobilesdk/face_detector/models/face_analyst_result.dart';
 import 'package:dataspikemobilesdk/face_detector/ml_processing/brightness_checker/brightness_checker.dart';
+import 'package:dataspikemobilesdk/face_detector/face_pipeline_isolate.dart';
 
 class FaceDetectorView extends StatefulWidget {
   const FaceDetectorView({super.key, required this.onShootCallback});
@@ -25,7 +26,7 @@ class FaceDetectorView extends StatefulWidget {
 }
 
 class _FaceDetectorViewState extends State<FaceDetectorView> {
-  FacePipeline? _facePipeline;
+  FacePipelineIsolate? _facePipeline;
 
   @override
   void initState() {
@@ -34,7 +35,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   }
 
   Future<void> _initPipeline() async {
-    _facePipeline = await FacePipeline.create();
+    _facePipeline = await FacePipelineIsolate.create();
   }
 
   bool _isProcessing = false;
@@ -68,21 +69,11 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     widget.onShootCallback(imageBytes, previewKeySize, screenSize, previewSize);
   }
 
-  DateTime? _lastProcessed;
-  final Duration _throttleDuration = Duration(milliseconds: 400);
-
   Future<void> _processImage(img.Image image, double cropRatio) async {
     if (!_canProcess) return;
     if (_isProcessing) return;
     if (_facePipeline == null) return;
-
-    final now = DateTime.now();
-    if (_lastProcessed != null &&
-        now.difference(_lastProcessed!) < _throttleDuration) {
-      return;
-    }
-
-    _lastProcessed = now;
+    
     _isProcessing = true;
 
     final brightness = BrightnessChecker.check(image);
@@ -132,6 +123,8 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
         isTopArcHighlighted: isTopArcHighlighted,
         isBottomArcHighlighted: isBottomArcHighlighted,
         highlightColor: status.arcColor,
+        isShownSecondaryArcLayer: status == AvatarDetectionStatus.ok,
+        isArrowsEnabled: status == AvatarDetectionStatus.tooFar
       );
 
       final paint = CustomPaint(painter: painter);
