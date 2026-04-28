@@ -11,6 +11,9 @@ enum AvatarDetectionStatus {
   lookStraight,
   tooBright,
   tooDark,
+  lowQuality,
+  chinIsNotVisible,
+  foreheadisNotVidible,
 
   undetected,
   notStarted,
@@ -26,19 +29,25 @@ enum AvatarDetectionStatus {
       case AvatarDetectionStatus.tooLow:
         return 'Tilt your face upward.';
       case AvatarDetectionStatus.notVisible:
-        return 'Face in not entire inside mask ';
+        return 'Face is not entire inside mask ';
       case AvatarDetectionStatus.tooFar:
         return 'Move your face closer';
       case AvatarDetectionStatus.closedEyes:
-        return 'Your eyes are closed';
+        return 'We could not detect your eyes.';
       case AvatarDetectionStatus.lookStraight:
-        return 'Face in not entire inside mask';
+        return 'Your face is not fully in the frame.';
       case AvatarDetectionStatus.tooBright:
-        return 'The image is too bright.';
+        return 'Too bright.';
       case AvatarDetectionStatus.tooDark:
-        return 'The image is too dark.';
+        return 'Too dark.';
+      case AvatarDetectionStatus.lowQuality:
+        return 'Image quality is insufficient.';
       case AvatarDetectionStatus.success:
         return 'Great. Check completed';
+      case AvatarDetectionStatus.chinIsNotVisible:
+        return 'Chin is not visible';
+      case AvatarDetectionStatus.foreheadisNotVidible:
+        return 'Forehead is not visible';
       case AvatarDetectionStatus.undetected:
       case AvatarDetectionStatus.notStarted:
         return '';
@@ -90,21 +99,25 @@ enum AvatarDetectionStatus {
       case AvatarDetectionStatus.ok:
         return 'Please, wait 5 seconds to help us check';
       case AvatarDetectionStatus.tooHigh:
+      case AvatarDetectionStatus.foreheadisNotVidible:
         return 'Tilt your face downward.';
       case AvatarDetectionStatus.tooLow:
+      case AvatarDetectionStatus.chinIsNotVisible:
         return 'Tilt your face upward.';
       case AvatarDetectionStatus.notVisible:
         return 'Place your face in the mask so that it is completely inside the frame';
       case AvatarDetectionStatus.tooFar:
         return 'Your face image should fit mask fully';
       case AvatarDetectionStatus.closedEyes:
-        return 'Please make sure they are open.';
+        return 'Look directly into the camera and try again';
       case AvatarDetectionStatus.lookStraight:
-        return 'Please look straight at the camera.';
+        return 'Hold the camera straight and try again';
       case AvatarDetectionStatus.tooBright:
-        return 'The image is too bright.';
+        return 'Avoid bright light behind you and try again';
       case AvatarDetectionStatus.tooDark:
-        return 'The image is too dark.';
+        return 'Move to a better-lit area and try again';
+      case AvatarDetectionStatus.lowQuality:
+        return 'Make sure your camera is clean and try again';
       case AvatarDetectionStatus.notStarted:
       case AvatarDetectionStatus.undetected:
       case AvatarDetectionStatus.success:

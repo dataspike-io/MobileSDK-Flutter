@@ -2,8 +2,6 @@ import 'dart:math' as math;
 import 'package:image/image.dart' as img;
 
 class FaceCropHelper {
-  static const double boxScale = 1.5; // BOX_SCALE from Python
-
   // Oriented square crop — port of crop_face_roi from Python
   // box: [xMin, yMin, xMax, yMax] in original image pixels
   // kps: keypoints from face detector [rightEye, leftEye, ...]

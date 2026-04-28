@@ -9,12 +9,14 @@ class _IsolateInitData {
   final Uint8List detectorBytes;
   final Uint8List landmarksBytes;
   final String canonicalData;
+  final Uint8List iqaBytes;
 
   _IsolateInitData({
     required this.toMain,
     required this.detectorBytes,
     required this.landmarksBytes,
     required this.canonicalData,
+    required this.iqaBytes,
   });
 }
 
@@ -28,6 +30,7 @@ void _isolateEntry(_IsolateInitData init) async {
       detectorBytes: init.detectorBytes,
       landmarksBytes: init.landmarksBytes,
       canonicalData: init.canonicalData,
+      iqaBytes: init.iqaBytes,
     );
   } catch (e) {
     init.toMain.send({'initError': e.toString()});
@@ -53,8 +56,9 @@ void _isolateEntry(_IsolateInitData init) async {
         order: img.ChannelOrder.rgb,
       );
 
-      final result = await pipeline.analyze(image);
-
+      final cropRatio = request['cropRatio'] as double? ?? 0.0;
+      final result = await pipeline.analyze(image, cropRatio: cropRatio);
+      
       if (result == null) {
         replyPort.send(null);
         continue;
@@ -70,6 +74,9 @@ void _isolateEntry(_IsolateInitData init) async {
         'yMin': result.boundingBox.yMin,
         'xMax': result.boundingBox.xMax,
         'yMax': result.boundingBox.yMax,
+        'isBlurry': result.isBlurry,
+        'isChinVisible': result.isChinVisible,
+        'isForeheadVisible': result.isForeheadVisible,
       });
     } catch (e) {
       replyPort.send({'error': e.toString()});
@@ -82,6 +89,9 @@ class FacePipelineIsolate {
   late final Isolate _isolate;
 
   static Future<FacePipelineIsolate> create() async {
+    final iqaBytes = await rootBundle.load(
+      'packages/dataspikemobilesdk/assets/ml/iqa_mobilenetv3small100_sigmoid.tflite',
+    );
     final detectorBytes = await rootBundle.load(
       'packages/dataspikemobilesdk/assets/ml/mediapipe_face-facedetector-float.tflite',
     );
@@ -102,6 +112,7 @@ class FacePipelineIsolate {
         detectorBytes: detectorBytes.buffer.asUint8List(),
         landmarksBytes: landmarksBytes.buffer.asUint8List(),
         canonicalData: canonicalData,
+        iqaBytes: iqaBytes.buffer.asUint8List(),
       ),
     );
 
@@ -115,13 +126,17 @@ class FacePipelineIsolate {
     return instance;
   }
 
-  Future<FaceAnalysisResult?> analyze(img.Image image) async {
+  Future<FaceAnalysisResult?> analyze(
+    img.Image image, {
+    double cropRatio = 0.0,
+  }) async {
     final replyPort = ReceivePort();
 
     _toIsolate.send({
       'bytes': Uint8List.fromList(image.getBytes(order: img.ChannelOrder.rgb)),
       'width': image.width,
       'height': image.height,
+      'cropRatio': cropRatio,
       'replyPort': replyPort.sendPort,
     });
 
@@ -145,6 +160,9 @@ class FacePipelineIsolate {
         xMax: map['xMax'] as double,
         yMax: map['yMax'] as double,
       ),
+      isBlurry: map['isBlurry'] as bool,
+      isChinVisible: map['isChinVisible'] as bool,
+      isForeheadVisible: map['isForeheadVisible'] as bool,
     );
   }
 

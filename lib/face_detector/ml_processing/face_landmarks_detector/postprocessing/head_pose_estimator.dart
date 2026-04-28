@@ -407,8 +407,8 @@ class HeadPoseEstimator {
   // Check if angles are within acceptable range
   static bool isAcceptable(
     Map<String, double> angles, {
-    double maxPitch = 15.0,
-    double maxYaw = 11.0,
+    double maxPitch = 14.0,
+    double maxYaw = 13.0,
     double maxRoll = 15.0,
   }) {
     return angles['pitch']!.abs() <= maxPitch &&

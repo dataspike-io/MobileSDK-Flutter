@@ -73,7 +73,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     if (!_canProcess) return;
     if (_isProcessing) return;
     if (_facePipeline == null) return;
-    
+
     _isProcessing = true;
 
     final brightness = BrightnessChecker.check(image);
@@ -95,7 +95,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     }
 
     try {
-      final result = await _facePipeline?.analyze(image);
+      final result = await _facePipeline?.analyze(image, cropRatio: cropRatio);
 
       if (result == null) {
         if (_customPaint != null) {
@@ -124,7 +124,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
         isBottomArcHighlighted: isBottomArcHighlighted,
         highlightColor: status.arcColor,
         isShownSecondaryArcLayer: status == AvatarDetectionStatus.ok,
-        isArrowsEnabled: status == AvatarDetectionStatus.tooFar
+        isArrowsEnabled: status == AvatarDetectionStatus.tooFar,
       );
 
       final paint = CustomPaint(painter: painter);
@@ -164,20 +164,25 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     final apexDiff = bottomApexFromBottomPct - topApexPct;
 
     final double normalizedCenterY;
+
     if (imageSize.aspectRatio < 1) {
       normalizedCenterY = box.centerY / imageSize.height - apexDiff;
     } else {
       normalizedCenterY = box.centerY / imageSize.height - cropRatio - apexDiff;
     }
 
-    if (normalizedCenterY < topFraction) return AvatarDetectionStatus.tooHigh;
-    if (normalizedCenterY > bottomFraction) return AvatarDetectionStatus.tooLow;
+    // if (normalizedCenterY < topFraction) return AvatarDetectionStatus.tooHigh;
+    // if (normalizedCenterY > bottomFraction) return AvatarDetectionStatus.tooLow;
+    if (!result.isChinVisible) return AvatarDetectionStatus.chinIsNotVisible;
+    if (!result.isForeheadVisible)
+      return AvatarDetectionStatus.foreheadisNotVidible;
 
     final faceArea = box.width * box.height;
     final frameArea = imageSize.width * imageSize.height;
     if (frameArea > 0 && (faceArea / frameArea) < minFaceAreaFraction) {
       return AvatarDetectionStatus.tooFar;
     }
+    
     if (!result.isHeadPoseAcceptable) {
       return AvatarDetectionStatus.lookStraight;
     }
@@ -185,6 +190,10 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     final eyeStatus = result.eyeStatus;
     if (eyeStatus['leftEyeClosed']! || eyeStatus['rightEyeClosed']!) {
       return AvatarDetectionStatus.closedEyes;
+    }
+
+    if (result.isBlurry) {
+      return AvatarDetectionStatus.lowQuality;
     }
 
     return AvatarDetectionStatus.ok;

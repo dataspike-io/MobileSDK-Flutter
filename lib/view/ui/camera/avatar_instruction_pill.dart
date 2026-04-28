@@ -11,7 +11,7 @@ class AvatarInstructionPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 280,
+      width: 300,
       child: Container(
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(

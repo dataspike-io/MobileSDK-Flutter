@@ -5,6 +5,9 @@ class FaceAnalysisResult {
   final bool isHeadPoseAcceptable;
   final Map<String, bool> eyeStatus;
   final FaceBoundingBox boundingBox;
+  final bool isBlurry;
+  final bool isChinVisible;
+  final bool isForeheadVisible;
 
   FaceAnalysisResult({
     required this.detectionScore,
@@ -12,7 +15,10 @@ class FaceAnalysisResult {
     required this.headPose,
     required this.isHeadPoseAcceptable,
     required this.eyeStatus,
-    required this.boundingBox, 
+    required this.boundingBox,
+    required this.isBlurry,
+    required this.isChinVisible,
+    required this.isForeheadVisible,
   });
 }
 
