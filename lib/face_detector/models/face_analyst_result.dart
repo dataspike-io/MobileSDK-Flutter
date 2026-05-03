@@ -8,6 +8,8 @@ class FaceAnalysisResult {
   final bool isBlurry;
   final bool isChinVisible;
   final bool isForeheadVisible;
+  final bool isTooBright;
+  final bool isTooDark;
 
   FaceAnalysisResult({
     required this.detectionScore,
@@ -19,6 +21,8 @@ class FaceAnalysisResult {
     required this.isBlurry,
     required this.isChinVisible,
     required this.isForeheadVisible,
+    required this.isTooBright,
+    required this.isTooDark,
   });
 }
 

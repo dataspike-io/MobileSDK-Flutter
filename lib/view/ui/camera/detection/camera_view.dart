@@ -232,7 +232,7 @@ class _CameraViewState extends State<CameraView> {
   void _processCameraImage(CameraImage image) {
     final now = DateTime.now();
     if (_lastFrameTime != null &&
-        now.difference(_lastFrameTime!) < const Duration(milliseconds: 400)) {
+        now.difference(_lastFrameTime!) < const Duration(milliseconds: 1000)) {
       return;
     }
     _lastFrameTime = now;
@@ -241,9 +241,6 @@ class _CameraViewState extends State<CameraView> {
 
     final imgImage = _convertCameraImage(image);
     if (imgImage == null) return;
-
-    // final imgImage = _convertCameraImage(image);
-    // if (imgImage == null) return;
 
     final ps = _controller!.value.previewSize!;
     final previewAR = ps.height / ps.width;

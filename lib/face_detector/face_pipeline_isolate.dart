@@ -48,6 +48,12 @@ void _isolateEntry(_IsolateInitData init) async {
     final request = msg as Map<String, dynamic>;
     final replyPort = request['replyPort'] as SendPort;
 
+    if (request.containsKey('reset')) {
+      pipeline.resetState();
+      request['replyPort'].send(null);
+      continue;
+    }
+
     try {
       final image = img.Image.fromBytes(
         width: request['width'] as int,
@@ -77,6 +83,8 @@ void _isolateEntry(_IsolateInitData init) async {
         'isBlurry': result.isBlurry,
         'isChinVisible': result.isChinVisible,
         'isForeheadVisible': result.isForeheadVisible,
+        'isTooBright': result.isTooBright,
+        'isTooDark': result.isTooDark,
       });
     } catch (e) {
       replyPort.send({'error': e.toString()});
@@ -87,6 +95,13 @@ void _isolateEntry(_IsolateInitData init) async {
 class FacePipelineIsolate {
   late final SendPort _toIsolate;
   late final Isolate _isolate;
+
+  Future<void> resetState() async {
+    final replyPort = ReceivePort();
+    _toIsolate.send({'reset': true, 'replyPort': replyPort.sendPort});
+    await replyPort.first;
+    replyPort.close();
+  }
 
   static Future<FacePipelineIsolate> create() async {
     final iqaBytes = await rootBundle.load(
@@ -163,6 +178,8 @@ class FacePipelineIsolate {
       isBlurry: map['isBlurry'] as bool,
       isChinVisible: map['isChinVisible'] as bool,
       isForeheadVisible: map['isForeheadVisible'] as bool,
+      isTooBright: map['isTooBright'] as bool,
+      isTooDark: map['isTooDark'] as bool,
     );
   }
 

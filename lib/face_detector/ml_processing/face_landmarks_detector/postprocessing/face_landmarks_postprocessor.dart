@@ -28,7 +28,7 @@ class FaceLandmarksPostprocessor {
 
   static Map<String, bool> checkEyesClosedFromPixels(
     List<List<double>> lmOrig, {
-    double threshold = 0.2,
+    double threshold = 0.2, // 21
   }) {
     final leftEAR = _eyeAspectRatio(lmOrig, _leftEyeIdx);
     final rightEAR = _eyeAspectRatio(lmOrig, _rightEyeIdx);

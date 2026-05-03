@@ -9,6 +9,8 @@ import 'package:image/image.dart' as img;
 import 'package:dataspikemobilesdk/face_detector/models/face_analyst_result.dart';
 import 'package:dataspikemobilesdk/face_detector/ml_processing/brightness_checker/brightness_checker.dart';
 import 'package:dataspikemobilesdk/face_detector/face_pipeline_isolate.dart';
+import 'dart:io';
+import 'package:flutter/services.dart';
 
 class FaceDetectorView extends StatefulWidget {
   const FaceDetectorView({super.key, required this.onShootCallback});
@@ -36,6 +38,22 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
 
   Future<void> _initPipeline() async {
     _facePipeline = await FacePipelineIsolate.create();
+
+    // final List<String> paths = [
+    //   'packages/dataspikemobilesdk/assets/images/1.jpeg',
+    // ];
+
+    // for (final path in paths) {
+    //   _facePipeline?.resetState(); // сброс состояния
+    //   final data = await rootBundle.load(path);
+
+    //   final bytes = data.buffer.asUint8List();
+    //   final image = img.decodeImage(bytes);
+    //   if (image == null) continue;
+    //   print('### $path');
+    //   await _processImage(image, 0.0);
+    //   await Future.delayed(const Duration(seconds: 2));
+    // }
   }
 
   bool _isProcessing = false;
@@ -76,23 +94,26 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
 
     _isProcessing = true;
 
-    final brightness = BrightnessChecker.check(image);
-    final isTooDark = BrightnessChecker.isTooDark(brightness);
-    final isTooBright = BrightnessChecker.isTooBright(brightness);
+    // final brightness = BrightnessChecker.check(image);
 
-    if (isTooBright) {
-      _status = AvatarDetectionStatus.tooBright;
-      _isProcessing = false;
-      if (mounted) setState(() {});
-      return;
-    }
+    // final isTooDark = BrightnessChecker.isTooDark(brightness);
+    // final isTooBright = BrightnessChecker.isTooBright(brightness);
+    // print('### $brightness');
+    // if (isTooBright) {
+    // print('### tooBright');
+    // _status = AvatarDetectionStatus.tooBright;
+    // _isProcessing = false;
+    // if (mounted) setState(() {});
+    // return;
+    // }
 
-    if (isTooDark) {
-      _status = AvatarDetectionStatus.tooDark;
-      _isProcessing = false;
-      if (mounted) setState(() {});
-      return;
-    }
+    // if (isTooDark) {
+    // print('### tooDark');
+    // _status = AvatarDetectionStatus.tooDark;
+    // _isProcessing = false;
+    // if (mounted) setState(() {});
+    // return;
+    // }
 
     try {
       final result = await _facePipeline?.analyze(image, cropRatio: cropRatio);
@@ -165,35 +186,48 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
 
     final double normalizedCenterY;
 
-    if (imageSize.aspectRatio < 1) {
-      normalizedCenterY = box.centerY / imageSize.height - apexDiff;
-    } else {
-      normalizedCenterY = box.centerY / imageSize.height - cropRatio - apexDiff;
+    if (result.isTooBright) {
+      return AvatarDetectionStatus.tooBright;
     }
+
+    if (result.isTooDark) {
+      return AvatarDetectionStatus.tooDark;
+    }
+
+    if (result.isBlurry) {
+      return AvatarDetectionStatus.lowQuality;
+    }
+
+    // if (imageSize.aspectRatio < 1) {
+    //   normalizedCenterY = box.centerY / imageSize.height - apexDiff;
+    // } else {
+    //   normalizedCenterY = box.centerY / imageSize.height - cropRatio - apexDiff;
+    // }
 
     // if (normalizedCenterY < topFraction) return AvatarDetectionStatus.tooHigh;
     // if (normalizedCenterY > bottomFraction) return AvatarDetectionStatus.tooLow;
-    if (!result.isChinVisible) return AvatarDetectionStatus.chinIsNotVisible;
-    if (!result.isForeheadVisible)
+    if (!result.isChinVisible) {
+      return AvatarDetectionStatus.chinIsNotVisible;
+    }
+    if (!result.isForeheadVisible) {
       return AvatarDetectionStatus.foreheadisNotVidible;
+    }
 
     final faceArea = box.width * box.height;
     final frameArea = imageSize.width * imageSize.height;
     if (frameArea > 0 && (faceArea / frameArea) < minFaceAreaFraction) {
       return AvatarDetectionStatus.tooFar;
     }
-    
+
     if (!result.isHeadPoseAcceptable) {
       return AvatarDetectionStatus.lookStraight;
     }
 
     final eyeStatus = result.eyeStatus;
-    if (eyeStatus['leftEyeClosed']! || eyeStatus['rightEyeClosed']!) {
+    if (eyeStatus['leftEyeClosed']! ||
+        eyeStatus['rightEyeClosed']! ||
+        eyeStatus['bothEyesClosed']!) {
       return AvatarDetectionStatus.closedEyes;
-    }
-
-    if (result.isBlurry) {
-      return AvatarDetectionStatus.lowQuality;
     }
 
     return AvatarDetectionStatus.ok;

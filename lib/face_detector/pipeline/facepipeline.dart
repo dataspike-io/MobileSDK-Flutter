@@ -11,6 +11,7 @@ import 'package:dataspikemobilesdk/face_detector/ml_processing/face_crop/face_cr
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
 import 'dart:io';
+import 'package:dataspikemobilesdk/face_detector/ml_processing/brightness_checker/brightness_checker.dart';
 
 class FacePipeline {
   late Interpreter _faceDetector;
@@ -30,6 +31,12 @@ class FacePipeline {
   Map<String, dynamic>? _trackedFace;
   int _framesSinceDetection = 0;
   static const int _redetectEveryNFrames = 5;
+
+  void resetState() {
+    _trackedFace = null;
+    _framesSinceDetection = _redetectEveryNFrames;
+    _blurryFrames = 0;
+  }
 
   static Future<FacePipeline> createFromBytes({
     required Uint8List detectorBytes,
@@ -194,7 +201,12 @@ class FacePipeline {
       ldW,
       scale: 1.1,
     );
+
     final iqaPatch = cropResult.patch;
+
+    final brightness = BrightnessChecker.check(iqaPatch);
+    final isTooBright = BrightnessChecker.isTooBright(brightness);
+    final isTooDark = BrightnessChecker.isTooDark(brightness);
 
     final iqaInput = IQAPreprocessor.preprocess(iqaPatch);
     final iqaOutput = List.filled(1, List.filled(1, 0.0));
@@ -224,7 +236,7 @@ class FacePipeline {
       visibleImgH,
       cropOffset,
     );
-    
+
     return FaceAnalysisResult(
       detectionScore: bestFace['score'] as double,
       landmarks: landmarks,
@@ -235,6 +247,8 @@ class FacePipeline {
       isBlurry: isBlurry,
       isChinVisible: chinVisible,
       isForeheadVisible: foreheadVisible,
+      isTooBright: isTooBright,
+      isTooDark: isTooDark,
     );
   }
 
