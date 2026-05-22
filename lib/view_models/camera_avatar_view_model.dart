@@ -161,9 +161,15 @@ class CameraAvatarViewModel extends ChangeNotifier {
         switch (result.code) {
           case 5013: showErrorV2?.call(AvatarDetectionStatus.halfAttempts);
           case 5012: // Chin is not visible
+          case 5011:
+          case 5010:
           case 5009: // Too Blury
           case 5008: // Eyes Closed
+          case 5007: // 3d depth phase?
+          case 5006: // Small resolution? 
+          case 5005: // Disputed?
           case 5004: // Poor Ligtning
+          case 5003: // Move Closer?
           case 5002: // Spoofing
           case 5001: // Deepfake
           case 4001: // No face
