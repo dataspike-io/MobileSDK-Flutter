@@ -222,27 +222,8 @@ class _CameraViewState extends State<CameraView> {
     if (widget.status == AvatarDetectionStatus.ok &&
         oldWidget.status != AvatarDetectionStatus.ok) {
       _triggerCapture(MediaQuery.of(context).size);
-      // _shootImage(MediaQuery.of(context).size);
     }
   }
-
-  // Future _shootImage(Size screenSize) async {
-  //   if (_controller != null && _controller!.value.isInitialized) {
-  //     final renderBox =
-  //         _previewKey.currentContext?.findRenderObject() as RenderBox?;
-  //     final previewKeySize = renderBox?.size ?? Size.zero;
-  //     final previewSize = _controller!.value.previewSize!;
-  //     final file = await _controller!.takePicture();
-  //     final bytes = await file.readAsBytes();
-
-  //     await widget.onShootCallback(
-  //       bytes,
-  //       previewKeySize,
-  //       screenSize,
-  //       previewSize,
-  //     );
-  //   }
-  // }
 
   Future _stopLiveFeed() async {
     if (_controller == null) return;
@@ -290,83 +271,44 @@ class _CameraViewState extends State<CameraView> {
     return null;
   }
 
-  // Future<void> _triggerCapture(Size screenSize) async {
-  //   _captureCompleter = Completer<CameraImage>();
-
-  //   final image = await _captureCompleter!.future;
-  //   _captureCompleter = null;
-
-  //   await _captureFromStream(image, screenSize);
-  // }
-
   Future<void> _triggerCapture(Size screenSize) async {
-    const frameCount = 4;
-    final bytesList = <Uint8List>[];
-
-    for (int i = 0; i < frameCount; i++) {
+    final rawFrames = <CameraImage>[];
+    for (int i = 0; i < 4; i++) {
       _captureCompleter = Completer<CameraImage>();
-      final image = await _captureCompleter!.future;
+      rawFrames.add(await _captureCompleter!.future);
       _captureCompleter = null;
-
-      await _captureFromStream(image, screenSize, bytesList);
     }
 
-    if (bytesList.length == frameCount) {
-      final renderBox =
-          _previewKey.currentContext?.findRenderObject() as RenderBox?;
-      final previewKeySize = renderBox?.size ?? Size.zero;
-      final previewSize = _controller!.value.previewSize!;
+    final results = await Future.wait(
+      rawFrames.map((frame) => _captureFromStream(frame, screenSize)),
+    );
 
-      await widget.onShootCallback(
-        bytesList,
-        previewKeySize,
-        screenSize,
-        previewSize,
-      );
-    }
+    final bytesList = results.whereType<Uint8List>().toList();
+    if (bytesList.isEmpty) return;
+
+    final renderBox =
+        _previewKey.currentContext?.findRenderObject() as RenderBox?;
+    final previewKeySize = renderBox?.size ?? Size.zero;
+    final previewSize = _controller!.value.previewSize!;
+
+    await widget.onShootCallback(
+      bytesList,
+      previewKeySize,
+      screenSize,
+      previewSize,
+    );
   }
 
-  // Future<void> _captureFromStream(CameraImage image, Size screenSize) async {
-  //   final Uint8List? bytes;
-
-  //   if (Platform.isIOS) {
-  //     bytes = await _convertIOSFrameToJpeg(image);
-  //   } else {
-  //     final imgImage = _convertYUV420(image);
-  //     bytes = Uint8List.fromList(img.encodeJpg(imgImage, quality: 100));
-  //   }
-
-  //   if (bytes == null) return;
-
-  //   final renderBox =
-  //       _previewKey.currentContext?.findRenderObject() as RenderBox?;
-  //   final previewKeySize = renderBox?.size ?? Size.zero;
-  //   final previewSize = _controller!.value.previewSize!;
-
-  //   await widget.onShootCallback(
-  //     bytes,
-  //     previewKeySize,
-  //     screenSize,
-  //     previewSize,
-  //   );
-  // }
-
-  Future<void> _captureFromStream(
+  Future<Uint8List?> _captureFromStream(
     CameraImage image,
     Size screenSize,
-    List<Uint8List> bytesList,
   ) async {
-    final Uint8List? bytes;
-
     if (Platform.isIOS) {
-      bytes = await _convertIOSFrameToJpeg(image);
+      return _convertIOSFrameToJpeg(image);
     } else {
       final imgImage = _convertYUV420(image);
-      bytes = Uint8List.fromList(img.encodeJpg(imgImage, quality: 100));
+      return Uint8List.fromList(img.encodeJpg(imgImage, quality: 100));
     }
-
-    if (bytes == null) return;
-    bytesList.add(bytes);
   }
 
   Future<Uint8List?> _convertIOSFrameToJpeg(CameraImage image) async {
