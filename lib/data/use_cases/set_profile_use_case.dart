@@ -6,6 +6,8 @@ import 'package:dataspikemobilesdk/domain/managers/dataspike_personal_data_field
 import 'package:dataspikemobilesdk/domain/models/manual_custom_representation_type.dart';
 import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart';
 import 'package:dataspikemobilesdk/domain/models/states/upload_manual_file_state.dart';
+import 'package:dataspikemobilesdk/data/models/request/image_selfie_v2_request_body.dart';
+import 'package:dataspikemobilesdk/domain/models/states/upload_image_state_v2.dart';
 
 class SetProfileUseCase {
   final IDataspikeRepository dataspikeRepository;
@@ -39,6 +41,14 @@ class SetProfileUseCase {
       imageBytes: imageBytes,
       ext: ext,
       fileName: fileName,
+    );
+  }
+
+  Future<UploadImageStateV2> uploadImageV2({
+    required List<LivenessBatchFrame> frames,
+  }) async {
+    return await dataspikeRepository.uploadImageV2(
+      frames: frames
     );
   }
 

@@ -17,6 +17,9 @@ import 'package:dataspikemobilesdk/data/models/request/profile_fields_request_bo
 import 'package:dataspikemobilesdk/data/models/request/image_document_request_body.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:dataspikemobilesdk/data/models/errors/common_errors.dart';
+import 'package:dataspikemobilesdk/data/models/request/image_selfie_v2_request_body.dart';
+import 'package:dataspikemobilesdk/data/models/response/upload_image_response_v2.dart';
+import 'package:dataspikemobilesdk/data/models/response/upload_image_error_response_v2.dart';
 
 abstract class IDataspikeApiService {
   Future<VerificationResponse> getVerification(String shortId);
@@ -26,6 +29,10 @@ abstract class IDataspikeApiService {
     List<int> fileBytes,
     String ext,
     String fileName,
+  );
+  Future<UploadImageResponseV2> uploadImageV2(
+    String shortId,
+    List<LivenessBatchFrame> frames,
   );
   Future<UploadImageResponse> uploadDocument(
     String shortId,
@@ -68,7 +75,9 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     final headers = DataspikeEndpoint.getVerification.headers(apiToken);
 
     return _wrapNetworkErrors(() async {
-      final response = await http.get(url, headers: headers).timeout(_defaultTimeout);
+      final response = await http
+          .get(url, headers: headers)
+          .timeout(_defaultTimeout);
       if (response.statusCode == 200) {
         final jsonBody = json.decode(response.body) as Map<String, dynamic>;
         return VerificationResponse.fromJson(jsonBody);
@@ -127,6 +136,59 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
   }
 
   @override
+  Future<UploadImageResponseV2> uploadImageV2(
+    String shortId,
+    List<LivenessBatchFrame> frames,
+  ) async {
+    final url = Uri.parse(
+      '$baseUrl${DataspikeEndpoint.uploadImageV2.path(shortId: shortId)}',
+    );
+    final headers = DataspikeEndpoint.uploadImageV2.headers(apiToken);
+
+    final metadata = LivenessBatchMetadata(
+      frames: frames
+          .map((f) => LivenessBatchFrameMeta(frameId: f.frameId))
+          .toList(),
+    );
+
+    var request = http.MultipartRequest('POST', url)
+      ..headers.addAll(headers)
+      ..fields['metadata'] = json.encode(metadata.toJson());
+
+    for (final frame in frames) {
+      if (frame.fileBytes.isNotEmpty) {
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            frame.frameId,
+            frame.fileBytes,
+            contentType: _mimeFromExt(frame.ext),
+            filename: frame.fileName,
+          ),
+        );
+      }
+    }
+
+    return _wrapNetworkErrors(() async {
+      final streamedResponse = await request.send().timeout(_defaultTimeout);
+      final response = await http.Response.fromStream(streamedResponse);
+      if (response.statusCode == 200) {
+        final jsonBody = json.decode(response.body) as Map<String, dynamic>;
+        return UploadImageResponseV2.fromJson(jsonBody);
+      } else {
+        try {
+          final errorJson = json.decode(response.body) as Map<String, dynamic>;
+          final errorResponse = UploadImageErrorResponseV2.fromJson(errorJson);
+          throw errorResponse;
+        } on UploadImageErrorResponseV2 {
+          rethrow;
+        } catch (_) {
+          throw Exception('Failed to upload image: ${response.statusCode}');
+        }
+      }
+    });
+  }
+
+  @override
   Future<UploadImageResponse> uploadDocument(
     String shortId,
     ImageDocumentRequestBody body,
@@ -170,8 +232,7 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     );
     final headers = DataspikeEndpoint.uploadManualDocument.headers(apiToken);
 
-    var request = http.MultipartRequest('POST', url)
-      ..headers.addAll(headers);
+    var request = http.MultipartRequest('POST', url)..headers.addAll(headers);
 
     if (fileBytes.isNotEmpty) {
       request.files.add(
@@ -233,7 +294,9 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     final headers = DataspikeEndpoint.getCountries.headers(apiToken);
 
     return _wrapNetworkErrors(() async {
-      final response = await http.get(url, headers: headers).timeout(_defaultTimeout);
+      final response = await http
+          .get(url, headers: headers)
+          .timeout(_defaultTimeout);
       if (response.statusCode == 200) {
         final jsonBody = json.decode(response.body) as List<dynamic>;
         return jsonBody
@@ -255,14 +318,18 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     final headers = DataspikeEndpoint.proceedWithVerification.headers(apiToken);
 
     return _wrapNetworkErrors(() async {
-      final response = await http.post(url, headers: headers).timeout(_defaultTimeout);
+      final response = await http
+          .post(url, headers: headers)
+          .timeout(_defaultTimeout);
       if (response.statusCode == 200) {
         final jsonBody = json.decode(response.body) as Map<String, dynamic>;
         return ProceedWithVerificationResponse.fromJson(jsonBody);
       } else {
         try {
           final errorJson = json.decode(response.body) as Map<String, dynamic>;
-          final errorResponse = ProceedWithVerificationErrorResponse.fromJson(errorJson);
+          final errorResponse = ProceedWithVerificationErrorResponse.fromJson(
+            errorJson,
+          );
           throw errorResponse;
         } on ProceedWithVerificationErrorResponse {
           rethrow;
@@ -325,11 +392,11 @@ extension DataspikeApiServiceImplExtensions on IDataspikeApiService {
       case 'mov':
         return MediaType('video', 'mp4');
       case 'mpeg':
-        return MediaType('video', 'mpeg'); 
+        return MediaType('video', 'mpeg');
       case 'pdf':
         return MediaType('application', 'pdf');
       default:
-        return MediaType('application', 'octet-stream'); 
+        return MediaType('application', 'octet-stream');
     }
   }
 }

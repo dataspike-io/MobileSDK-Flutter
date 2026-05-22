@@ -5,8 +5,15 @@ import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
 
 class AvatarInstructionPill extends StatelessWidget {
   final AvatarDetectionStatus status;
+  final VoidCallback? firstAction;
+  final VoidCallback? secondAction;
 
-  const AvatarInstructionPill({super.key, required this.status});
+  const AvatarInstructionPill({
+    super.key,
+    required this.status,
+    this.firstAction,
+    this.secondAction
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +85,68 @@ class AvatarInstructionPill extends StatelessWidget {
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
+              ),
+
+            if (status.isButtonEnabled)
+              Column(
+                children: [
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: 248,
+                    height: 32,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.royalPurple,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 0,
+                      ),
+                      onPressed: firstAction,
+                      child: Text(
+                        status.buttonTitle ?? '',
+                        style: const TextStyle(
+                          fontFamily: 'Figtree',
+                          package: 'dataspikemobilesdk',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+            if (status.isAdditionalButtonEnabled)
+              Column(
+                children: [
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: 248,
+                    height: 32,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.royalPurple,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 0,
+                      ),
+                      onPressed: secondAction,
+                      child: Text(
+                        status.additionalButtonTitle ?? '',
+                        style: const TextStyle(
+                          fontFamily: 'Figtree',
+                          package: 'dataspikemobilesdk',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
           ],
         ),

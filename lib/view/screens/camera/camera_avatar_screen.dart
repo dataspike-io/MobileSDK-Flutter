@@ -1,3 +1,4 @@
+import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/detection/face_detector_view.dart';
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
@@ -19,6 +20,7 @@ class LiveAvatarCamera extends StatefulWidget {
 
 class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
   late final CameraAvatarViewModel viewModel;
+  final _faceDetectorKey = GlobalKey<FaceDetectorViewState>();
 
   @override
   void initState() {
@@ -29,6 +31,8 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
       hideLoader: hideLoader,
       showError: (title, msg, instruction) =>
           showError(title, msg, instruction),
+      showErrorV2: (status) =>
+          showErrorV2(status),
       showCommonError: (type) => _showCommonError(type),
     );
     super.initState();
@@ -42,10 +46,16 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
 
   void proceedNext() {
     if (!mounted) return;
-    DataspikeCoordinator.proceedNext(
-      context,
-      after: DataspikeStep.selfieCamera,
-    );
+    _faceDetectorKey.currentState?.setSuccessStatus();
+
+    Future.delayed(const Duration(seconds: 3), () {
+      if (!mounted) return;
+
+      DataspikeCoordinator.proceedNext(
+        context,
+        after: DataspikeStep.selfieCamera,
+      );
+    });
   }
 
   void showLoader() async {
@@ -55,10 +65,8 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
       useRootNavigator: true,
       barrierDismissible: false,
       barrierColor: AppColors.slateGray,
-      builder: (_) => Align(
-        alignment: const Alignment(0, -0.15), 
-        child: const Loader(),
-      ),
+      builder: (_) =>
+          Align(alignment: const Alignment(0, -0.15), child: const Loader()),
     );
   }
 
@@ -84,6 +92,16 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
         instruction: withInstruction ? InstructionType.liveness : null,
       ),
     );
+  }
+
+  void showErrorV2(AvatarDetectionStatus? status) {
+    if (!mounted) return;
+
+    if (status != null) {
+      _faceDetectorKey.currentState?.setExternalError(status);
+    } else {
+       _faceDetectorKey.currentState?.removeStatus();
+    }
   }
 
   void _showCommonError(ErrorImageBottomSheetType type) {
@@ -118,9 +136,10 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
               TopBar(hasTimer: true),
               Expanded(
                 child: FaceDetectorView(
+                  key: _faceDetectorKey,
                   onShootCallback:
                       (imageBytes, previewKeySize, screenSize, previewSize) =>
-                          viewModel.shootAndCrop(
+                          viewModel.shootAndCropV2(
                             imageBytes,
                             previewKeySize,
                             screenSize,

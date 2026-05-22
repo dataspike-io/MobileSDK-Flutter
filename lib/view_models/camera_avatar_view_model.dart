@@ -7,6 +7,9 @@ import 'package:flutter/foundation.dart';
 import 'package:dataspikemobilesdk/view/ui/error/error_image_bottom_sheet.dart';
 import 'package:dataspikemobilesdk/data/models/errors/common_errors.dart';
 import 'package:dataspikemobilesdk/utils/camera/camera_variable_environments.dart';
+import 'package:dataspikemobilesdk/data/models/request/image_selfie_v2_request_body.dart';
+import 'package:dataspikemobilesdk/domain/models/states/upload_image_state_v2.dart';
+import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
 
 class CameraAvatarViewModel extends ChangeNotifier {
   late Future<void> init;
@@ -18,7 +21,8 @@ class CameraAvatarViewModel extends ChangeNotifier {
 
   void Function(ErrorImageBottomSheetType type)? showCommonError;
   void Function(String title, String message, bool withInstruction)? showError;
-  
+  void Function(AvatarDetectionStatus? status)? showErrorV2;
+
   void attachCallbacks({
     VoidCallback? onProceed,
     VoidCallback? showLoader,
@@ -26,12 +30,14 @@ class CameraAvatarViewModel extends ChangeNotifier {
     void Function(ErrorImageBottomSheetType type)? showCommonError,
     void Function(String title, String message, bool withInstruction)?
     showError,
+    showErrorV2,
   }) {
     this.onProceed = onProceed;
     this.showLoader = showLoader;
     this.hideLoader = hideLoader;
     this.showCommonError = showCommonError;
     this.showError = showError;
+    this.showErrorV2 = showErrorV2;
   }
 
   CameraAvatarViewModel({required UploadImageUseCase setUseCase})
@@ -39,18 +45,77 @@ class CameraAvatarViewModel extends ChangeNotifier {
     init = _setup();
   }
 
-  Future<void> _setup() async { }
+  Future<void> _setup() async {}
 
+  // Future<void> shootAndCrop(
+  //   Uint8List imageBytes,
+  //   Size previewKeySize,
+  //   Size screenSize,
+  //   Size previewSize,
+  // ) async {
+  //   showLoader?.call();
+  //   notifyListeners();
 
-  Future<void> shootAndCrop(
-    Uint8List imageBytes,
-    Size previewKeySize, 
+  //   try {
+  //     final containerW = previewKeySize.width;
+  //     final containerH = previewKeySize.height;
+
+  //     final ps = previewSize;
+  //     final previewW = ps.width;
+  //     final previewH = ps.height;
+
+  //     final processed = await compute<AvatarCropParams, Uint8List>(
+  //       processAvatarShotInIsolate,
+  //       AvatarCropParams(
+  //         imageBytes: imageBytes,
+  //         containerW: containerW,
+  //         containerH: containerH,
+  //         previewW: previewW,
+  //         previewH: previewH,
+  //         sideInsetPct: CameraConstants.avatarSideInsetPct,
+  //         topApexPct: CameraConstants.avatarTopApexPct,
+  //         bottomApexFromBottomPct:
+  //             CameraConstants.avatarBottomApexFromBottomPct,
+  //         strokeWidth: CameraConstants.avatarStrokeWidth,
+  //       ),
+  //     );
+
+  //     final result = await _setUseCase.uploadImage(
+  //       documentType: 'liveness_photo',
+  //       imageBytes: processed,
+  //       ext: 'jpg',
+  //       fileName: 'selfie.jpg',
+  //     );
+
+  //     hideLoader?.call();
+  //     notifyListeners();
+
+  //     if (result is UploadImageSuccess) {
+  //       onProceed?.call();
+  //     } else if (result is UploadImageError) {
+  //       showError?.call(result.title, result.message, result.withInstruction);
+  //     }
+  //   } on NoInternetException {
+  //     hideLoader?.call();
+  //     notifyListeners();
+  //     showCommonError?.call(ErrorImageBottomSheetType.noInternet);
+  //   } catch (e) {
+  //     hideLoader?.call();
+  //     notifyListeners();
+  //     showError?.call(
+  //       'Processing error',
+  //       'Failed to process the image.',
+  //       false,
+  //     );
+  //   }
+  // }
+
+  Future<void> shootAndCropV2(
+    List<Uint8List> imageBytesList,
+    Size previewKeySize,
     Size screenSize,
     Size previewSize,
   ) async {
-    showLoader?.call();
-    notifyListeners();
-
     try {
       final containerW = previewKeySize.width;
       final containerH = previewKeySize.height;
@@ -59,42 +124,58 @@ class CameraAvatarViewModel extends ChangeNotifier {
       final previewW = ps.width;
       final previewH = ps.height;
 
-      final processed = await compute<AvatarCropParams, Uint8List>(
-        processAvatarShotInIsolate,
-        AvatarCropParams(
-          imageBytes: imageBytes,
-          containerW: containerW,
-          containerH: containerH,
-          previewW: previewW,
-          previewH: previewH,
-          sideInsetPct: CameraConstants.avatarSideInsetPct,
-          topApexPct: CameraConstants.avatarTopApexPct,
-          bottomApexFromBottomPct: CameraConstants.avatarBottomApexFromBottomPct,
-          strokeWidth: CameraConstants.avatarStrokeWidth,
-        ),
-      );
+      final frames = <LivenessBatchFrame>[];
 
-      final result = await _setUseCase.uploadImage(
-        documentType: 'liveness_photo',
-        imageBytes: processed,
-        ext: 'jpg',
-        fileName: 'selfie.jpg',
-      );
+      for (int i = 0; i < imageBytesList.length; i++) {
+        final processed = await compute<AvatarCropParams, Uint8List>(
+          processAvatarShotInIsolate,
+          AvatarCropParams(
+            imageBytes: imageBytesList[i],
+            containerW: containerW,
+            containerH: containerH,
+            previewW: previewW,
+            previewH: previewH,
+            sideInsetPct: CameraConstants.avatarSideInsetPct,
+            topApexPct: CameraConstants.avatarTopApexPct,
+            bottomApexFromBottomPct:
+                CameraConstants.avatarBottomApexFromBottomPct,
+            strokeWidth: CameraConstants.avatarStrokeWidth,
+          ),
+        );
 
-      hideLoader?.call();
-      notifyListeners();
+        frames.add(
+          LivenessBatchFrame(
+            frameId: 'frame_$i',
+            fileBytes: processed,
+            ext: 'jpg',
+            fileName: 'selfie_$i.jpg',
+          ),
+        );
+      }
 
-      if (result is UploadImageSuccess) {
+      final result = await _setUseCase.uploadImageV2(frames: frames);
+
+      if (result is UploadImageSuccessV2) {
         onProceed?.call();
-      } else if (result is UploadImageError) {
-        showError?.call(result.title, result.message, result.withInstruction);
+      } else if (result is UploadImageErrorV2) {
+        switch (result.code) {
+          case 5013: showErrorV2?.call(AvatarDetectionStatus.halfAttempts);
+          case 5012: // Chin is not visible
+          case 5009: // Too Blury
+          case 5008: // Eyes Closed
+          case 5004: // Poor Ligtning
+          case 5002: // Spoofing
+          case 5001: // Deepfake
+          case 4001: // No face
+          default: showErrorV2?.call(null);
+        }
+      } else {
+        showErrorV2?.call(null);
       }
     } on NoInternetException {
-      hideLoader?.call();
       notifyListeners();
       showCommonError?.call(ErrorImageBottomSheetType.noInternet);
     } catch (e) {
-      hideLoader?.call();
       notifyListeners();
       showError?.call(
         'Processing error',

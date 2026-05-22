@@ -17,7 +17,7 @@ class DetectorView extends StatefulWidget {
   final CustomPaint? customPaint;
   final Function(img.Image inputImage, double cropRatio) onImage;
   final Future<void> Function(
-    Uint8List imageBytes,
+    List<Uint8List> imageBytesList,
     Size previewKeySize, 
     Size screenSize,
     Size previewSize

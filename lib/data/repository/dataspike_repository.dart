@@ -1,3 +1,4 @@
+import 'package:dataspikemobilesdk/data/models/response/upload_image_error_response_v2.dart';
 import 'package:dataspikemobilesdk/domain/models/states/message_state.dart';
 import 'package:dataspikemobilesdk/domain/models/states/upload_manual_file_state.dart';
 import 'package:dataspikemobilesdk/domain/models/states/verification_state.dart';
@@ -19,6 +20,8 @@ import 'package:dataspikemobilesdk/data/models/response/upload_image_error_respo
 import 'package:dataspikemobilesdk/data/models/response/proceed_with_verification_error_response.dart';
 import 'package:dataspikemobilesdk/domain/mappers/upload_manual_file_response_mapper.dart';
 import 'package:dataspikemobilesdk/data/models/errors/common_errors.dart';
+import 'package:dataspikemobilesdk/data/models/request/image_selfie_v2_request_body.dart';
+import 'package:dataspikemobilesdk/domain/models/states/upload_image_state_v2.dart';
 
 abstract class IDataspikeRepository {
   Future<VerificationState> getVerification({required bool darkModeIsEnabled});
@@ -27,6 +30,9 @@ abstract class IDataspikeRepository {
     required List<int> imageBytes,
     required String ext,
     required String fileName,
+  });
+  Future<UploadImageStateV2> uploadImageV2({
+    required List<LivenessBatchFrame> frames,
   });
   Future<UploadImageState> uploadDocument({
     required ImageDocumentRequestBody body,
@@ -111,6 +117,28 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
       rethrow;
     } catch (e) {
       return uploadImageResponseMapper.map(
+        response: null,
+        error: e is Exception ? e : Exception(e.toString()),
+      );
+    }
+  }
+
+  @override
+  Future<UploadImageStateV2> uploadImageV2({
+    required List<LivenessBatchFrame> frames,
+  }) async {
+    try {
+      final response = await apiService.uploadImageV2(
+      shortId,
+      frames,
+    );
+      return uploadImageResponseMapper.mapV2(response: response, error: null);
+    } on UploadImageErrorResponseV2 catch (e) {
+      return uploadImageResponseMapper.mapV2(response: null, error: e);
+    } on NoInternetException {
+      rethrow;
+    } catch (e) {
+      return uploadImageResponseMapper.mapV2(
         response: null,
         error: e is Exception ? e : Exception(e.toString()),
       );

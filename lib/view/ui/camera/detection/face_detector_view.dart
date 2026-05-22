@@ -1,4 +1,4 @@
-import 'package:dataspikemobilesdk/face_detector/pipeline/facepipeline.dart';
+// import 'package:dataspikemobilesdk/face_detector/pipeline/facepipeline.dart';
 import 'package:flutter/material.dart';
 import 'detector_view.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/two_arcs_painter.dart';
@@ -7,16 +7,16 @@ import 'dart:typed_data';
 import 'package:dataspikemobilesdk/utils/camera/camera_variable_environments.dart';
 import 'package:image/image.dart' as img;
 import 'package:dataspikemobilesdk/face_detector/models/face_analyst_result.dart';
-import 'package:dataspikemobilesdk/face_detector/ml_processing/brightness_checker/brightness_checker.dart';
+// import 'package:dataspikemobilesdk/face_detector/ml_processing/brightness_checker/brightness_checker.dart';
 import 'package:dataspikemobilesdk/face_detector/face_pipeline_isolate.dart';
-import 'dart:io';
+// import 'dart:io';
 import 'package:flutter/services.dart';
 
 class FaceDetectorView extends StatefulWidget {
   const FaceDetectorView({super.key, required this.onShootCallback});
 
   final Future<void> Function(
-    Uint8List imageBytes,
+    List<Uint8List> imageBytesList,
     Size previewKeySize,
     Size screenSize,
     Size previewSize,
@@ -24,11 +24,12 @@ class FaceDetectorView extends StatefulWidget {
   onShootCallback;
 
   @override
-  State<FaceDetectorView> createState() => _FaceDetectorViewState();
+  State<FaceDetectorView> createState() => FaceDetectorViewState();
 }
 
-class _FaceDetectorViewState extends State<FaceDetectorView> {
+class FaceDetectorViewState extends State<FaceDetectorView> {
   FacePipelineIsolate? _facePipeline;
+  // DateTime? _okSince;
 
   @override
   void initState() {
@@ -79,18 +80,21 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   }
 
   Future<void> _onShootCallback(
-    Uint8List imageBytes,
+    List<Uint8List> imageBytesList,
     Size previewKeySize,
     Size screenSize,
     Size previewSize,
   ) async {
-    widget.onShootCallback(imageBytes, previewKeySize, screenSize, previewSize);
+    widget.onShootCallback(imageBytesList, previewKeySize, screenSize, previewSize);
   }
 
   Future<void> _processImage(img.Image image, double cropRatio) async {
     if (!_canProcess) return;
     if (_isProcessing) return;
     if (_facePipeline == null) return;
+    if (_status.isAutoHideDisabled) {
+      return;
+    }
 
     _isProcessing = true;
 
@@ -119,6 +123,8 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
       final result = await _facePipeline?.analyze(image, cropRatio: cropRatio);
 
       if (result == null) {
+        // _okSince = null;
+
         if (_customPaint != null) {
           _customPaint = CustomPaint(painter: TwoArcsPainter());
         }
@@ -163,11 +169,61 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     CustomPaint? newPaint,
     AvatarDetectionStatus newStatus,
   ) {
+    // _setSuccessStatusIfRequired(newStatus);
+
+    if (_status.isAutoHideDisabled) {
+      return;
+    }
+
     if (newStatus != _status || newPaint?.painter != _customPaint?.painter) {
       _status = newStatus;
       _customPaint = newPaint;
       if (mounted) setState(() {});
     }
+  }
+
+  void setExternalError(AvatarDetectionStatus newStatus) {
+    _status = newStatus;
+    _customPaint = null;
+    if (mounted) setState(() {});
+  }
+
+  // void _setSuccessStatusIfRequired(AvatarDetectionStatus newStatus) {
+  //   if (_status == AvatarDetectionStatus.success) return;
+
+  //   if (newStatus == AvatarDetectionStatus.ok) {
+  //     _okSince ??= DateTime.now();
+
+  //     final okDuration = DateTime.now().difference(_okSince!);
+
+  //     if (okDuration >= const Duration(seconds: 5)) {
+  //       _setSuccessStatus();
+  //     }
+  //   } else {
+  //     _okSince = null;
+  //   }
+  // }
+
+  void setSuccessStatus() {
+    _status = AvatarDetectionStatus.success;
+
+    final painter = TwoArcsPainter(
+      isTopArcHighlighted: true,
+      isBottomArcHighlighted: true,
+      highlightColor: _status.arcColor,
+      isShownSecondaryArcLayer: false,
+      isArrowsEnabled: false,
+    );
+
+    final paint = CustomPaint(painter: painter);
+    _customPaint = paint;
+    if (mounted) setState(() {});
+  }
+
+  void removeStatus() {
+    _status = AvatarDetectionStatus.notStarted;
+    _customPaint = null;
+    if (mounted) setState(() {});
   }
 
   AvatarDetectionStatus _evaluateHeadPosition({

@@ -1,16 +1,18 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/avatar_instruction_pill.dart';
-import 'package:dataspikemobilesdk/view/ui/continue_circle_button.dart';
+// import 'package:dataspikemobilesdk/view/ui/continue_circle_button.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/face_oval_outside_clipper.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/default_face_corner_painter.dart';
-
+// import 'dart:async';
 import 'package:image/image.dart' as img;
-import 'dart:ui';
+// import 'dart:ui';
+import 'dart:ui' as ui;
 
 class CameraView extends StatefulWidget {
   const CameraView({
@@ -25,7 +27,7 @@ class CameraView extends StatefulWidget {
   final CustomPaint? customPaint;
   final Function(img.Image inputImage, double cropRatio) onImage;
   final Future<void> Function(
-    Uint8List imageBytes,
+    List<Uint8List> imageBytesList,
     Size previewKeySize,
     Size screenSize,
     Size previewSize,
@@ -45,6 +47,7 @@ class _CameraViewState extends State<CameraView> {
   double? _containerAR;
   final _previewKey = GlobalKey();
   DateTime? _lastFrameTime;
+  Completer<CameraImage>? _captureCompleter;
 
   @override
   void initState() {
@@ -83,7 +86,7 @@ class _CameraViewState extends State<CameraView> {
     final screenSize = MediaQuery.of(context).size;
 
     final camWidth = screenSize.width;
-    final camHeight = screenSize.height * 0.65;
+    final camHeight = screenSize.height * 0.8;
 
     if (_cameras.isEmpty) return Container();
     if (_controller == null) return Container();
@@ -125,7 +128,7 @@ class _CameraViewState extends State<CameraView> {
                                   ClipPath(
                                     clipper: FaceOvalOutsideClipper(),
                                     child: BackdropFilter(
-                                      filter: ImageFilter.blur(
+                                      filter: ui.ImageFilter.blur(
                                         sigmaX: 6,
                                         sigmaY: 6,
                                       ),
@@ -154,24 +157,31 @@ class _CameraViewState extends State<CameraView> {
 
                       if (widget.status.isVisible)
                         Positioned(
-                          bottom: 10,
+                          bottom: 30,
                           left: 0,
                           right: 0,
                           child: Center(
-                            child: AvatarInstructionPill(status: widget.status),
+                            child: AvatarInstructionPill(
+                              status: widget.status,
+                              firstAction: () {
+                                if (widget.status.isButtonEnabled) {
+                                  Navigator.of(context).pop();
+                                }
+                              },
+                              secondAction: () {
+                                if (widget.status.isAdditionalButtonEnabled) {
+                                  Navigator.of(
+                                    context,
+                                    rootNavigator: true,
+                                  ).pop();
+                                }
+                              },
+                            ),
                           ),
                         ),
                     ],
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            CircularContinueButton(
-              onPressed: () => _shootImage(
-                _previewKey.currentContext?.size ?? Size.zero,
-                screenSize,
               ),
             ),
           ],
@@ -205,20 +215,34 @@ class _CameraViewState extends State<CameraView> {
     });
   }
 
-  Future _shootImage(Size previewKeySize, Size screenSize) async {
-    if (_controller != null && _controller!.value.isInitialized) {
-      final previewSize = _controller!.value.previewSize!;
-      final file = await _controller!.takePicture();
-      final bytes = await file.readAsBytes();
+  @override
+  void didUpdateWidget(covariant CameraView oldWidget) {
+    super.didUpdateWidget(oldWidget);
 
-      await widget.onShootCallback(
-        bytes,
-        previewKeySize,
-        screenSize,
-        previewSize,
-      );
+    if (widget.status == AvatarDetectionStatus.ok &&
+        oldWidget.status != AvatarDetectionStatus.ok) {
+      _triggerCapture(MediaQuery.of(context).size);
+      // _shootImage(MediaQuery.of(context).size);
     }
   }
+
+  // Future _shootImage(Size screenSize) async {
+  //   if (_controller != null && _controller!.value.isInitialized) {
+  //     final renderBox =
+  //         _previewKey.currentContext?.findRenderObject() as RenderBox?;
+  //     final previewKeySize = renderBox?.size ?? Size.zero;
+  //     final previewSize = _controller!.value.previewSize!;
+  //     final file = await _controller!.takePicture();
+  //     final bytes = await file.readAsBytes();
+
+  //     await widget.onShootCallback(
+  //       bytes,
+  //       previewKeySize,
+  //       screenSize,
+  //       previewSize,
+  //     );
+  //   }
+  // }
 
   Future _stopLiveFeed() async {
     if (_controller == null) return;
@@ -230,6 +254,11 @@ class _CameraViewState extends State<CameraView> {
   }
 
   void _processCameraImage(CameraImage image) {
+    if (_captureCompleter != null && !_captureCompleter!.isCompleted) {
+      _captureCompleter!.complete(image);
+      return;
+    }
+
     final now = DateTime.now();
     if (_lastFrameTime != null &&
         now.difference(_lastFrameTime!) < const Duration(milliseconds: 1000)) {
@@ -259,6 +288,114 @@ class _CameraViewState extends State<CameraView> {
       return _convertBGRA(image);
     }
     return null;
+  }
+
+  // Future<void> _triggerCapture(Size screenSize) async {
+  //   _captureCompleter = Completer<CameraImage>();
+
+  //   final image = await _captureCompleter!.future;
+  //   _captureCompleter = null;
+
+  //   await _captureFromStream(image, screenSize);
+  // }
+
+  Future<void> _triggerCapture(Size screenSize) async {
+    const frameCount = 4;
+    final bytesList = <Uint8List>[];
+
+    for (int i = 0; i < frameCount; i++) {
+      _captureCompleter = Completer<CameraImage>();
+      final image = await _captureCompleter!.future;
+      _captureCompleter = null;
+
+      await _captureFromStream(image, screenSize, bytesList);
+    }
+
+    if (bytesList.length == frameCount) {
+      final renderBox =
+          _previewKey.currentContext?.findRenderObject() as RenderBox?;
+      final previewKeySize = renderBox?.size ?? Size.zero;
+      final previewSize = _controller!.value.previewSize!;
+
+      await widget.onShootCallback(
+        bytesList,
+        previewKeySize,
+        screenSize,
+        previewSize,
+      );
+    }
+  }
+
+  // Future<void> _captureFromStream(CameraImage image, Size screenSize) async {
+  //   final Uint8List? bytes;
+
+  //   if (Platform.isIOS) {
+  //     bytes = await _convertIOSFrameToJpeg(image);
+  //   } else {
+  //     final imgImage = _convertYUV420(image);
+  //     bytes = Uint8List.fromList(img.encodeJpg(imgImage, quality: 100));
+  //   }
+
+  //   if (bytes == null) return;
+
+  //   final renderBox =
+  //       _previewKey.currentContext?.findRenderObject() as RenderBox?;
+  //   final previewKeySize = renderBox?.size ?? Size.zero;
+  //   final previewSize = _controller!.value.previewSize!;
+
+  //   await widget.onShootCallback(
+  //     bytes,
+  //     previewKeySize,
+  //     screenSize,
+  //     previewSize,
+  //   );
+  // }
+
+  Future<void> _captureFromStream(
+    CameraImage image,
+    Size screenSize,
+    List<Uint8List> bytesList,
+  ) async {
+    final Uint8List? bytes;
+
+    if (Platform.isIOS) {
+      bytes = await _convertIOSFrameToJpeg(image);
+    } else {
+      final imgImage = _convertYUV420(image);
+      bytes = Uint8List.fromList(img.encodeJpg(imgImage, quality: 100));
+    }
+
+    if (bytes == null) return;
+    bytesList.add(bytes);
+  }
+
+  Future<Uint8List?> _convertIOSFrameToJpeg(CameraImage image) async {
+    final completer = Completer<ui.Image>();
+
+    ui.decodeImageFromPixels(
+      image.planes[0].bytes,
+      image.width,
+      image.height,
+      ui.PixelFormat.bgra8888,
+      completer.complete,
+      rowBytes: image.planes[0].bytesPerRow,
+    );
+
+    final uiImage = await completer.future;
+    final byteData = await uiImage.toByteData(
+      format: ui.ImageByteFormat.rawRgba,
+    );
+    uiImage.dispose();
+    if (byteData == null) return null;
+
+    final imgImage = img.Image.fromBytes(
+      width: image.width,
+      height: image.height,
+      bytes: byteData.buffer,
+      order: img.ChannelOrder.rgba,
+    );
+
+    return Uint8List.fromList(img.encodeJpg(imgImage, quality: 100));
   }
 
   img.Image _convertBGRA(CameraImage image) {

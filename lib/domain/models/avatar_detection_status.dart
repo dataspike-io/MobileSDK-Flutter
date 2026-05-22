@@ -18,7 +18,11 @@ enum AvatarDetectionStatus {
   undetected,
   notStarted,
 
-  success;
+  success,
+
+  // ExternalErrors
+  headwearIsOn,
+  halfAttempts;
 
   String get title {
     switch (this) {
@@ -48,6 +52,10 @@ enum AvatarDetectionStatus {
         return 'Chin is not visible';
       case AvatarDetectionStatus.foreheadisNotVidible:
         return 'Forehead is not visible';
+      case AvatarDetectionStatus.halfAttempts:
+        return 'You wasted half your attempts';
+      case AvatarDetectionStatus.headwearIsOn:
+        return 'Headwear or glasses detected.';
       case AvatarDetectionStatus.undetected:
       case AvatarDetectionStatus.notStarted:
         return '';
@@ -118,10 +126,64 @@ enum AvatarDetectionStatus {
         return 'Move to a better-lit area and try again';
       case AvatarDetectionStatus.lowQuality:
         return 'Make sure your camera is clean and try again';
+      case AvatarDetectionStatus.halfAttempts:
+        return 'Please check recommendations and try again';
+      case AvatarDetectionStatus.headwearIsOn:
+        return 'Please remove them and try again';
       case AvatarDetectionStatus.notStarted:
       case AvatarDetectionStatus.undetected:
       case AvatarDetectionStatus.success:
         return null;
+    }
+  }
+
+  String? get buttonTitle {
+    switch (this) {
+      case AvatarDetectionStatus.halfAttempts:
+      case AvatarDetectionStatus.headwearIsOn:
+        return 'Try again';
+      default:
+        return null;
+    }
+  }
+
+  bool get isButtonEnabled {
+    switch (this) {
+      case AvatarDetectionStatus.halfAttempts:
+      case AvatarDetectionStatus.headwearIsOn:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  String? get additionalButtonTitle {
+    switch (this) {
+      case AvatarDetectionStatus.halfAttempts:
+        return 'Open recommendations';
+      default:
+        return null;
+    }
+  }
+
+  bool get isAdditionalButtonEnabled {
+    switch (this) {
+      case AvatarDetectionStatus.halfAttempts:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  bool get isAutoHideDisabled {
+    switch (this) {
+      case AvatarDetectionStatus.headwearIsOn:
+      case AvatarDetectionStatus.success:
+      case AvatarDetectionStatus.ok:
+      case AvatarDetectionStatus.halfAttempts:
+        return true;
+      default:
+        return false;
     }
   }
 
