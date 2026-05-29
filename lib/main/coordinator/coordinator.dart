@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:dataspikemobilesdk/main/manager/dataspike_manager.dart';
 import 'package:dataspikemobilesdk/view/screens/camera/liveness_screen/liveness_instruction_screen.dart';
+import 'package:dataspikemobilesdk/view/ui/top_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/view/screens/dataspike_screen/dataspike_screen.dart';
 import 'package:dataspikemobilesdk/view/screens/onboarding_screen/onboarding_screen.dart';
@@ -18,6 +19,7 @@ import 'package:dataspikemobilesdk/view/screens/verification_expired_screen/veri
 import 'package:dataspikemobilesdk/view/screens/camera/instruction_screen/instruction_screen.dart';
 import 'package:dataspikemobilesdk/domain/models/instruction_type.dart';
 import 'package:dataspikemobilesdk/view/screens/countries_screen/countries_screen.dart';
+import 'package:dataspikemobilesdk/view/screens/success_selfie_screen/success_selfie_screen.dart';
 
 enum DataspikeStep {
   onboarding,
@@ -27,6 +29,7 @@ enum DataspikeStep {
   poaInstruction,
   documentCamera,
   selfieCamera,
+  successSelfie,
   address,
   verificationCompleted,
   cameraAccess,
@@ -102,6 +105,10 @@ class DataspikeCoordinator {
   }
 
   static void showNextStep(BuildContext context, DataspikeStep step) {
+    if (TopBar.isShowedPopUp) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+   
     switch (step) {
       case DataspikeStep.onboarding:
         Navigator.of(context).pushAndRemoveUntil(
@@ -174,6 +181,16 @@ class DataspikeCoordinator {
           )
         );
         break;
+      case DataspikeStep.successSelfie:
+        Navigator.of(
+          context,
+        ).push(
+          MaterialPageRoute(
+            maintainState: false,
+            builder: (_) => const SuccessSelfieScreen()
+          )
+        );
+        break;
       case DataspikeStep.address:
         Navigator.of(context).push(
           MaterialPageRoute(
@@ -236,6 +253,7 @@ class DataspikeCoordinator {
     if (requiresSelfie) {
       steps.add(DataspikeStep.selfieInstruction);
       steps.add(DataspikeStep.selfieCamera);
+      steps.add(DataspikeStep.successSelfie);
     }
     if (requiresAddress) {
       steps.add(DataspikeStep.poaInstruction);
@@ -264,7 +282,9 @@ class DataspikeCoordinator {
     }
 
     if (next != null) {
-      if (after == DataspikeStep.cameraAccess) {
+      if (
+        after == DataspikeStep.cameraAccess 
+      ) {
         Navigator.of(context).pop();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           showNextStep(context, next!);
@@ -281,6 +301,8 @@ class DataspikeCoordinator {
       showNextStep(context, DataspikeStep.onboarding);
   static void showSelfieCamera(BuildContext context) =>
       showNextStep(context, DataspikeStep.selfieCamera);
+  static void showSuccessSelfie(BuildContext context) =>
+      showNextStep(context, DataspikeStep.successSelfie);
   static void showDocumentCamera(BuildContext context) =>
       showNextStep(context, DataspikeStep.documentCamera);
   static void showPersonalData(BuildContext context) =>

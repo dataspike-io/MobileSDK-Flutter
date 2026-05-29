@@ -52,7 +52,7 @@ class _CameraViewState extends State<CameraView> {
   @override
   void initState() {
     super.initState();
-
+    
     _initialize();
   }
 
@@ -387,6 +387,6 @@ class _CameraViewState extends State<CameraView> {
       order: img.ChannelOrder.rgba,
     );
 
-    return img.copyRotate(rgbImage, angle: 90);
+    return img.copyRotate(rgbImage, angle: -90);
   }
 }
