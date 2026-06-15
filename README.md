@@ -664,4 +664,19 @@ The onVerificationCompleted callback can return the following statuses: Complete
 - After rebuilding the AAR, run `./gradlew --stop && ./gradlew clean` if you hit odd compile errors (corrupted incremental cache / stale compiler in the daemon).
 - Commit the submodule at the right revision so CI and other developers build the same module version.
 
+### Possible Issue (Android)
+
+Without this, `npx react-native run-android` fails with `adb ENOENT`.
+
+```bash
+# ~/.zshrc
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+```
+
+```bash
+source ~/.zshrc
+adb devices   # should run and list a device/emulator
+```
+
 ---
