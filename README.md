@@ -451,3 +451,217 @@ The onVerificationCompleted callback can return the following statuses: Complete
 
 ### Limitations iOS 
 Due to certain iOS platform [limitations](https://github.com/dataspike-io/MobileSDK-Flutter#apple-silicon-build-issues), Flutter-based integration may require running Xcode and related tooling under Rosetta on Apple Silicon machines for proper testing and dependency compatibility.
+
+---
+
+## Implementation Guide (React Native - iOS)
+
+Follow these steps to integrate DataspikeMobile SDK into your React Native project.
+
+### Step 1 — Add Flutter Module (Git dependency)
+There is an option to add it once for all project or separately for iOS and Android.
+
+```bash
+mkdir -p DataspikeModule
+git submodule add -b main https://github.com/dataspike-io/MobileSDK-Flutter.git DataspikeModule/dataspike_module
+git submodule update --init --recursive
+cd DataspikeModule/dataspike_module/dataspike_module
+flutter pub get
+cd -
+```
+
+### Step 2 — Update and install your podfile
+
+[Example of a podfile](https://github.com/dataspike-io/MobileSDK-Flutter-React/blob/master/ios/Podfile)
+
+In your iOS project part:
+```bash
+pod install --repo-update
+```
+
+### Step 3 - Add bridge files to your .xcworkspace in Xcode
+
+1. [DataspikeModule.m](https://github.com/dataspike-io/MobileSDK-Flutter-React/blob/master/ios/DataspikeExample/DataspikeModule.m)
+2. [DataspikeModule.swift](https://github.com/dataspike-io/MobileSDK-Flutter-React/blob/master/ios/DataspikeModule.swift)
+
+
+### Step 4 - Permissions (IOS)
+
+Add the following keys to your `Info.plist` (ensure they are present for the configuration you run — e.g. both Debug and Release plists if you use separate files):
+
+- `NSCameraUsageDescription`
+- `NSPhotoLibraryUsageDescription`
+- `NSMotionUsageDescription`
+- `NSLocalNetworkUsageDescription` (Debug only)
+
+The following permissions **must be enabled** in your `Podfile` build settings. [Look example](https://github.com/dataspike-io/MobileSDK-Flutter-React/blob/master/ios/Podfile)
+Without these flags, the verification flow will not work correctly.
+
+```ruby
+'PERMISSION_CAMERA=1',
+'PERMISSION_PHOTOS=1',
+```
+
+### Step 5 - Update App.tsx
+
+Update App.tsx according to [example](https://github.com/dataspike-io/MobileSDK-Flutter-React/blob/master/App.tsx) or your current implementation, where the first argument is "dsApiToken" and the second one is "shortId".
+
+### Step 6 - Run iOS to check
+
+```ruby
+npx react-native run-ios
+```
+
+## Implementation Guide (React Native - Android)
+
+### Step 1 — Add Flutter Module (Git dependency)
+There is an option to add it once for all project or separately for iOS and Android.
+
+```bash
+mkdir -p DataspikeModule
+git submodule add -b main https://github.com/dataspike-io/MobileSDK-Flutter.git DataspikeModule/dataspike_module
+git submodule update --init --recursive
+cd DataspikeModule/dataspike_module/dataspike_module
+flutter pub get
+cd -
+```
+
+### Step 2 - Build the module as an AAR
+
+**Requirement: the module's `compileSdk` must be ≥ 36.** Otherwise `checkAarMetadata` fails — `file_picker` and `flutter_plugin_android_lifecycle` require compiling against API 36.
+
+In `dataspikemobilesdk/android/build.gradle`:
+
+```groovy
+android {
+    compileSdk = 36
+}
+```
+
+If it contains plugins on an old Kotlin Gradle Plugin (e.g. `tflite_flutter`) and the build fails on a JVM-target mismatch (Java 11 vs Kotlin 21), add to the module's `gradle.properties`:
+
+```properties
+kotlin.jvm.target.validation.mode=warning
+```
+
+Build the AAR:
+
+```bash
+cd android/DataspikeModule/dataspike_module/<module>
+flutter build aar
+```
+
+From the output, note the local repo path (`build/host/outputs/repo`) and the dependency coordinates (`com.example.dataspike_module:flutter_debug:1.0`, etc.).
+
+### Step 3 - Wire the AAR into the host
+
+#### 3.1 `android/settings.gradle`
+
+There must be no source integration. If it's still there — **remove it**:
+
+```groovy
+// REMOVE if present:
+setBinding(new Binding([gradle: this]))
+evaluate(new File(settingsDir, '.../.android/include_flutter.groovy'))
+```
+
+#### 3.2 `android/build.gradle.kts` (root) — Kotlin version
+
+The host's Kotlin must **match** the version the AAR was built with (Flutter 3.4x → Kotlin 2.3.20). An older compiler can't read newer metadata (compatibility is forward-only).
+
+```kotlin
+buildscript {
+    extra["kotlinVersion"] = "2.3.20"
+    // ...
+    dependencies {
+        classpath("com.android.tools.build:gradle")
+        classpath("com.facebook.react:react-native-gradle-plugin")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.20")
+    }
+}
+```
+
+#### 3.3 `android/app/build.gradle.kts` — repositories and dependencies
+
+**Put the repositories at the app level, not in settings.** With `repositoriesMode = PREFER_PROJECT`, `:app` has its own project repos (added by the react plugin), so settings-level repos are ignored for it.
+
+```kotlin
+repositories {
+    google()
+    mavenCentral()
+    maven { url = uri("${rootProject.projectDir}/DataspikeModule/dataspike_module/dataspike_module/build/host/outputs/repo") }
+    maven { url = uri("https://storage.googleapis.com/download.flutter.io") }
+}
+
+dependencies {
+    // ...
+    debugImplementation("com.example.dataspike_module:flutter_debug:1.0")
+    releaseImplementation("com.example.dataspike_module:flutter_release:1.0")
+    // no profile: RN only has debug/release
+}
+```
+
+### Step 4 - Native Bridge 
+
+1. [DataspikeModule.kt](https://github.com/dataspike-io/MobileSDK-Flutter-React/blob/master/android/app/src/main/java/com/dataspikeexample/DataspikeModule.kt)
+2. [DataspikePackage.kt](https://github.com/dataspike-io/MobileSDK-Flutter-React/blob/master/android/app/src/main/java/com/dataspikeexample/DataspikePackage.kt)
+3. [Register in `MainApplication.kt`](https://github.com/dataspike-io/MobileSDK-Flutter-React/blob/master/android/app/src/main/java/com/dataspikeexample/MainApplication.kt)
+
+### Step 5 - Permissions (ANDROID)
+
+```kotlin
+<uses-permission android:name="android.permission.CAMERA"/>
+<uses-permission android:name="android.permission.INTERNET"/>
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+<uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+<uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+```
+
+### Step 6 - FlutterActivity (inside `<application>`)
+
+Without this, `startActivity(FlutterActivity…)` throws `ActivityNotFoundException` and the app crashes when the button is pressed.
+
+```xml
+<activity
+    android:name="io.flutter.embedding.android.FlutterActivity"
+    android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+    android:hardwareAccelerated="true"
+    android:windowSoftInputMode="adjustResize"
+    android:exported="false" />
+```
+
+### Step 7 - Calling from JS 
+
+```js
+import { NativeModules } from 'react-native';
+
+const { DataspikeModule } = NativeModules;
+const status = await DataspikeModule.startFlow(apiToken, shortId);
+// status comes from onVerificationCompleted
+```
+
+### Step 8 - Build and run
+
+```bash
+# 1) Metro in a separate terminal
+npx react-native start
+
+# 2) forward the port to the device
+adb reverse tcp:8081 tcp:8081
+
+# 3) build + install + launch
+npx react-native run-android
+```
+
+### Step 9 - Verification Statuses
+The onVerificationCompleted callback can return the following statuses: Completed, Expired, Failed
+
+
+### Maintenance (Android)
+
+- **Any change in the Flutter module (`dataspike_module` / `dataspikemobilesdk`) → rebuild the AAR with `flutter build aar`.** The host consumes the prebuilt artifact and won't pick up changes on its own.
+- After rebuilding the AAR, run `./gradlew --stop && ./gradlew clean` if you hit odd compile errors (corrupted incremental cache / stale compiler in the daemon).
+- Commit the submodule at the right revision so CI and other developers build the same module version.
+
+---
