@@ -159,17 +159,18 @@ class CameraAvatarViewModel extends ChangeNotifier {
         onProceed?.call();
       } else if (result is UploadImageErrorV2) {
         switch (result.code) {
-          case 5013: showErrorV2?.call(AvatarDetectionStatus.halfAttempts);
+          // showErrorV2?.call(AvatarDetectionStatus.halfAttempts); // 
+          case 5013: showErrorV2?.call(AvatarDetectionStatus.headwearIsOn); // 
           case 5012: // Chin is not visible
-          case 5011:
-          case 5010:
+          case 5011: // Forehead is not visible
+          case 5010: // BACK: Small resolution (Is it 5006 or not?)
           case 5009: // Too Blury
           case 5008: // Eyes Closed
-          case 5007: // 3d depth phase?
-          case 5006: // Small resolution? 
-          case 5005: // Disputed?
+          case 5007: // MY 3d depth phase? BACK: More faces
+          case 5006: // MY Small resolution? BACK: Small face 
+          case 5005: // Disputed
           case 5004: // Poor Ligtning
-          case 5003: // Move Closer?
+          case 5003: // Move Closer
           case 5002: // Spoofing
           case 5001: // Deepfake
           case 4001: // No face

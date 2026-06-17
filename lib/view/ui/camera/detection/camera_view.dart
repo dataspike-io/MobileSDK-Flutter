@@ -52,7 +52,6 @@ class _CameraViewState extends State<CameraView> {
   @override
   void initState() {
     super.initState();
-    
     _initialize();
   }
 
@@ -262,14 +261,50 @@ class _CameraViewState extends State<CameraView> {
 
   img.Image? _convertCameraImage(CameraImage image) {
     if (Platform.isAndroid) {
-      // NV21 → img.Image
-      return _convertYUV420(image);
+      return _convertYUV420Preview(image); 
     } else if (Platform.isIOS) {
-      // BGRA8888 → img.Image
       return _convertBGRA(image);
     }
+    
     return null;
+}
+
+img.Image _convertYUV420Preview(CameraImage image, {int step = 2}) {
+  final dstW = image.width ~/ step;
+  final dstH = image.height ~/ step;
+  final yPlane = image.planes[0].bytes;
+  final uPlane = image.planes[1].bytes;
+  final vPlane = image.planes[2].bytes;
+  final yRowStride = image.planes[0].bytesPerRow;
+  final uvRowStride = image.planes[1].bytesPerRow;
+  final uvPixelStride = image.planes[1].bytesPerPixel ?? 1;
+
+  final rgba = Uint8List(dstW * dstH * 4);
+  for (int dy = 0; dy < dstH; dy++) {
+    final sy = dy * step;
+    for (int dx = 0; dx < dstW; dx++) {
+      final sx = dx * step;
+      final yValue = yPlane[sy * yRowStride + sx] & 0xFF;
+      final uvIndex = (sy ~/ 2) * uvRowStride + (sx ~/ 2) * uvPixelStride;
+      final u = (uPlane[uvIndex] & 0xFF) - 128;
+      final v = (vPlane[uvIndex] & 0xFF) - 128;
+      final r = (yValue + 1.402 * v).clamp(0, 255).toInt();
+      final g = (yValue - 0.344136 * u - 0.714136 * v).clamp(0, 255).toInt();
+      final b = (yValue + 1.772 * u).clamp(0, 255).toInt();
+      final idx = (dy * dstW + dx) * 4;
+      rgba[idx] = r;
+      rgba[idx + 1] = g;
+      rgba[idx + 2] = b;
+      rgba[idx + 3] = 255;
+    }
   }
+
+  final rgbImage = img.Image.fromBytes(
+    width: dstW, height: dstH, bytes: rgba.buffer,
+    order: img.ChannelOrder.rgba,
+  );
+  return img.copyRotate(rgbImage, angle: -90);
+}
 
   Future<void> _triggerCapture(Size screenSize) async {
     final rawFrames = <CameraImage>[];
@@ -349,6 +384,7 @@ class _CameraViewState extends State<CameraView> {
     );
   }
 
+  // OLD DEPRECATED
   img.Image _convertYUV420(CameraImage image) {
     final width = image.width;
     final height = image.height;
@@ -358,20 +394,16 @@ class _CameraViewState extends State<CameraView> {
     final uvRowStride = image.planes[1].bytesPerRow;
     final uvPixelStride = image.planes[1].bytesPerPixel ?? 1;
 
-    // Create RGBA buffer directly
     final rgba = Uint8List(width * height * 4);
-
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
         final yValue = yPlane[y * image.planes[0].bytesPerRow + x] & 0xFF;
         final uvIndex = (y ~/ 2) * uvRowStride + (x ~/ 2) * uvPixelStride;
         final u = (uPlane[uvIndex] & 0xFF) - 128;
         final v = (vPlane[uvIndex] & 0xFF) - 128;
-
         final r = (yValue + 1.402 * v).clamp(0, 255).toInt();
         final g = (yValue - 0.344136 * u - 0.714136 * v).clamp(0, 255).toInt();
         final b = (yValue + 1.772 * u).clamp(0, 255).toInt();
-
         final idx = (y * width + x) * 4;
         rgba[idx] = r;
         rgba[idx + 1] = g;
@@ -386,7 +418,6 @@ class _CameraViewState extends State<CameraView> {
       bytes: rgba.buffer,
       order: img.ChannelOrder.rgba,
     );
-
     return img.copyRotate(rgbImage, angle: -90);
   }
 }

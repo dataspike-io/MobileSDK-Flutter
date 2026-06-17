@@ -1,3 +1,4 @@
 {
-    "workbench.editor.showTabs": "single"
+    "workbench.editor.showTabs": "single",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
