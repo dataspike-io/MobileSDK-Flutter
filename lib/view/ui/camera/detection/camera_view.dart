@@ -5,14 +5,12 @@ import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/avatar_instruction_pill.dart';
-// import 'package:dataspikemobilesdk/view/ui/continue_circle_button.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/face_oval_outside_clipper.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/default_face_corner_painter.dart';
-// import 'dart:async';
 import 'package:image/image.dart' as img;
-// import 'dart:ui';
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
 
 class CameraView extends StatefulWidget {
   const CameraView({
@@ -122,7 +120,6 @@ class _CameraViewState extends State<CameraView> {
                               fit: StackFit.expand,
                               children: [
                                 CameraPreview(_controller!),
-
                                 if (widget.customPaint != null)
                                   ClipPath(
                                     clipper: FaceOvalOutsideClipper(),
@@ -141,7 +138,6 @@ class _CameraViewState extends State<CameraView> {
                           ),
                         ),
                       ),
-
                       widget.customPaint != null
                           ? Transform.scale(
                               scale: coverScaleRation,
@@ -153,7 +149,6 @@ class _CameraViewState extends State<CameraView> {
                               ),
                             )
                           : CustomPaint(painter: DefaultFaceCornersPainter()),
-
                       if (widget.status.isVisible)
                         Positioned(
                           bottom: 30,
@@ -241,7 +236,7 @@ class _CameraViewState extends State<CameraView> {
 
     final now = DateTime.now();
     if (_lastFrameTime != null &&
-        now.difference(_lastFrameTime!) < const Duration(milliseconds: 1000)) {
+        now.difference(_lastFrameTime!) < const Duration(milliseconds: 900)) {
       return;
     }
     _lastFrameTime = now;
@@ -261,64 +256,157 @@ class _CameraViewState extends State<CameraView> {
 
   img.Image? _convertCameraImage(CameraImage image) {
     if (Platform.isAndroid) {
-      return _convertYUV420Preview(image); 
+      return _convertYUV420Preview(image);
     } else if (Platform.isIOS) {
       return _convertBGRA(image);
     }
-    
     return null;
-}
-
-img.Image _convertYUV420Preview(CameraImage image, {int step = 2}) {
-  final dstW = image.width ~/ step;
-  final dstH = image.height ~/ step;
-  final yPlane = image.planes[0].bytes;
-  final uPlane = image.planes[1].bytes;
-  final vPlane = image.planes[2].bytes;
-  final yRowStride = image.planes[0].bytesPerRow;
-  final uvRowStride = image.planes[1].bytesPerRow;
-  final uvPixelStride = image.planes[1].bytesPerPixel ?? 1;
-
-  final rgba = Uint8List(dstW * dstH * 4);
-  for (int dy = 0; dy < dstH; dy++) {
-    final sy = dy * step;
-    for (int dx = 0; dx < dstW; dx++) {
-      final sx = dx * step;
-      final yValue = yPlane[sy * yRowStride + sx] & 0xFF;
-      final uvIndex = (sy ~/ 2) * uvRowStride + (sx ~/ 2) * uvPixelStride;
-      final u = (uPlane[uvIndex] & 0xFF) - 128;
-      final v = (vPlane[uvIndex] & 0xFF) - 128;
-      final r = (yValue + 1.402 * v).clamp(0, 255).toInt();
-      final g = (yValue - 0.344136 * u - 0.714136 * v).clamp(0, 255).toInt();
-      final b = (yValue + 1.772 * u).clamp(0, 255).toInt();
-      final idx = (dy * dstW + dx) * 4;
-      rgba[idx] = r;
-      rgba[idx + 1] = g;
-      rgba[idx + 2] = b;
-      rgba[idx + 3] = 255;
-    }
   }
 
-  final rgbImage = img.Image.fromBytes(
-    width: dstW, height: dstH, bytes: rgba.buffer,
-    order: img.ChannelOrder.rgba,
-  );
-  return img.copyRotate(rgbImage, angle: -90);
-}
+  img.Image _convertYUV420Preview(CameraImage image, {int step = 2}) {
+    final dstW = image.width ~/ step;
+    final dstH = image.height ~/ step;
+    final yPlane = image.planes[0].bytes;
+    final uPlane = image.planes[1].bytes;
+    final vPlane = image.planes[2].bytes;
+    final yRowStride = image.planes[0].bytesPerRow;
+    final uvRowStride = image.planes[1].bytesPerRow;
+    final uvPixelStride = image.planes[1].bytesPerPixel ?? 1;
 
-  Future<void> _triggerCapture(Size screenSize) async {
-    final rawFrames = <CameraImage>[];
-    for (int i = 0; i < 4; i++) {
-      _captureCompleter = Completer<CameraImage>();
-      rawFrames.add(await _captureCompleter!.future);
-      _captureCompleter = null;
+    final rgba = Uint8List(dstW * dstH * 4);
+    for (int dy = 0; dy < dstH; dy++) {
+      final sy = dy * step;
+      for (int dx = 0; dx < dstW; dx++) {
+        final sx = dx * step;
+        final yValue = yPlane[sy * yRowStride + sx] & 0xFF;
+        final uvIndex = (sy ~/ 2) * uvRowStride + (sx ~/ 2) * uvPixelStride;
+        final u = (uPlane[uvIndex] & 0xFF) - 128;
+        final v = (vPlane[uvIndex] & 0xFF) - 128;
+        final r = (yValue + 1.402 * v).clamp(0, 255).toInt();
+        final g = (yValue - 0.344136 * u - 0.714136 * v).clamp(0, 255).toInt();
+        final b = (yValue + 1.772 * u).clamp(0, 255).toInt();
+        final idx = (dy * dstW + dx) * 4;
+        rgba[idx] = r;
+        rgba[idx + 1] = g;
+        rgba[idx + 2] = b;
+        rgba[idx + 3] = 255;
+      }
     }
 
-    final results = await Future.wait(
-      rawFrames.map((frame) => _captureFromStream(frame, screenSize)),
+    final rgbImage = img.Image.fromBytes(
+      width: dstW,
+      height: dstH,
+      bytes: rgba.buffer,
+      order: img.ChannelOrder.rgba,
     );
+    return img.copyRotate(rgbImage, angle: -90);
+  }
 
-    final bytesList = results.whereType<Uint8List>().toList();
+  img.Image _convertBGRA(CameraImage image, {int step = 2}) {
+    if (step == 1) {
+      return img.Image.fromBytes(
+        width: image.width,
+        height: image.height,
+        bytes: image.planes[0].bytes.buffer,
+        order: img.ChannelOrder.bgra,
+      );
+    }
+
+    final srcBytes = image.planes[0].bytes;
+    final srcRowBytes = image.planes[0].bytesPerRow;
+    final dstW = image.width ~/ step;
+    final dstH = image.height ~/ step;
+
+    final out = Uint8List(dstW * dstH * 4);
+    for (int dy = 0; dy < dstH; dy++) {
+      final srcRowOffset = (dy * step) * srcRowBytes;
+      for (int dx = 0; dx < dstW; dx++) {
+        final srcIdx = srcRowOffset + (dx * step) * 4;
+        final dstIdx = (dy * dstW + dx) * 4;
+        out[dstIdx] = srcBytes[srcIdx];
+        out[dstIdx + 1] = srcBytes[srcIdx + 1];
+        out[dstIdx + 2] = srcBytes[srcIdx + 2];
+        out[dstIdx + 3] = srcBytes[srcIdx + 3];
+      }
+    }
+
+    return img.Image.fromBytes(
+      width: dstW,
+      height: dstH,
+      bytes: out.buffer,
+      order: img.ChannelOrder.bgra,
+    );
+  }
+
+  Future<void> _triggerCapture(Size screenSize) async {
+    List<Uint8List> bytesList;
+
+    if (Platform.isIOS) {
+      final frames = <_RgbaFrameData>[];
+
+      for (int i = 0; i < 4; i++) {
+        _captureCompleter = Completer<CameraImage>();
+        final image = await _captureCompleter!.future;
+        _captureCompleter = null;
+
+        final completer = Completer<ui.Image>();
+        ui.decodeImageFromPixels(
+          image.planes[0].bytes,
+          image.width,
+          image.height,
+          ui.PixelFormat.bgra8888,
+          completer.complete,
+          rowBytes: image.planes[0].bytesPerRow,
+        );
+        final uiImage = await completer.future;
+        final byteData = await uiImage.toByteData(
+          format: ui.ImageByteFormat.rawRgba,
+        );
+        uiImage.dispose();
+
+        if (byteData != null) {
+          frames.add(
+            _RgbaFrameData(
+              rgbaBytes: byteData.buffer.asUint8List(),
+              width: image.width,
+              height: image.height,
+            ),
+          );
+        }
+      }
+
+      bytesList = await compute(
+        _encodeJpegBatchIsolate,
+        _JpegEncodeBatchPayload(frames: frames, quality: 90),
+      );
+    } else {
+      final frames = <_YuvFrameData>[];
+
+      for (int i = 0; i < 4; i++) {
+        _captureCompleter = Completer<CameraImage>();
+        final image = await _captureCompleter!.future;
+        _captureCompleter = null;
+
+        frames.add(
+          _YuvFrameData(
+            yPlane: image.planes[0].bytes,
+            uPlane: image.planes[1].bytes,
+            vPlane: image.planes[2].bytes,
+            width: image.width,
+            height: image.height,
+            yRowStride: image.planes[0].bytesPerRow,
+            uvRowStride: image.planes[1].bytesPerRow,
+            uvPixelStride: image.planes[1].bytesPerPixel ?? 1,
+          ),
+        );
+      }
+
+      bytesList = await compute(
+        _convertAndEncodeYuvBatchIsolate,
+        _YuvCaptureBatchPayload(frames: frames, quality: 80),
+      );
+    }
+
     if (bytesList.isEmpty) return;
 
     final renderBox =
@@ -333,91 +421,85 @@ img.Image _convertYUV420Preview(CameraImage image, {int step = 2}) {
       previewSize,
     );
   }
+}
 
-  Future<Uint8List?> _captureFromStream(
-    CameraImage image,
-    Size screenSize,
-  ) async {
-    if (Platform.isIOS) {
-      return _convertIOSFrameToJpeg(image);
-    } else {
-      final imgImage = _convertYUV420(image);
-      return Uint8List.fromList(img.encodeJpg(imgImage, quality: 100));
-    }
-  }
+class _RgbaFrameData {
+  final Uint8List rgbaBytes;
+  final int width, height;
+  _RgbaFrameData({
+    required this.rgbaBytes,
+    required this.width,
+    required this.height,
+  });
+}
 
-  Future<Uint8List?> _convertIOSFrameToJpeg(CameraImage image) async {
-    final completer = Completer<ui.Image>();
+class _JpegEncodeBatchPayload {
+  final List<_RgbaFrameData> frames;
+  final int quality;
+  _JpegEncodeBatchPayload({required this.frames, required this.quality});
+}
 
-    ui.decodeImageFromPixels(
-      image.planes[0].bytes,
-      image.width,
-      image.height,
-      ui.PixelFormat.bgra8888,
-      completer.complete,
-      rowBytes: image.planes[0].bytesPerRow,
-    );
-
-    final uiImage = await completer.future;
-    final byteData = await uiImage.toByteData(
-      format: ui.ImageByteFormat.rawRgba,
-    );
-    uiImage.dispose();
-    if (byteData == null) return null;
-
+List<Uint8List> _encodeJpegBatchIsolate(_JpegEncodeBatchPayload batch) {
+  return batch.frames.map((f) {
     final imgImage = img.Image.fromBytes(
-      width: image.width,
-      height: image.height,
-      bytes: byteData.buffer,
+      width: f.width,
+      height: f.height,
+      bytes: f.rgbaBytes.buffer,
       order: img.ChannelOrder.rgba,
     );
+    return Uint8List.fromList(img.encodeJpg(imgImage, quality: batch.quality));
+  }).toList();
+}
 
-    return Uint8List.fromList(img.encodeJpg(imgImage, quality: 100));
-  }
+class _YuvFrameData {
+  final Uint8List yPlane, uPlane, vPlane;
+  final int width, height, yRowStride, uvRowStride, uvPixelStride;
+  _YuvFrameData({
+    required this.yPlane,
+    required this.uPlane,
+    required this.vPlane,
+    required this.width,
+    required this.height,
+    required this.yRowStride,
+    required this.uvRowStride,
+    required this.uvPixelStride,
+  });
+}
 
-  img.Image _convertBGRA(CameraImage image) {
-    return img.Image.fromBytes(
-      width: image.width,
-      height: image.height,
-      bytes: image.planes[0].bytes.buffer,
-      order: img.ChannelOrder.bgra,
-    );
-  }
+class _YuvCaptureBatchPayload {
+  final List<_YuvFrameData> frames;
+  final int quality;
+  _YuvCaptureBatchPayload({required this.frames, required this.quality});
+}
 
-  // OLD DEPRECATED
-  img.Image _convertYUV420(CameraImage image) {
-    final width = image.width;
-    final height = image.height;
-    final yPlane = image.planes[0].bytes;
-    final uPlane = image.planes[1].bytes;
-    final vPlane = image.planes[2].bytes;
-    final uvRowStride = image.planes[1].bytesPerRow;
-    final uvPixelStride = image.planes[1].bytesPerPixel ?? 1;
-
-    final rgba = Uint8List(width * height * 4);
-    for (int y = 0; y < height; y++) {
-      for (int x = 0; x < width; x++) {
-        final yValue = yPlane[y * image.planes[0].bytesPerRow + x] & 0xFF;
-        final uvIndex = (y ~/ 2) * uvRowStride + (x ~/ 2) * uvPixelStride;
-        final u = (uPlane[uvIndex] & 0xFF) - 128;
-        final v = (vPlane[uvIndex] & 0xFF) - 128;
+List<Uint8List> _convertAndEncodeYuvBatchIsolate(
+  _YuvCaptureBatchPayload batch,
+) {
+  return batch.frames.map((p) {
+    final rgba = Uint8List(p.width * p.height * 4);
+    for (int y = 0; y < p.height; y++) {
+      for (int x = 0; x < p.width; x++) {
+        final yValue = p.yPlane[y * p.yRowStride + x] & 0xFF;
+        final uvIndex = (y ~/ 2) * p.uvRowStride + (x ~/ 2) * p.uvPixelStride;
+        final u = (p.uPlane[uvIndex] & 0xFF) - 128;
+        final v = (p.vPlane[uvIndex] & 0xFF) - 128;
         final r = (yValue + 1.402 * v).clamp(0, 255).toInt();
         final g = (yValue - 0.344136 * u - 0.714136 * v).clamp(0, 255).toInt();
         final b = (yValue + 1.772 * u).clamp(0, 255).toInt();
-        final idx = (y * width + x) * 4;
+        final idx = (y * p.width + x) * 4;
         rgba[idx] = r;
         rgba[idx + 1] = g;
         rgba[idx + 2] = b;
         rgba[idx + 3] = 255;
       }
     }
-
     final rgbImage = img.Image.fromBytes(
-      width: width,
-      height: height,
+      width: p.width,
+      height: p.height,
       bytes: rgba.buffer,
       order: img.ChannelOrder.rgba,
     );
-    return img.copyRotate(rgbImage, angle: -90);
-  }
+    final rotated = img.copyRotate(rgbImage, angle: -90);
+    return Uint8List.fromList(img.encodeJpg(rotated, quality: batch.quality));
+  }).toList();
 }

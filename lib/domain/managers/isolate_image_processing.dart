@@ -185,3 +185,13 @@ Future<Uint8List> processAvatarShotInIsolate(AvatarCropParams p) async {
   final out = img.encodeJpg(cropped, quality: 100);
   return Uint8List.fromList(out);
 }
+
+Future<List<Uint8List>> processAvatarShotBatchInIsolate(
+  List<AvatarCropParams> paramsList,
+) async {
+  final results = <Uint8List>[];
+  for (final params in paramsList) {
+    results.add(await processAvatarShotInIsolate(params));
+  }
+  return results;
+}

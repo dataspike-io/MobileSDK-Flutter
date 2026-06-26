@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/data/use_cases/uploading_image_use_case.dart';
 import 'package:flutter/services.dart';
-import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart';
 import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
 import 'package:flutter/foundation.dart';
 import 'package:dataspikemobilesdk/view/ui/error/error_image_bottom_sheet.dart';
@@ -47,69 +46,6 @@ class CameraAvatarViewModel extends ChangeNotifier {
 
   Future<void> _setup() async {}
 
-  // Future<void> shootAndCrop(
-  //   Uint8List imageBytes,
-  //   Size previewKeySize,
-  //   Size screenSize,
-  //   Size previewSize,
-  // ) async {
-  //   showLoader?.call();
-  //   notifyListeners();
-
-  //   try {
-  //     final containerW = previewKeySize.width;
-  //     final containerH = previewKeySize.height;
-
-  //     final ps = previewSize;
-  //     final previewW = ps.width;
-  //     final previewH = ps.height;
-
-  //     final processed = await compute<AvatarCropParams, Uint8List>(
-  //       processAvatarShotInIsolate,
-  //       AvatarCropParams(
-  //         imageBytes: imageBytes,
-  //         containerW: containerW,
-  //         containerH: containerH,
-  //         previewW: previewW,
-  //         previewH: previewH,
-  //         sideInsetPct: CameraConstants.avatarSideInsetPct,
-  //         topApexPct: CameraConstants.avatarTopApexPct,
-  //         bottomApexFromBottomPct:
-  //             CameraConstants.avatarBottomApexFromBottomPct,
-  //         strokeWidth: CameraConstants.avatarStrokeWidth,
-  //       ),
-  //     );
-
-  //     final result = await _setUseCase.uploadImage(
-  //       documentType: 'liveness_photo',
-  //       imageBytes: processed,
-  //       ext: 'jpg',
-  //       fileName: 'selfie.jpg',
-  //     );
-
-  //     hideLoader?.call();
-  //     notifyListeners();
-
-  //     if (result is UploadImageSuccess) {
-  //       onProceed?.call();
-  //     } else if (result is UploadImageError) {
-  //       showError?.call(result.title, result.message, result.withInstruction);
-  //     }
-  //   } on NoInternetException {
-  //     hideLoader?.call();
-  //     notifyListeners();
-  //     showCommonError?.call(ErrorImageBottomSheetType.noInternet);
-  //   } catch (e) {
-  //     hideLoader?.call();
-  //     notifyListeners();
-  //     showError?.call(
-  //       'Processing error',
-  //       'Failed to process the image.',
-  //       false,
-  //     );
-  //   }
-  // }
-
   Future<void> shootAndCropV2(
     List<Uint8List> imageBytesList,
     Size previewKeySize,
@@ -119,39 +55,41 @@ class CameraAvatarViewModel extends ChangeNotifier {
     try {
       final containerW = previewKeySize.width;
       final containerH = previewKeySize.height;
+      final previewW = previewSize.width;
+      final previewH = previewSize.height;
 
-      final ps = previewSize;
-      final previewW = ps.width;
-      final previewH = ps.height;
+      final paramsList = imageBytesList
+          .map(
+            (bytes) => AvatarCropParams(
+              imageBytes: bytes,
+              containerW: containerW,
+              containerH: containerH,
+              previewW: previewW,
+              previewH: previewH,
+              sideInsetPct: CameraConstants.avatarSideInsetPct,
+              topApexPct: CameraConstants.avatarTopApexPct,
+              bottomApexFromBottomPct:
+                  CameraConstants.avatarBottomApexFromBottomPct,
+              strokeWidth: CameraConstants.avatarStrokeWidth,
+            ),
+          )
+          .toList();
 
-      final frames = <LivenessBatchFrame>[];
+      final processedList =
+          await compute<List<AvatarCropParams>, List<Uint8List>>(
+            processAvatarShotBatchInIsolate,
+            paramsList,
+          );
 
-      for (int i = 0; i < imageBytesList.length; i++) {
-        final processed = await compute<AvatarCropParams, Uint8List>(
-          processAvatarShotInIsolate,
-          AvatarCropParams(
-            imageBytes: imageBytesList[i],
-            containerW: containerW,
-            containerH: containerH,
-            previewW: previewW,
-            previewH: previewH,
-            sideInsetPct: CameraConstants.avatarSideInsetPct,
-            topApexPct: CameraConstants.avatarTopApexPct,
-            bottomApexFromBottomPct:
-                CameraConstants.avatarBottomApexFromBottomPct,
-            strokeWidth: CameraConstants.avatarStrokeWidth,
-          ),
-        );
-
-        frames.add(
+      final frames = <LivenessBatchFrame>[
+        for (int i = 0; i < processedList.length; i++)
           LivenessBatchFrame(
             frameId: 'frame_$i',
-            fileBytes: processed,
+            fileBytes: processedList[i],
             ext: 'jpg',
             fileName: 'selfie_$i.jpg',
           ),
-        );
-      }
+      ];
 
       final result = await _setUseCase.uploadImageV2(frames: frames);
 
@@ -159,15 +97,15 @@ class CameraAvatarViewModel extends ChangeNotifier {
         onProceed?.call();
       } else if (result is UploadImageErrorV2) {
         switch (result.code) {
-          // showErrorV2?.call(AvatarDetectionStatus.halfAttempts); // 
-          case 5013: showErrorV2?.call(AvatarDetectionStatus.headwearIsOn); // 
+          // showErrorV2?.call(AvatarDetectionStatus.halfAttempts); //
+          case 5013: showErrorV2?.call(AvatarDetectionStatus.headwearIsOn); //
           case 5012: // Chin is not visible
           case 5011: // Forehead is not visible
           case 5010: // BACK: Small resolution (Is it 5006 or not?)
           case 5009: // Too Blury
           case 5008: // Eyes Closed
           case 5007: // MY 3d depth phase? BACK: More faces
-          case 5006: // MY Small resolution? BACK: Small face 
+          case 5006: // MY Small resolution? BACK: Small face
           case 5005: // Disputed
           case 5004: // Poor Ligtning
           case 5003: // Move Closer

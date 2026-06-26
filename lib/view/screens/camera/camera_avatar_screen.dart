@@ -91,7 +91,9 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
         message: message,
         instruction: withInstruction ? InstructionType.liveness : null,
       ),
-    );
+    ).then((_) => { 
+      _faceDetectorKey.currentState?.removeStatus()
+    });
   }
 
   void showErrorV2(AvatarDetectionStatus? status) {
@@ -100,7 +102,7 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
     if (status != null) {
       _faceDetectorKey.currentState?.setExternalError(status);
     } else {
-       _faceDetectorKey.currentState?.removeStatus();
+      _faceDetectorKey.currentState?.removeStatus();
     }
   }
 
@@ -120,7 +122,9 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
           Navigator.of(context, rootNavigator: true).pop();
         },
       ),
-    );
+    ).then((_) => { 
+      _faceDetectorKey.currentState?.removeStatus()
+    });
   }
 
   @override
