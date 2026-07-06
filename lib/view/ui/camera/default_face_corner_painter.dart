@@ -8,12 +8,14 @@ class DefaultFaceCornersPainter extends CustomPainter {
     this.cornerLength = 85.0,
     this.strokeWidth = 5.0,
     this.borderRadius = 46.0,
+    this.countdownValue,
   });
 
   final Color color;
   final double cornerLength;
   final double strokeWidth;
   final double borderRadius;
+  final int? countdownValue;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -63,6 +65,26 @@ class DefaultFaceCornersPainter extends CustomPainter {
       dx: -1, dy: -1,
       r: r, cl: cl,
     );
+
+    if (countdownValue != null) {
+      final center = Offset((leftX + rightX) / 2, (topY + bottomY) / 2);
+      final tp = TextPainter(
+        text: TextSpan(
+          text: '$countdownValue',
+          style: const TextStyle(
+            color: AppColors.white,
+            fontSize: 96,
+            fontWeight: FontWeight.w700,
+            shadows: [
+              Shadow(color: Colors.black54, blurRadius: 12, offset: Offset(0, 2)),
+            ],
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      tp.paint(canvas, center - Offset(tp.width / 2, tp.height / 2));
+    }
   }
 
   void _drawCorner(
@@ -93,5 +115,6 @@ class DefaultFaceCornersPainter extends CustomPainter {
       color != old.color ||
       cornerLength != old.cornerLength ||
       strokeWidth != old.strokeWidth ||
-      borderRadius != old.borderRadius;
+      borderRadius != old.borderRadius ||
+      countdownValue != old.countdownValue;
 }

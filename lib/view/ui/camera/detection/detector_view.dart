@@ -12,6 +12,7 @@ class DetectorView extends StatefulWidget {
     required this.status,
     this.customPaint,
     this.onCameraFeedReady,
+    this.onTimerReady,
   });
 
   final CustomPaint? customPaint;
@@ -23,6 +24,7 @@ class DetectorView extends StatefulWidget {
     Size previewSize
   ) onShootCallback;
   final Function()? onCameraFeedReady;
+  final Function()? onTimerReady;
   final AvatarDetectionStatus status;
 
   @override
@@ -42,6 +44,7 @@ class _DetectorViewState extends State<DetectorView> {
       onImage: widget.onImage,
       onCameraFeedReady: widget.onCameraFeedReady,
       onShootCallback: widget.onShootCallback,
+      onTimerReady: widget.onTimerReady,
       status: widget.status,
     );
   }

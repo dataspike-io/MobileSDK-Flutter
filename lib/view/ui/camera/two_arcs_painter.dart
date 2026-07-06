@@ -7,26 +7,22 @@ class TwoArcsPainter extends CustomPainter {
   const TwoArcsPainter({
     this.color = AppColors.white,
     this.highlightColor = AppColors.lightRed,
-    this.secondaryHighlightColor = AppColors.royalPurple,
     this.topRisePx = 110,
     this.bottomRisePx = 110,
     this.ctrlXpx = 60,
     this.isTopArcHighlighted = false,
     this.isBottomArcHighlighted = false,
-    this.isShownSecondaryArcLayer = false,
     this.isArrowsEnabled = false,
   });
 
   final Color color;
   final Color highlightColor;
-  final Color secondaryHighlightColor;
 
   final double topRisePx;
   final double bottomRisePx;
   final double ctrlXpx;
   final bool isTopArcHighlighted;
   final bool isBottomArcHighlighted;
-  final bool isShownSecondaryArcLayer;
   final bool isArrowsEnabled;
 
   Offset _bezierPoint(List<Offset> p, double t) {
@@ -124,71 +120,6 @@ class TwoArcsPainter extends CustomPainter {
     canvas.drawPath(topPath, topPaintLine);
     canvas.drawPath(bottomPath, bottomPaintLine);
 
-    if (isShownSecondaryArcLayer) {
-      final inset = 30.0;
-      final sLeftX = leftX + inset;
-      final sRightX = rightX - inset;
-      final sMidX = (sLeftX + sRightX) / 2;
-      final sTopApexY = topApexY + inset;
-      final sBottomApexY = bottomApexY - inset;
-
-      final sWidth = sRightX - sLeftX;
-      final origWidth = rightX - leftX;
-      final sCtrlXpx = ctrlXpx * (sWidth / origWidth);
-
-      final sTopRise = topRise * 1.15; 
-      final sBottomRise = bottomRise * 1.15;
-
-      final sTopLineY = topApexY + sTopRise;
-      final sBottomLineY = bottomApexY - sBottomRise;
-
-      final sTopPath = Path()
-        ..moveTo(sLeftX, sTopLineY)
-        ..cubicTo(
-          sLeftX,
-          sTopLineY - sTopRise * 0.6,
-          sMidX - sCtrlXpx,
-          sTopApexY,
-          sMidX,
-          sTopApexY,
-        )
-        ..cubicTo(
-          sMidX + sCtrlXpx,
-          sTopApexY,
-          sRightX,
-          sTopLineY - sTopRise * 0.6,
-          sRightX,
-          sTopLineY,
-        );
-
-      final sBottomPath = Path()
-        ..moveTo(sRightX, sBottomLineY)
-        ..cubicTo(
-          sRightX,
-          sBottomLineY + sBottomRise * 0.6,
-          sMidX + sCtrlXpx,
-          sBottomApexY,
-          sMidX,
-          sBottomApexY,
-        )
-        ..cubicTo(
-          sMidX - sCtrlXpx,
-          sBottomApexY,
-          sLeftX,
-          sBottomLineY + sBottomRise * 0.6,
-          sLeftX,
-          sBottomLineY,
-        );
-      final secondaryPaint = Paint()
-        ..color = secondaryHighlightColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = CameraConstants.avatarStrokeWidth
-        ..strokeCap = StrokeCap.round;
-
-      canvas.drawPath(sTopPath, secondaryPaint);
-      canvas.drawPath(sBottomPath, secondaryPaint);
-    }
-
     if (isArrowsEnabled) {
       const arrowSize = 14.0;
       final arrowPaint = Paint()
@@ -263,6 +194,5 @@ class TwoArcsPainter extends CustomPainter {
       bottomRisePx != old.bottomRisePx ||
       ctrlXpx != old.ctrlXpx ||
       isTopArcHighlighted != old.isTopArcHighlighted ||
-      isBottomArcHighlighted != old.isBottomArcHighlighted ||
-      isShownSecondaryArcLayer != old.isShownSecondaryArcLayer;
+      isBottomArcHighlighted != old.isBottomArcHighlighted;
 }

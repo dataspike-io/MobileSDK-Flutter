@@ -15,6 +15,7 @@ enum AvatarDetectionStatus {
   chinIsNotVisible,
   foreheadisNotVidible,
 
+  initialTimer,
   undetected,
   notStarted,
 
@@ -27,7 +28,7 @@ enum AvatarDetectionStatus {
   String get title {
     switch (this) {
       case AvatarDetectionStatus.ok:
-        return 'Hold on!';
+        return 'Please remain still';
       case AvatarDetectionStatus.tooHigh:
         return 'Tilt your face downward.';
       case AvatarDetectionStatus.tooLow:
@@ -57,6 +58,8 @@ enum AvatarDetectionStatus {
       case AvatarDetectionStatus.headwearIsOn:
         return 'Headwear or glasses detected.';
       case AvatarDetectionStatus.undetected:
+      case AvatarDetectionStatus.initialTimer:
+        return 'Align your face with the contour';
       case AvatarDetectionStatus.notStarted:
         return '';
     }
@@ -65,7 +68,6 @@ enum AvatarDetectionStatus {
   bool get isVisible {
     switch (this) {
       case AvatarDetectionStatus.notStarted:
-      case AvatarDetectionStatus.undetected:
         return false;
       default:
         return true;
@@ -87,6 +89,7 @@ enum AvatarDetectionStatus {
       case AvatarDetectionStatus.tooLow:
         return AppColors.lightRed;
       case AvatarDetectionStatus.success:
+      case AvatarDetectionStatus.ok:
         return AppColors.successGreen;
       default:
         return AppColors.white;
@@ -104,8 +107,6 @@ enum AvatarDetectionStatus {
 
   String? get subtitle {
     switch (this) {
-      case AvatarDetectionStatus.ok:
-        return 'Please, wait 5 seconds to help us check';
       case AvatarDetectionStatus.tooHigh:
       case AvatarDetectionStatus.foreheadisNotVidible:
         return 'Tilt your face downward.';
@@ -132,6 +133,8 @@ enum AvatarDetectionStatus {
         return 'Please remove them and try again';
       case AvatarDetectionStatus.notStarted:
       case AvatarDetectionStatus.undetected:
+      case AvatarDetectionStatus.initialTimer:
+      case AvatarDetectionStatus.ok:
       case AvatarDetectionStatus.success:
         return null;
     }
@@ -144,6 +147,37 @@ enum AvatarDetectionStatus {
         return 'Try again';
       default:
         return null;
+    }
+  }
+
+  bool get isTopArcHighlighted {
+    switch (this) {
+      case AvatarDetectionStatus.tooHigh:
+      case AvatarDetectionStatus.ok:
+      case AvatarDetectionStatus.success:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  bool get isBottomArcHighlighted {
+    switch (this) {
+      case AvatarDetectionStatus.tooLow:
+      case AvatarDetectionStatus.ok:
+      case AvatarDetectionStatus.success:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  bool get isArrowsEnabled {
+    switch (this) {
+      case AvatarDetectionStatus.tooFar:
+        return true;
+      default:
+        return false;
     }
   }
 
@@ -181,6 +215,7 @@ enum AvatarDetectionStatus {
       case AvatarDetectionStatus.success:
       case AvatarDetectionStatus.ok:
       case AvatarDetectionStatus.halfAttempts:
+      case AvatarDetectionStatus.initialTimer:
         return true;
       default:
         return false;

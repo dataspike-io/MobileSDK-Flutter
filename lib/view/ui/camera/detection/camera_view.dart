@@ -20,6 +20,7 @@ class CameraView extends StatefulWidget {
     required this.onShootCallback,
     required this.status,
     this.onCameraFeedReady,
+    this.onTimerReady,
   });
 
   final CustomPaint? customPaint;
@@ -32,6 +33,7 @@ class CameraView extends StatefulWidget {
   )
   onShootCallback;
   final VoidCallback? onCameraFeedReady;
+  final VoidCallback? onTimerReady;
   final AvatarDetectionStatus status;
 
   @override
@@ -47,10 +49,16 @@ class _CameraViewState extends State<CameraView> {
   DateTime? _lastFrameTime;
   Completer<CameraImage>? _captureCompleter;
 
+  Timer? _countdownTimer;
+  int _countdownValue = 5;
+
   @override
   void initState() {
     super.initState();
     _initialize();
+    if (widget.status == AvatarDetectionStatus.initialTimer) {
+      _startCountdown();
+    }
   }
 
   void _initialize() async {
@@ -70,6 +78,7 @@ class _CameraViewState extends State<CameraView> {
 
   @override
   void dispose() {
+    _cancelCountdown();
     _stopLiveFeed();
     super.dispose();
   }
@@ -148,7 +157,15 @@ class _CameraViewState extends State<CameraView> {
                                 ),
                               ),
                             )
-                          : CustomPaint(painter: DefaultFaceCornersPainter()),
+                          : CustomPaint(
+                              painter: DefaultFaceCornersPainter(
+                                countdownValue:
+                                    widget.status ==
+                                        AvatarDetectionStatus.initialTimer
+                                    ? _countdownValue
+                                    : null,
+                              ),
+                            ),
                       if (widget.status.isVisible)
                         Positioned(
                           bottom: 30,
@@ -217,6 +234,38 @@ class _CameraViewState extends State<CameraView> {
         oldWidget.status != AvatarDetectionStatus.ok) {
       _triggerCapture(MediaQuery.of(context).size);
     }
+
+    if (widget.status == AvatarDetectionStatus.initialTimer &&
+        oldWidget.status != AvatarDetectionStatus.initialTimer) {
+      _startCountdown();
+    } else if (widget.status != AvatarDetectionStatus.initialTimer &&
+        oldWidget.status == AvatarDetectionStatus.initialTimer) {
+      _cancelCountdown();
+    }
+  }
+
+  void _startCountdown() {
+    _countdownTimer?.cancel();
+    _countdownValue = 5;
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() => _countdownValue--);
+      if (_countdownValue <= 0) {
+        timer.cancel();
+        _countdownTimer = null;
+        if (widget.onTimerReady != null) {
+          widget.onTimerReady!();
+        }
+      }
+    });
+  }
+
+  void _cancelCountdown() {
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
   }
 
   Future _stopLiveFeed() async {

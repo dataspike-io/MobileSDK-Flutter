@@ -39,41 +39,16 @@ class _LivenessInstructionScreenState extends State<LivenessInstructionScreen> {
                     mainAxisAlignment: MainAxisAlignment.center, 
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        'Check this before we continue',
-                        maxLines: 2,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppColors.black,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'FunnelDisplay',
-                          package: 'dataspikemobilesdk',
-                        ),
-                      ),
-                      const SizedBox(height: 32.0),
+                      const SizedBox(height: 20.0),
                       Lottie.asset(
                         'packages/dataspikemobilesdk/assets/animations/liveness-check-animation.json',
-                        width: 150,
-                        height: 150,
+                        width: 250,
+                        height: 250,
                         fit: BoxFit.fill,
                       ),
                       const SizedBox(height: 20.0),
                       Text(
-                        'Place your entire face\ninside mask',
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        style: TextStyle(
-                          color: AppColors.black,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Figtree',
-                          package: 'dataspikemobilesdk',
-                        ),
-                      ),
-                      const SizedBox(height: 41.0),
-                      Text(
-                        'Turn smartphone display brightness high',
+                        'Turn device display brightness high',
                         maxLines: 2,
                         style: TextStyle(
                           color: AppColors.black,
