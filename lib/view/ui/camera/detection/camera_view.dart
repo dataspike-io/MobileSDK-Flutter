@@ -52,6 +52,9 @@ class _CameraViewState extends State<CameraView> {
   Timer? _countdownTimer;
   int _countdownValue = 5;
 
+  Timer? _successDotsTimer;
+  bool _showSuccessDots = false;
+
   @override
   void initState() {
     super.initState();
@@ -79,6 +82,7 @@ class _CameraViewState extends State<CameraView> {
   @override
   void dispose() {
     _cancelCountdown();
+    _successDotsTimer?.cancel();
     _stopLiveFeed();
     super.dispose();
   }
@@ -166,28 +170,32 @@ class _CameraViewState extends State<CameraView> {
                                     : null,
                               ),
                             ),
-                      if (widget.status.isVisible)
+                      if (widget.status.isVisible || _showSuccessDots)
                         Positioned(
                           bottom: 30,
                           left: 0,
                           right: 0,
                           child: Center(
-                            child: AvatarInstructionPill(
-                              status: widget.status,
-                              firstAction: () {
-                                if (widget.status.isButtonEnabled) {
-                                  Navigator.of(context).pop();
-                                }
-                              },
-                              secondAction: () {
-                                if (widget.status.isAdditionalButtonEnabled) {
-                                  Navigator.of(
-                                    context,
-                                    rootNavigator: true,
-                                  ).pop();
-                                }
-                              },
-                            ),
+                            child: _showSuccessDots
+                                ? const _SuccessDotsLoader()
+                                : AvatarInstructionPill(
+                                    status: widget.status,
+                                    firstAction: () {
+                                      if (widget.status.isButtonEnabled) {
+                                        Navigator.of(context).pop();
+                                      }
+                                    },
+                                    secondAction: () {
+                                      if (widget
+                                          .status
+                                          .isAdditionalButtonEnabled) {
+                                        Navigator.of(
+                                          context,
+                                          rootNavigator: true,
+                                        ).pop();
+                                      }
+                                    },
+                                  ),
                           ),
                         ),
                     ],
@@ -233,6 +241,13 @@ class _CameraViewState extends State<CameraView> {
     if (widget.status == AvatarDetectionStatus.ok &&
         oldWidget.status != AvatarDetectionStatus.ok) {
       _triggerCapture(MediaQuery.of(context).size);
+      _startSuccessDotsTimer();
+    } else if (widget.status != AvatarDetectionStatus.ok &&
+        oldWidget.status == AvatarDetectionStatus.ok) {
+      _successDotsTimer?.cancel();
+      if (_showSuccessDots) {
+        setState(() => _showSuccessDots = false);
+      }
     }
 
     if (widget.status == AvatarDetectionStatus.initialTimer &&
@@ -242,6 +257,14 @@ class _CameraViewState extends State<CameraView> {
         oldWidget.status == AvatarDetectionStatus.initialTimer) {
       _cancelCountdown();
     }
+  }
+
+  void _startSuccessDotsTimer() {
+    _successDotsTimer?.cancel();
+    _successDotsTimer = Timer(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      setState(() => _showSuccessDots = true);
+    });
   }
 
   void _startCountdown() {
@@ -468,6 +491,72 @@ class _CameraViewState extends State<CameraView> {
       previewKeySize,
       screenSize,
       previewSize,
+    );
+  }
+}
+
+class _SuccessDotsLoader extends StatefulWidget {
+  const _SuccessDotsLoader();
+
+  @override
+  State<_SuccessDotsLoader> createState() => _SuccessDotsLoaderState();
+}
+
+class _SuccessDotsLoaderState extends State<_SuccessDotsLoader>
+    with TickerProviderStateMixin {
+  static const _dotCount = 3;
+  static const _pulseDuration = Duration(milliseconds: 500);
+  static const _stagger = Duration(milliseconds: 200);
+
+  late final List<AnimationController> _controllers;
+  late final List<Animation<double>> _fades;
+
+  @override
+  void initState() {
+    super.initState();
+    _controllers = List.generate(
+      _dotCount,
+      (_) => AnimationController(vsync: this, duration: _pulseDuration),
+    );
+    _fades = _controllers
+        .map((c) => CurvedAnimation(parent: c, curve: Curves.easeInOut))
+        .toList();
+
+    for (var i = 0; i < _dotCount; i++) {
+      Future.delayed(_stagger * i, () {
+        if (mounted) _controllers[i].repeat(reverse: true);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _controllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(_dotCount, (i) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: FadeTransition(
+            opacity: _fades[i],
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        );
+      }),
     );
   }
 }
