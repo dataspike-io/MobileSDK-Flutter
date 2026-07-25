@@ -10,6 +10,7 @@ class UploadImageSuccess extends UploadImageState {
   final bool detectedTwoSideDocument;
   final String detectedCountry;
   final List<DataspikeErrorDomainModel> errors;
+  final bool? limitReached;
 
   UploadImageSuccess({
     required this.documentId,
@@ -18,6 +19,7 @@ class UploadImageSuccess extends UploadImageState {
     required this.detectedTwoSideDocument,
     required this.detectedCountry,
     required this.errors,
+    required this.limitReached
   });
 
     bool get isFront => detectedDocumentSide == DocumentSide.front;

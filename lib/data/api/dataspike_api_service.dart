@@ -26,6 +26,7 @@ abstract class IDataspikeApiService {
   Future<UploadImageResponse> uploadImage(
     String shortId,
     String documentType,
+    String? side,
     List<int> fileBytes,
     String ext,
     String fileName,
@@ -91,6 +92,7 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
   Future<UploadImageResponse> uploadImage(
     String shortId,
     String documentType,
+    String? side,
     List<int> fileBytes,
     String ext,
     String fileName,
@@ -100,9 +102,12 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     );
     final headers = DataspikeEndpoint.uploadImage.headers(apiToken);
 
-    var request = http.MultipartRequest('POST', url)
+    final request = http.MultipartRequest('POST', url)
       ..headers.addAll(headers)
-      ..fields['document_type'] = documentType;
+      ..fields.addAll({
+        'document_type': documentType,
+        if (side != null) 'side': side,
+      });
 
     if (fileBytes.isNotEmpty) {
       request.files.add(

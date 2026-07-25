@@ -13,12 +13,14 @@ class UploadImageUseCase {
 
   Future<UploadImageState> uploadImage({
     required String documentType,
+    String? side,
     required List<int> imageBytes,
     required String ext,
     required String fileName,
   }) async {
     return await dataspikeRepository.uploadImage(
       documentType: documentType,
+      side: side,
       imageBytes: imageBytes,
       ext: ext,
       fileName: fileName,

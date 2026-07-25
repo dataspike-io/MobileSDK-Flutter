@@ -12,4 +12,9 @@ enum DocumentSide {
         return DocumentSide.front;
     }
   }
+
+  String toRaw() => switch (this) {
+    front => 'front',
+    back => 'back',
+  };
 }

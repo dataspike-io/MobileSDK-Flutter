@@ -7,6 +7,7 @@ class UploadImageResponse {
   final bool? detectedTwoSideDocument;
   final String? detectedCountry;
   final List<DataspikeErrorResponse>? errors;
+  final bool? limitReached;
 
   UploadImageResponse({
     this.documentId,
@@ -15,6 +16,7 @@ class UploadImageResponse {
     this.detectedTwoSideDocument,
     this.detectedCountry,
     this.errors,
+    this.limitReached
   });
 
   factory UploadImageResponse.fromJson(Map<String, dynamic> json) =>
@@ -27,5 +29,6 @@ class UploadImageResponse {
         errors: (json['errors'] as List<dynamic>?)
             ?.map((e) => DataspikeErrorResponse.fromJson(e as Map<String, dynamic>))
             .toList(),
+        limitReached: json['limit_reached'] as bool?,
       );
 }

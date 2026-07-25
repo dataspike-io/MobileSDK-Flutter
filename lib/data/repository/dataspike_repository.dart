@@ -27,6 +27,7 @@ abstract class IDataspikeRepository {
   Future<VerificationState> getVerification({required bool darkModeIsEnabled});
   Future<UploadImageState> uploadImage({
     required String documentType,
+    String? side,
     required List<int> imageBytes,
     required String ext,
     required String fileName,
@@ -98,6 +99,7 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
   @override
   Future<UploadImageState> uploadImage({
     required String documentType,
+    String? side,
     required List<int> imageBytes,
     required String ext,
     required String fileName,
@@ -106,12 +108,15 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
       final response = await apiService.uploadImage(
         shortId,
         documentType,
+        side,
         imageBytes,
         ext,
         fileName,
       );
       return uploadImageResponseMapper.map(response: response, error: null);
     } on UploadImageErrorResponse catch (e) {
+      return uploadImageResponseMapper.map(response: null, error: e);
+    } on UploadImageErrorResponseV2 catch (e) {
       return uploadImageResponseMapper.map(response: null, error: e);
     } on NoInternetException {
       rethrow;
@@ -153,6 +158,8 @@ class DataspikeRepositoryImpl implements IDataspikeRepository {
       final response = await apiService.uploadDocument(shortId, body);
       return uploadImageResponseMapper.map(response: response, error: null);
     } on UploadImageErrorResponse catch (e) {
+      return uploadImageResponseMapper.map(response: null, error: e);
+    } on UploadImageErrorResponseV2 catch (e) {
       return uploadImageResponseMapper.map(response: null, error: e);
     } on NoInternetException {
       rethrow;
