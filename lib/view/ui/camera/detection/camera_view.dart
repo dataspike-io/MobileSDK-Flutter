@@ -8,6 +8,7 @@ import 'package:dataspikemobilesdk/view/ui/camera/avatar_instruction_pill.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/face_oval_outside_clipper.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/default_face_corner_painter.dart';
+import 'package:dataspikemobilesdk/face_detector/models/camera_frame_input.dart';
 import 'package:image/image.dart' as img;
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
@@ -24,7 +25,7 @@ class CameraView extends StatefulWidget {
   });
 
   final CustomPaint? customPaint;
-  final Function(img.Image inputImage, double cropRatio) onImage;
+  final Function(CameraFrameInput frame, double cropRatio) onImage;
   final Future<void> Function(
     List<Uint8List> imageBytesList,
     Size previewKeySize,
@@ -315,99 +316,44 @@ class _CameraViewState extends State<CameraView> {
 
     if (_containerAR == null) return;
 
-    final imgImage = _convertCameraImage(image);
-    if (imgImage == null) return;
+    final frame = _buildFrameInput(image);
+    if (frame == null) return;
 
     final ps = _controller!.value.previewSize!;
     final previewAR = ps.height / ps.width;
     final coverScale = previewAR / _containerAR!;
     final fraction = 1 - coverScale;
 
-    widget.onImage(imgImage, fraction);
+    widget.onImage(frame, fraction);
   }
 
-  img.Image? _convertCameraImage(CameraImage image) {
+  // Both platforms hand off raw, unconverted camera bytes and let the
+  // pipeline isolate do the per-pixel conversion (YUV->RGB + rotate on
+  // Android, BGRA downsample+copy on iOS), so the UI isolate never does
+  // that work, however cheap it might be on a given platform.
+  CameraFrameInput? _buildFrameInput(CameraImage image) {
     if (Platform.isAndroid) {
-      return _convertYUV420Preview(image);
+      return CameraFrameInput.yuv420Rotated90(
+        yPlane: image.planes[0].bytes,
+        uPlane: image.planes[1].bytes,
+        vPlane: image.planes[2].bytes,
+        sensorWidth: image.width,
+        sensorHeight: image.height,
+        yRowStride: image.planes[0].bytesPerRow,
+        uvRowStride: image.planes[1].bytesPerRow,
+        uvPixelStride: image.planes[1].bytesPerPixel ?? 1,
+        step: 2,
+      );
     } else if (Platform.isIOS) {
-      return _convertBGRA(image);
-    }
-    return null;
-  }
-
-  img.Image _convertYUV420Preview(CameraImage image, {int step = 2}) {
-    final dstW = image.width ~/ step;
-    final dstH = image.height ~/ step;
-    final yPlane = image.planes[0].bytes;
-    final uPlane = image.planes[1].bytes;
-    final vPlane = image.planes[2].bytes;
-    final yRowStride = image.planes[0].bytesPerRow;
-    final uvRowStride = image.planes[1].bytesPerRow;
-    final uvPixelStride = image.planes[1].bytesPerPixel ?? 1;
-
-    final rgba = Uint8List(dstW * dstH * 4);
-    for (int dy = 0; dy < dstH; dy++) {
-      final sy = dy * step;
-      for (int dx = 0; dx < dstW; dx++) {
-        final sx = dx * step;
-        final yValue = yPlane[sy * yRowStride + sx] & 0xFF;
-        final uvIndex = (sy ~/ 2) * uvRowStride + (sx ~/ 2) * uvPixelStride;
-        final u = (uPlane[uvIndex] & 0xFF) - 128;
-        final v = (vPlane[uvIndex] & 0xFF) - 128;
-        final r = (yValue + 1.402 * v).clamp(0, 255).toInt();
-        final g = (yValue - 0.344136 * u - 0.714136 * v).clamp(0, 255).toInt();
-        final b = (yValue + 1.772 * u).clamp(0, 255).toInt();
-        final idx = (dy * dstW + dx) * 4;
-        rgba[idx] = r;
-        rgba[idx + 1] = g;
-        rgba[idx + 2] = b;
-        rgba[idx + 3] = 255;
-      }
-    }
-
-    final rgbImage = img.Image.fromBytes(
-      width: dstW,
-      height: dstH,
-      bytes: rgba.buffer,
-      order: img.ChannelOrder.rgba,
-    );
-    return img.copyRotate(rgbImage, angle: -90);
-  }
-
-  img.Image _convertBGRA(CameraImage image, {int step = 2}) {
-    if (step == 1) {
-      return img.Image.fromBytes(
-        width: image.width,
-        height: image.height,
-        bytes: image.planes[0].bytes.buffer,
-        order: img.ChannelOrder.bgra,
+      return CameraFrameInput.bgraRaw(
+        bgraBytes: image.planes[0].bytes,
+        sensorWidth: image.width,
+        sensorHeight: image.height,
+        bgraRowStride: image.planes[0].bytesPerRow,
+        step: 2,
       );
     }
-
-    final srcBytes = image.planes[0].bytes;
-    final srcRowBytes = image.planes[0].bytesPerRow;
-    final dstW = image.width ~/ step;
-    final dstH = image.height ~/ step;
-
-    final out = Uint8List(dstW * dstH * 4);
-    for (int dy = 0; dy < dstH; dy++) {
-      final srcRowOffset = (dy * step) * srcRowBytes;
-      for (int dx = 0; dx < dstW; dx++) {
-        final srcIdx = srcRowOffset + (dx * step) * 4;
-        final dstIdx = (dy * dstW + dx) * 4;
-        out[dstIdx] = srcBytes[srcIdx];
-        out[dstIdx + 1] = srcBytes[srcIdx + 1];
-        out[dstIdx + 2] = srcBytes[srcIdx + 2];
-        out[dstIdx + 3] = srcBytes[srcIdx + 3];
-      }
-    }
-
-    return img.Image.fromBytes(
-      width: dstW,
-      height: dstH,
-      bytes: out.buffer,
-      order: img.ChannelOrder.bgra,
-    );
+    return null;
   }
 
   Future<void> _triggerCapture(Size screenSize) async {

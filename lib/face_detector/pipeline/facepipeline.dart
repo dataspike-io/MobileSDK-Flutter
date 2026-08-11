@@ -38,6 +38,44 @@ class FacePipeline {
     _blurryFrames = 0;
   }
 
+  // Default interpreter options run on very few CPU threads. Apple
+  // silicon's strong single-core performance hides this, but on Android
+  // (weaker single-core, more cores) it leaves most of the CPU idle
+  // during inference. Spread the work across cores instead — but fall
+  // back to the plain default if the multi-threaded option ever fails
+  // to create on a given device, since a slower pipeline beats a
+  // liveness screen that never initializes at all.
+  //
+  // On iOS, additionally try the Metal GPU delegate first (full FP32
+  // precision, not the lower-precision fast path) before falling back to
+  // CPU-only, since GPU execution can meaningfully beat even a
+  // multi-threaded CPU run for these conv-heavy models.
+  static Interpreter _createInterpreter(Uint8List bytes) {
+    final threads = math.min(4, math.max(1, Platform.numberOfProcessors));
+
+    if (Platform.isIOS) {
+      try {
+        final options = InterpreterOptions()..threads = threads;
+        options.addDelegate(
+          GpuDelegate(options: GpuDelegateOptions(allowPrecisionLoss: false)),
+        );
+        return Interpreter.fromBuffer(bytes, options: options);
+      } catch (_) {
+        // Unsupported op, delegate creation failure, etc. — fall through
+        // to the CPU-only paths below.
+      }
+    }
+
+    try {
+      return Interpreter.fromBuffer(
+        bytes,
+        options: InterpreterOptions()..threads = threads,
+      );
+    } catch (_) {
+      return Interpreter.fromBuffer(bytes);
+    }
+  }
+
   static Future<FacePipeline> createFromBytes({
     required Uint8List detectorBytes,
     required Uint8List landmarksBytes,
@@ -46,9 +84,9 @@ class FacePipeline {
   }) async {
     final pipeline = FacePipeline();
 
-    pipeline._faceDetector = await Interpreter.fromBuffer(detectorBytes);
-    pipeline._faceLandmarks = await Interpreter.fromBuffer(landmarksBytes);
-    pipeline._iqa = await Interpreter.fromBuffer(iqaBytes);
+    pipeline._faceDetector = _createInterpreter(detectorBytes);
+    pipeline._faceLandmarks = _createInterpreter(landmarksBytes);
+    pipeline._iqa = _createInterpreter(iqaBytes);
 
     pipeline._canonical = await _parseCanonical(canonicalData);
 
