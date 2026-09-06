@@ -111,7 +111,13 @@ Future<Uint8List> processGalleryImageInIsolate(GalleryProcessParams p) async {
 
 // Avatar specific
 class AvatarCropParams {
-  final Uint8List imageBytes;
+  // Raw, already-oriented RGBA pixels — deliberately not a JPEG. The
+  // shutter capture step hands off pixels directly instead of an encoded
+  // JPEG so this function is the *only* place that encodes, instead of
+  // decoding an already-encoded frame just to re-encode it after cropping.
+  final Uint8List rgbaBytes;
+  final int imageWidth;
+  final int imageHeight;
   final double containerW;
   final double containerH;
   final double previewW;
@@ -123,7 +129,9 @@ class AvatarCropParams {
   final double strokeWidth;
 
   const AvatarCropParams({
-    required this.imageBytes,
+    required this.rgbaBytes,
+    required this.imageWidth,
+    required this.imageHeight,
     required this.containerW,
     required this.containerH,
     required this.previewW,
@@ -136,11 +144,15 @@ class AvatarCropParams {
 }
 
 Future<Uint8List> processAvatarShotInIsolate(AvatarCropParams p) async {
-  final decoded = img.decodeImage(p.imageBytes);
-  if (decoded == null) {
-    throw StateError('Unable to decode image');
-  }
-  img.Image original = img.bakeOrientation(decoded);
+  // No decodeImage/bakeOrientation here: these are raw pixels handed off
+  // straight from the camera capture step (already correctly oriented),
+  // not a JPEG with EXIF metadata to interpret.
+  final img.Image original = img.Image.fromBytes(
+    width: p.imageWidth,
+    height: p.imageHeight,
+    bytes: p.rgbaBytes.buffer,
+    order: img.ChannelOrder.rgba,
+  );
 
   final imgW = original.width.toDouble();
   final imgH = original.height.toDouble();
@@ -182,7 +194,10 @@ Future<Uint8List> processAvatarShotInIsolate(AvatarCropParams p) async {
   int h = ((cropH / scale).round()).clamp(1, imgH.toInt() - y);
 
   final cropped = img.copyCrop(original, x: x, y: y, width: w, height: h);
-  final out = img.encodeJpg(cropped, quality: 100);
+  // 100 = essentially uncompressed JPEG; 90 is visually indistinguishable
+  // for a liveness selfie but produces a meaningfully smaller file, which
+  // is what actually goes over the wire in the upload request.
+  final out = img.encodeJpg(cropped, quality: 90);
   return Uint8List.fromList(out);
 }
 

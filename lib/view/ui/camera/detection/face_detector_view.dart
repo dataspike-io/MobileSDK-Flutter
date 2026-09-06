@@ -4,15 +4,15 @@ import 'detector_view.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/two_arcs_painter.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
 import 'package:dataspikemobilesdk/face_detector/models/camera_frame_input.dart';
+import 'package:dataspikemobilesdk/face_detector/models/captured_frame.dart';
 import 'package:dataspikemobilesdk/face_detector/models/face_analyst_result.dart';
 import 'package:dataspikemobilesdk/face_detector/face_pipeline_isolate.dart';
-import 'package:flutter/services.dart';
 
 class FaceDetectorView extends StatefulWidget {
   const FaceDetectorView({super.key, required this.onShootCallback});
 
   final Future<void> Function(
-    List<Uint8List> imageBytesList,
+    List<CapturedFrame> frames,
     Size previewKeySize,
     Size screenSize,
     Size previewSize,
@@ -79,13 +79,13 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
   }
 
   Future<void> _onShootCallback(
-    List<Uint8List> imageBytesList,
+    List<CapturedFrame> frames,
     Size previewKeySize,
     Size screenSize,
     Size previewSize,
   ) async {
     widget.onShootCallback(
-      imageBytesList,
+      frames,
       previewKeySize,
       screenSize,
       previewSize,

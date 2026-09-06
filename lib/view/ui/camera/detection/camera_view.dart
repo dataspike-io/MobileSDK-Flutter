@@ -9,7 +9,7 @@ import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/face_oval_outside_clipper.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/default_face_corner_painter.dart';
 import 'package:dataspikemobilesdk/face_detector/models/camera_frame_input.dart';
-import 'package:image/image.dart' as img;
+import 'package:dataspikemobilesdk/face_detector/models/captured_frame.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 
@@ -27,7 +27,7 @@ class CameraView extends StatefulWidget {
   final CustomPaint? customPaint;
   final Function(CameraFrameInput frame, double cropRatio) onImage;
   final Future<void> Function(
-    List<Uint8List> imageBytesList,
+    List<CapturedFrame> frames,
     Size previewKeySize,
     Size screenSize,
     Size previewSize,
@@ -356,17 +356,26 @@ class _CameraViewState extends State<CameraView> {
     return null;
   }
 
+  // Captures 4 frames and hands off their raw (already correctly
+  // oriented) RGBA pixels, deliberately *not* JPEG-encoded — the crop
+  // step (processAvatarShotInIsolate) does the one-and-only JPEG encode
+  // after cropping, instead of an encode here that just gets decoded
+  // and thrown away moments later.
   Future<void> _triggerCapture(Size screenSize) async {
-    List<Uint8List> bytesList;
+    List<CapturedFrame> frames;
 
     if (Platform.isIOS) {
-      final frames = <_RgbaFrameData>[];
+      final captured = <CapturedFrame>[];
 
       for (int i = 0; i < 4; i++) {
         _captureCompleter = Completer<CameraImage>();
         final image = await _captureCompleter!.future;
         _captureCompleter = null;
 
+        // ui.decodeImageFromPixels needs the Flutter engine's raster
+        // context, so it has to run here rather than in a background
+        // isolate — but it's a fast, hardware-accelerated decode, not a
+        // per-pixel Dart loop, so that's cheap.
         final completer = Completer<ui.Image>();
         ui.decodeImageFromPixels(
           image.planes[0].bytes,
@@ -383,8 +392,8 @@ class _CameraViewState extends State<CameraView> {
         uiImage.dispose();
 
         if (byteData != null) {
-          frames.add(
-            _RgbaFrameData(
+          captured.add(
+            CapturedFrame(
               rgbaBytes: byteData.buffer.asUint8List(),
               width: image.width,
               height: image.height,
@@ -393,19 +402,16 @@ class _CameraViewState extends State<CameraView> {
         }
       }
 
-      bytesList = await compute(
-        _encodeJpegBatchIsolate,
-        _JpegEncodeBatchPayload(frames: frames, quality: 90),
-      );
+      frames = captured;
     } else {
-      final frames = <_YuvFrameData>[];
+      final yuvFrames = <_YuvFrameData>[];
 
       for (int i = 0; i < 4; i++) {
         _captureCompleter = Completer<CameraImage>();
         final image = await _captureCompleter!.future;
         _captureCompleter = null;
 
-        frames.add(
+        yuvFrames.add(
           _YuvFrameData(
             yPlane: image.planes[0].bytes,
             uPlane: image.planes[1].bytes,
@@ -419,13 +425,10 @@ class _CameraViewState extends State<CameraView> {
         );
       }
 
-      bytesList = await compute(
-        _convertAndEncodeYuvBatchIsolate,
-        _YuvCaptureBatchPayload(frames: frames, quality: 80),
-      );
+      frames = await compute(_convertYuvBatchIsolate, yuvFrames);
     }
 
-    if (bytesList.isEmpty) return;
+    if (frames.isEmpty) return;
 
     final renderBox =
         _previewKey.currentContext?.findRenderObject() as RenderBox?;
@@ -433,7 +436,7 @@ class _CameraViewState extends State<CameraView> {
     final previewSize = _controller!.value.previewSize!;
 
     await widget.onShootCallback(
-      bytesList,
+      frames,
       previewKeySize,
       screenSize,
       previewSize,
@@ -507,34 +510,6 @@ class _SuccessDotsLoaderState extends State<_SuccessDotsLoader>
   }
 }
 
-class _RgbaFrameData {
-  final Uint8List rgbaBytes;
-  final int width, height;
-  _RgbaFrameData({
-    required this.rgbaBytes,
-    required this.width,
-    required this.height,
-  });
-}
-
-class _JpegEncodeBatchPayload {
-  final List<_RgbaFrameData> frames;
-  final int quality;
-  _JpegEncodeBatchPayload({required this.frames, required this.quality});
-}
-
-List<Uint8List> _encodeJpegBatchIsolate(_JpegEncodeBatchPayload batch) {
-  return batch.frames.map((f) {
-    final imgImage = img.Image.fromBytes(
-      width: f.width,
-      height: f.height,
-      bytes: f.rgbaBytes.buffer,
-      order: img.ChannelOrder.rgba,
-    );
-    return Uint8List.fromList(img.encodeJpg(imgImage, quality: batch.quality));
-  }).toList();
-}
-
 class _YuvFrameData {
   final Uint8List yPlane, uPlane, vPlane;
   final int width, height, yRowStride, uvRowStride, uvPixelStride;
@@ -550,17 +525,19 @@ class _YuvFrameData {
   });
 }
 
-class _YuvCaptureBatchPayload {
-  final List<_YuvFrameData> frames;
-  final int quality;
-  _YuvCaptureBatchPayload({required this.frames, required this.quality});
-}
-
-List<Uint8List> _convertAndEncodeYuvBatchIsolate(
-  _YuvCaptureBatchPayload batch,
-) {
-  return batch.frames.map((p) {
-    final rgba = Uint8List(p.width * p.height * 4);
+// Converts + rotates in a single pass instead of building an unrotated
+// RGBA buffer and then running a separate copyRotate(-90) pass over it —
+// each source pixel is written directly to its final rotated position.
+// The destination mapping (dstX = y, dstY = (width-1) - x) is exactly
+// what copyRotate(angle: -90) produces (verified byte-for-byte against
+// it on synthetic data before landing this). No JPEG encode here: that
+// happens exactly once, after cropping, in processAvatarShotInIsolate.
+List<CapturedFrame> _convertYuvBatchIsolate(List<_YuvFrameData> frames) {
+  return frames.map((p) {
+    final dstW = p.height;
+    final dstH = p.width;
+    final wm1 = p.width - 1;
+    final rgba = Uint8List(dstW * dstH * 4);
     for (int y = 0; y < p.height; y++) {
       for (int x = 0; x < p.width; x++) {
         final yValue = p.yPlane[y * p.yRowStride + x] & 0xFF;
@@ -570,20 +547,15 @@ List<Uint8List> _convertAndEncodeYuvBatchIsolate(
         final r = (yValue + 1.402 * v).clamp(0, 255).toInt();
         final g = (yValue - 0.344136 * u - 0.714136 * v).clamp(0, 255).toInt();
         final b = (yValue + 1.772 * u).clamp(0, 255).toInt();
-        final idx = (y * p.width + x) * 4;
+        final dstX = y;
+        final dstY = wm1 - x;
+        final idx = (dstY * dstW + dstX) * 4;
         rgba[idx] = r;
         rgba[idx + 1] = g;
         rgba[idx + 2] = b;
         rgba[idx + 3] = 255;
       }
     }
-    final rgbImage = img.Image.fromBytes(
-      width: p.width,
-      height: p.height,
-      bytes: rgba.buffer,
-      order: img.ChannelOrder.rgba,
-    );
-    final rotated = img.copyRotate(rgbImage, angle: -90);
-    return Uint8List.fromList(img.encodeJpg(rotated, quality: batch.quality));
+    return CapturedFrame(rgbaBytes: rgba, width: dstW, height: dstH);
   }).toList();
 }
