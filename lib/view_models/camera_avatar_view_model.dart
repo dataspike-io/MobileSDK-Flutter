@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/data/use_cases/uploading_image_use_case.dart';
-import 'package:flutter/services.dart';
+import 'package:dataspikemobilesdk/face_detector/models/captured_frame.dart';
 import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
 import 'package:flutter/foundation.dart';
 import 'package:dataspikemobilesdk/view/ui/error/error_image_bottom_sheet.dart';
@@ -47,7 +47,7 @@ class CameraAvatarViewModel extends ChangeNotifier {
   Future<void> _setup() async {}
 
   Future<void> shootAndCropV2(
-    List<Uint8List> imageBytesList,
+    List<CapturedFrame> frames,
     Size previewKeySize,
     Size screenSize,
     Size previewSize,
@@ -58,10 +58,12 @@ class CameraAvatarViewModel extends ChangeNotifier {
       final previewW = previewSize.width;
       final previewH = previewSize.height;
 
-      final paramsList = imageBytesList
+      final paramsList = frames
           .map(
-            (bytes) => AvatarCropParams(
-              imageBytes: bytes,
+            (frame) => AvatarCropParams(
+              rgbaBytes: frame.rgbaBytes,
+              imageWidth: frame.width,
+              imageHeight: frame.height,
               containerW: containerW,
               containerH: containerH,
               previewW: previewW,
@@ -81,7 +83,7 @@ class CameraAvatarViewModel extends ChangeNotifier {
             paramsList,
           );
 
-      final frames = <LivenessBatchFrame>[
+      final batchFrames = <LivenessBatchFrame>[
         for (int i = 0; i < processedList.length; i++)
           LivenessBatchFrame(
             frameId: 'frame_$i',
@@ -91,7 +93,7 @@ class CameraAvatarViewModel extends ChangeNotifier {
           ),
       ];
 
-      final result = await _setUseCase.uploadImageV2(frames: frames);
+      final result = await _setUseCase.uploadImageV2(frames: batchFrames);
 
       if (result is UploadImageSuccessV2) {
         onProceed?.call();

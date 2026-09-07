@@ -2,7 +2,89 @@ import 'dart:isolate';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:dataspikemobilesdk/face_detector/pipeline/facepipeline.dart';
+import 'package:dataspikemobilesdk/face_detector/models/camera_frame_input.dart';
 import 'package:dataspikemobilesdk/face_detector/models/face_analyst_result.dart';
+
+/// Converts a raw YUV420 camera frame to RGB and rotates it -90°
+/// (portrait), mirroring what the Android camera preview needs. Runs
+/// inside the pipeline isolate so this per-pixel work never blocks the
+/// UI isolate.
+img.Image _convertYuv420ToImage({
+  required Uint8List yPlane,
+  required Uint8List uPlane,
+  required Uint8List vPlane,
+  required int sensorWidth,
+  required int sensorHeight,
+  required int yRowStride,
+  required int uvRowStride,
+  required int uvPixelStride,
+  required int step,
+}) {
+  final dstW = sensorWidth ~/ step;
+  final dstH = sensorHeight ~/ step;
+
+  final rgba = Uint8List(dstW * dstH * 4);
+  for (int dy = 0; dy < dstH; dy++) {
+    final sy = dy * step;
+    for (int dx = 0; dx < dstW; dx++) {
+      final sx = dx * step;
+      final yValue = yPlane[sy * yRowStride + sx] & 0xFF;
+      final uvIndex = (sy ~/ 2) * uvRowStride + (sx ~/ 2) * uvPixelStride;
+      final u = (uPlane[uvIndex] & 0xFF) - 128;
+      final v = (vPlane[uvIndex] & 0xFF) - 128;
+      final r = (yValue + 1.402 * v).clamp(0, 255).toInt();
+      final g = (yValue - 0.344136 * u - 0.714136 * v).clamp(0, 255).toInt();
+      final b = (yValue + 1.772 * u).clamp(0, 255).toInt();
+      final idx = (dy * dstW + dx) * 4;
+      rgba[idx] = r;
+      rgba[idx + 1] = g;
+      rgba[idx + 2] = b;
+      rgba[idx + 3] = 255;
+    }
+  }
+
+  final rgbImage = img.Image.fromBytes(
+    width: dstW,
+    height: dstH,
+    bytes: rgba.buffer,
+    order: img.ChannelOrder.rgba,
+  );
+  return img.copyRotate(rgbImage, angle: -90);
+}
+
+/// Downsamples raw BGRA camera bytes into an RGB image. No rotation: iOS
+/// delivers already portrait-oriented frames. Runs inside the pipeline
+/// isolate, mirroring the YUV420 path above.
+img.Image _convertBgraToImage({
+  required Uint8List bgraBytes,
+  required int sensorWidth,
+  required int sensorHeight,
+  required int bgraRowStride,
+  required int step,
+}) {
+  final dstW = sensorWidth ~/ step;
+  final dstH = sensorHeight ~/ step;
+
+  final out = Uint8List(dstW * dstH * 4);
+  for (int dy = 0; dy < dstH; dy++) {
+    final srcRowOffset = (dy * step) * bgraRowStride;
+    for (int dx = 0; dx < dstW; dx++) {
+      final srcIdx = srcRowOffset + (dx * step) * 4;
+      final dstIdx = (dy * dstW + dx) * 4;
+      out[dstIdx] = bgraBytes[srcIdx];
+      out[dstIdx + 1] = bgraBytes[srcIdx + 1];
+      out[dstIdx + 2] = bgraBytes[srcIdx + 2];
+      out[dstIdx + 3] = bgraBytes[srcIdx + 3];
+    }
+  }
+
+  return img.Image.fromBytes(
+    width: dstW,
+    height: dstH,
+    bytes: out.buffer,
+    order: img.ChannelOrder.bgra,
+  );
+}
 
 class _IsolateInitData {
   final SendPort toMain;
@@ -55,12 +137,35 @@ void _isolateEntry(_IsolateInitData init) async {
     }
 
     try {
-      final image = img.Image.fromBytes(
-        width: request['width'] as int,
-        height: request['height'] as int,
-        bytes: (request['bytes'] as Uint8List).buffer,
-        order: img.ChannelOrder.rgb,
-      );
+      final img.Image image;
+      if (request.containsKey('yPlane')) {
+        image = _convertYuv420ToImage(
+          yPlane: request['yPlane'] as Uint8List,
+          uPlane: request['uPlane'] as Uint8List,
+          vPlane: request['vPlane'] as Uint8List,
+          sensorWidth: request['sensorWidth'] as int,
+          sensorHeight: request['sensorHeight'] as int,
+          yRowStride: request['yRowStride'] as int,
+          uvRowStride: request['uvRowStride'] as int,
+          uvPixelStride: request['uvPixelStride'] as int,
+          step: request['step'] as int,
+        );
+      } else if (request.containsKey('bgraBytes')) {
+        image = _convertBgraToImage(
+          bgraBytes: request['bgraBytes'] as Uint8List,
+          sensorWidth: request['sensorWidth'] as int,
+          sensorHeight: request['sensorHeight'] as int,
+          bgraRowStride: request['bgraRowStride'] as int,
+          step: request['step'] as int,
+        );
+      } else {
+        image = img.Image.fromBytes(
+          width: request['width'] as int,
+          height: request['height'] as int,
+          bytes: (request['bytes'] as Uint8List).buffer,
+          order: img.ChannelOrder.rgb,
+        );
+      }
 
       final cropRatio = request['cropRatio'] as double? ?? 0.0;
       final result = await pipeline.analyze(image, cropRatio: cropRatio);
@@ -142,18 +247,43 @@ class FacePipelineIsolate {
   }
 
   Future<FaceAnalysisResult?> analyze(
-    img.Image image, {
+    CameraFrameInput frame, {
     double cropRatio = 0.0,
   }) async {
     final replyPort = ReceivePort();
 
-    _toIsolate.send({
-      'bytes': Uint8List.fromList(image.getBytes(order: img.ChannelOrder.rgb)),
-      'width': image.width,
-      'height': image.height,
+    final Map<String, dynamic> message = {
       'cropRatio': cropRatio,
       'replyPort': replyPort.sendPort,
-    });
+    };
+
+    final decoded = frame.decoded;
+    final bgraBytes = frame.bgraBytes;
+    if (decoded != null) {
+      message['bytes'] = Uint8List.fromList(
+        decoded.getBytes(order: img.ChannelOrder.rgb),
+      );
+      message['width'] = decoded.width;
+      message['height'] = decoded.height;
+    } else if (bgraBytes != null) {
+      message['bgraBytes'] = bgraBytes;
+      message['sensorWidth'] = frame.sensorWidth;
+      message['sensorHeight'] = frame.sensorHeight;
+      message['bgraRowStride'] = frame.bgraRowStride;
+      message['step'] = frame.step;
+    } else {
+      message['yPlane'] = frame.yPlane;
+      message['uPlane'] = frame.uPlane;
+      message['vPlane'] = frame.vPlane;
+      message['sensorWidth'] = frame.sensorWidth;
+      message['sensorHeight'] = frame.sensorHeight;
+      message['yRowStride'] = frame.yRowStride;
+      message['uvRowStride'] = frame.uvRowStride;
+      message['uvPixelStride'] = frame.uvPixelStride;
+      message['step'] = frame.step;
+    }
+
+    _toIsolate.send(message);
 
     final response = await replyPort.first;
     replyPort.close();

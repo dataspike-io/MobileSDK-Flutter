@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'camera_view.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
-import 'dart:typed_data';
-import 'package:image/image.dart' as img;
+import 'package:dataspikemobilesdk/face_detector/models/camera_frame_input.dart';
+import 'package:dataspikemobilesdk/face_detector/models/captured_frame.dart';
 
 class DetectorView extends StatefulWidget {
   const DetectorView({
@@ -16,10 +16,10 @@ class DetectorView extends StatefulWidget {
   });
 
   final CustomPaint? customPaint;
-  final Function(img.Image inputImage, double cropRatio) onImage;
+  final Function(CameraFrameInput frame, double cropRatio) onImage;
   final Future<void> Function(
-    List<Uint8List> imageBytesList,
-    Size previewKeySize, 
+    List<CapturedFrame> frames,
+    Size previewKeySize,
     Size screenSize,
     Size previewSize
   ) onShootCallback;

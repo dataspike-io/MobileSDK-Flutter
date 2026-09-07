@@ -3,17 +3,16 @@ import 'package:flutter/material.dart';
 import 'detector_view.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/two_arcs_painter.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
-import 'dart:typed_data';
-import 'package:image/image.dart' as img;
+import 'package:dataspikemobilesdk/face_detector/models/camera_frame_input.dart';
+import 'package:dataspikemobilesdk/face_detector/models/captured_frame.dart';
 import 'package:dataspikemobilesdk/face_detector/models/face_analyst_result.dart';
 import 'package:dataspikemobilesdk/face_detector/face_pipeline_isolate.dart';
-import 'package:flutter/services.dart';
 
 class FaceDetectorView extends StatefulWidget {
   const FaceDetectorView({super.key, required this.onShootCallback});
 
   final Future<void> Function(
-    List<Uint8List> imageBytesList,
+    List<CapturedFrame> frames,
     Size previewKeySize,
     Size screenSize,
     Size previewSize,
@@ -34,7 +33,12 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
   }
 
   Future<void> _initPipeline() async {
-    _facePipeline = await FacePipelineIsolate.create();
+    try {
+      _facePipeline = await FacePipelineIsolate.create();
+    } catch (_) {
+      // Leave _facePipeline null; _processImage's guard keeps skipping
+      // frames rather than crashing the screen.
+    }
   }
 
   bool _isProcessing = false;
@@ -75,20 +79,20 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
   }
 
   Future<void> _onShootCallback(
-    List<Uint8List> imageBytesList,
+    List<CapturedFrame> frames,
     Size previewKeySize,
     Size screenSize,
     Size previewSize,
   ) async {
     widget.onShootCallback(
-      imageBytesList,
+      frames,
       previewKeySize,
       screenSize,
       previewSize,
     );
   }
 
-  Future<void> _processImage(img.Image image, double cropRatio) async {
+  Future<void> _processImage(CameraFrameInput frame, double cropRatio) async {
     if (!_canProcess) return;
     if (_isProcessing) return;
     if (_facePipeline == null) return;
@@ -104,17 +108,23 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
     _isProcessing = true;
 
     try {
-      final result = await _facePipeline?.analyze(image, cropRatio: cropRatio);
+      final result = await _facePipeline?.analyze(frame, cropRatio: cropRatio);
 
       if (result == null) {
-        _setUndetectedState();
+        // Don't let a single "no face" frame kick us out of a status that
+        // must not be auto-hidden (e.g. the initial countdown, or a
+        // just-reached "ok"/success moment) — only CameraView's own timer
+        // (via _onTimerReady) is allowed to end the countdown.
+        if (!_status.isAutoHideDisabled) {
+          _setUndetectedState();
+        }
         return;
       }
 
       final status = _evaluateHeadPosition(
         result: result,
         cropRatio: cropRatio,
-        imageSize: Size(image.width.toDouble(), image.height.toDouble()),
+        imageSize: Size(frame.width.toDouble(), frame.height.toDouble()),
       );
 
       final isTopArcHighlighted = status.isTopArcHighlighted;
