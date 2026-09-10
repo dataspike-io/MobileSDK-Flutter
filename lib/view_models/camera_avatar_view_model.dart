@@ -100,17 +100,36 @@ class CameraAvatarViewModel extends ChangeNotifier {
       } else if (result is UploadImageErrorV2) {
         switch (result.code) {
           // showErrorV2?.call(AvatarDetectionStatus.halfAttempts); //
-          case 5013: showErrorV2?.call(AvatarDetectionStatus.headwearIsOn); //
-          case 5012: // Chin is not visible
-          case 5011: // Forehead is not visible
-          case 5010: // BACK: Small resolution (Is it 5006 or not?)
-          case 5009: // Too Blury
-          case 5008: // Eyes Closed
+          case 5013:
+          case 5023:
+            showErrorV2?.call(AvatarDetectionStatus.headwearIsOn);
+          case 5017:
+            showErrorV2?.call(AvatarDetectionStatus.excessiveBrightness);
+          case 5020:
+            showErrorV2?.call(AvatarDetectionStatus.faceCovered);
+          case 5021:
+            showErrorV2?.call(AvatarDetectionStatus.faceMaskOn);
+          case 5022: 
+            showErrorV2?.call(AvatarDetectionStatus.handNearFace);
+          case 5024: 
+            showErrorV2?.call(AvatarDetectionStatus.sunglassesOn);
+          case 5012:
+            showErrorV2?.call(AvatarDetectionStatus.chinOutOfFrame);
+          case 5011: 
+            showErrorV2?.call(AvatarDetectionStatus.foreheadOutOfFrame);
+          case 5010:
+            showErrorV2?.call(AvatarDetectionStatus.lowCameraResolution);
+          case 5009:
+            showErrorV2?.call(AvatarDetectionStatus.blurryPhoto);
+          case 5008:
+            showErrorV2?.call(AvatarDetectionStatus.eyesNotDetected);
+          case 5006: 
+          case 5003: 
+            showErrorV2?.call(AvatarDetectionStatus.faceTooFarFromCamera);
+          case 5004:
+            showErrorV2?.call(AvatarDetectionStatus.excessiveDarkness);
           case 5007: // MY 3d depth phase? BACK: More faces
-          case 5006: // MY Small resolution? BACK: Small face
           case 5005: // Disputed
-          case 5004: // Poor Ligtning
-          case 5003: // Move Closer
           case 5002: // Spoofing
           case 5001: // Deepfake
           case 4001: // No face

@@ -9,14 +9,11 @@ class WarningPopup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final h = MediaQuery.of(context).size.height;
-
     return SafeArea(
       top: false,
       bottom: false,
       child: Container(
         width: double.infinity,
-        height: h * 0.5,
         decoration: const BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.only(
@@ -37,6 +34,7 @@ class WarningPopup extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Row(
@@ -79,7 +77,7 @@ class WarningPopup extends StatelessWidget {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 24),
                     ContinueButton(
                       onPressed: () =>
                           Navigator.of(context, rootNavigator: true)

@@ -55,18 +55,23 @@ class AvatarInstructionPill extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                 ],
-                Text(
-                  status.title,
-                  style: const TextStyle(
-                    color: AppColors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    decoration: TextDecoration.none,
-                    fontFamily: 'Figtree',
-                    package: 'dataspikemobilesdk',
+                Flexible(
+                  child: Text(
+                    status.title,
+                    style: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      decoration: TextDecoration.none,
+                      fontFamily: 'Figtree',
+                      package: 'dataspikemobilesdk',
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: status.subtitle == null
+                        ? TextAlign.center
+                        : TextAlign.start,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
