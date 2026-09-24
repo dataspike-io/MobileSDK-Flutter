@@ -23,7 +23,19 @@ enum AvatarDetectionStatus {
 
   // ExternalErrors
   headwearIsOn,
-  halfAttempts;
+  halfAttempts,
+  excessiveBrightness,
+  faceCovered,
+  faceMaskOn,
+  handNearFace,
+  sunglassesOn,
+  faceTooFarFromCamera,
+  excessiveDarkness,
+  eyesNotDetected,
+  blurryPhoto,
+  lowCameraResolution,
+  foreheadOutOfFrame,
+  chinOutOfFrame;
 
   String get title {
     switch (this) {
@@ -57,6 +69,30 @@ enum AvatarDetectionStatus {
         return 'You wasted half your attempts';
       case AvatarDetectionStatus.headwearIsOn:
         return 'Headwear or glasses detected.';
+      case AvatarDetectionStatus.excessiveBrightness:
+        return 'Too bright.';
+      case AvatarDetectionStatus.faceCovered:
+        return 'Remove anything covering your face and retake.';
+      case AvatarDetectionStatus.faceMaskOn:
+        return 'Please remove your face mask and retake the selfie';
+      case AvatarDetectionStatus.handNearFace:
+        return 'Please keep your hand away from your face and retake the selfie.';
+      case AvatarDetectionStatus.sunglassesOn:
+        return 'Please remove your sunglasses and retake the selfie.';
+      case AvatarDetectionStatus.faceTooFarFromCamera:
+        return 'Slowly bring your face closer to the camera';
+      case AvatarDetectionStatus.excessiveDarkness:
+        return 'Too dark.';
+      case AvatarDetectionStatus.eyesNotDetected:
+        return 'Eyes not detected.';
+      case AvatarDetectionStatus.blurryPhoto:
+        return 'Photo too blurry.';
+      case AvatarDetectionStatus.lowCameraResolution:
+        return 'Camera resolution too low.';
+      case AvatarDetectionStatus.foreheadOutOfFrame:
+        return 'Forehead not visible.';
+      case AvatarDetectionStatus.chinOutOfFrame:
+        return 'Chin not visible.';
       case AvatarDetectionStatus.undetected:
       case AvatarDetectionStatus.initialTimer:
         return 'Align your face with the contour';
@@ -131,6 +167,25 @@ enum AvatarDetectionStatus {
         return 'Please check recommendations and try again';
       case AvatarDetectionStatus.headwearIsOn:
         return 'Please remove them and try again';
+      case AvatarDetectionStatus.excessiveBrightness:
+        return 'Avoid bright light behind you';
+      case AvatarDetectionStatus.faceCovered:
+      case AvatarDetectionStatus.faceMaskOn:
+      case AvatarDetectionStatus.handNearFace:
+      case AvatarDetectionStatus.sunglassesOn:
+      case AvatarDetectionStatus.faceTooFarFromCamera:
+        return null;
+      case AvatarDetectionStatus.excessiveDarkness:
+        return 'Move to a better-lit area';
+      case AvatarDetectionStatus.eyesNotDetected:
+        return 'Look straight at the camera.';
+      case AvatarDetectionStatus.blurryPhoto:
+        return 'Hold your phone steady.';
+      case AvatarDetectionStatus.lowCameraResolution:
+        return 'Try another device.';
+      case AvatarDetectionStatus.foreheadOutOfFrame:
+      case AvatarDetectionStatus.chinOutOfFrame:
+        return 'Move back so your whole face fits.';
       case AvatarDetectionStatus.notStarted:
       case AvatarDetectionStatus.undetected:
       case AvatarDetectionStatus.initialTimer:
@@ -144,6 +199,18 @@ enum AvatarDetectionStatus {
     switch (this) {
       case AvatarDetectionStatus.halfAttempts:
       case AvatarDetectionStatus.headwearIsOn:
+      case AvatarDetectionStatus.excessiveBrightness:
+      case AvatarDetectionStatus.faceCovered:
+      case AvatarDetectionStatus.faceMaskOn:
+      case AvatarDetectionStatus.handNearFace:
+      case AvatarDetectionStatus.sunglassesOn:
+      case AvatarDetectionStatus.faceTooFarFromCamera:
+      case AvatarDetectionStatus.excessiveDarkness:
+      case AvatarDetectionStatus.eyesNotDetected:
+      case AvatarDetectionStatus.blurryPhoto:
+      case AvatarDetectionStatus.lowCameraResolution:
+      case AvatarDetectionStatus.foreheadOutOfFrame:
+      case AvatarDetectionStatus.chinOutOfFrame:
         return 'Try again';
       default:
         return null;
@@ -185,6 +252,18 @@ enum AvatarDetectionStatus {
     switch (this) {
       case AvatarDetectionStatus.halfAttempts:
       case AvatarDetectionStatus.headwearIsOn:
+      case AvatarDetectionStatus.excessiveBrightness:
+      case AvatarDetectionStatus.faceCovered:
+      case AvatarDetectionStatus.faceMaskOn:
+      case AvatarDetectionStatus.handNearFace:
+      case AvatarDetectionStatus.sunglassesOn:
+      case AvatarDetectionStatus.faceTooFarFromCamera:
+      case AvatarDetectionStatus.excessiveDarkness:
+      case AvatarDetectionStatus.eyesNotDetected:
+      case AvatarDetectionStatus.blurryPhoto:
+      case AvatarDetectionStatus.lowCameraResolution:
+      case AvatarDetectionStatus.foreheadOutOfFrame:
+      case AvatarDetectionStatus.chinOutOfFrame:
         return true;
       default:
         return false;
@@ -216,6 +295,18 @@ enum AvatarDetectionStatus {
       case AvatarDetectionStatus.ok:
       case AvatarDetectionStatus.halfAttempts:
       case AvatarDetectionStatus.initialTimer:
+      case AvatarDetectionStatus.excessiveBrightness:
+      case AvatarDetectionStatus.faceCovered:
+      case AvatarDetectionStatus.faceMaskOn:
+      case AvatarDetectionStatus.handNearFace:
+      case AvatarDetectionStatus.sunglassesOn:
+      case AvatarDetectionStatus.faceTooFarFromCamera:
+      case AvatarDetectionStatus.excessiveDarkness:
+      case AvatarDetectionStatus.eyesNotDetected:
+      case AvatarDetectionStatus.blurryPhoto:
+      case AvatarDetectionStatus.lowCameraResolution:
+      case AvatarDetectionStatus.foreheadOutOfFrame:
+      case AvatarDetectionStatus.chinOutOfFrame:
         return true;
       default:
         return false;

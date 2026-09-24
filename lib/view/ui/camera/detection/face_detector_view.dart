@@ -62,6 +62,7 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
       onImage: _processImage,
       onShootCallback: _onShootCallback,
       onTimerReady: _onTimerReady,
+      onRetry: _setUndetectedState,
       status: _status,
     );
   }

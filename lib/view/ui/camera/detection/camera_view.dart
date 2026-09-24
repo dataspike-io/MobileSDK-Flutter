@@ -22,6 +22,7 @@ class CameraView extends StatefulWidget {
     required this.status,
     this.onCameraFeedReady,
     this.onTimerReady,
+    this.onRetry,
   });
 
   final CustomPaint? customPaint;
@@ -35,6 +36,7 @@ class CameraView extends StatefulWidget {
   onShootCallback;
   final VoidCallback? onCameraFeedReady;
   final VoidCallback? onTimerReady;
+  final VoidCallback? onRetry;
   final AvatarDetectionStatus status;
 
   @override
@@ -183,7 +185,7 @@ class _CameraViewState extends State<CameraView> {
                                     status: widget.status,
                                     firstAction: () {
                                       if (widget.status.isButtonEnabled) {
-                                        Navigator.of(context).pop();
+                                        widget.onRetry?.call();
                                       }
                                     },
                                     secondAction: () {
