@@ -45,8 +45,7 @@ class VerificationManager {
 
   int get millisecondsUntilVerificationExpired {
     try {
-      final dateFormat = DateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-      final parsedDate = dateFormat.parseUtc(_expiresAt);
+      final parsedDate = DateTime.parse(_expiresAt).toUtc();
       return parsedDate.millisecondsSinceEpoch - DateTime.now().millisecondsSinceEpoch;
     } catch (e) {
       return 0;

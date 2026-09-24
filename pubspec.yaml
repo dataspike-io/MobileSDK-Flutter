@@ -17,11 +17,12 @@ dependencies:
   image: ^4.1.7
   intl: ^0.18.0
   http: ^1.2.2
-  permission_handler: ^12.0.1
+  permission_handler: ^12.0.3
   image_picker: ^1.2.0
   file_picker: ^10.3.8
   package_info_plus: ^8.0.0
-  google_mlkit_face_detection: ^0.13.1
+  lottie: ^3.3.2
+  tflite_flutter: ^0.12.1
   
 dev_dependencies:
   flutter_test:
@@ -45,6 +46,8 @@ flutter:
   # adding or updating assets for this project.
   assets:
     - assets/images/
+    - assets/animations/
+    - assets/ml/
   
   fonts:
     - family: Figtree

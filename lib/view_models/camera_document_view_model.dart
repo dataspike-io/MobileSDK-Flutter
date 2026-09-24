@@ -163,6 +163,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
 
       final result = await _setUseCase.uploadImage(
         documentType: documentType.value,
+        side: _isFirstSideUploaded ? side.toRaw() : null,
         imageBytes: processed,
         ext: 'jpg',
         fileName: 'document.jpg',
@@ -230,6 +231,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
     try {
       final result = await _setUseCase.uploadImage(
         documentType: documentType.value,
+        side: _isFirstSideUploaded ? side.toRaw() : null,
         imageBytes: processed,
         ext: 'jpg',
         fileName: 'document.jpg',
@@ -304,6 +306,7 @@ class CameraDocumentViewModel extends ChangeNotifier {
       final result = isImage
           ? await _setUseCase.uploadImage(
               documentType: documentType.value,
+              side: _isFirstSideUploaded ? side.toRaw() : null,
               imageBytes: uploadBytes,
               ext: 'jpg',
               fileName: 'document.jpg',

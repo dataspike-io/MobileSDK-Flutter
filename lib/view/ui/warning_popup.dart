@@ -4,9 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
 
 class WarningPopup extends StatelessWidget {
-  final BuildContext parentContext;
 
-  const WarningPopup({super.key, required this.parentContext});
+  const WarningPopup({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +44,7 @@ class WarningPopup extends StatelessWidget {
                       children: [
                         InkWell(
                           onTap: () =>
-                              Navigator.of(parentContext, rootNavigator: true)
+                              Navigator.of(context, rootNavigator: true)
                                   .pop(),
                           child: SvgPicture.asset(
                             'packages/dataspikemobilesdk/assets/images/cross_circled.svg',
@@ -83,7 +82,7 @@ class WarningPopup extends StatelessWidget {
                     const Spacer(),
                     ContinueButton(
                       onPressed: () =>
-                          Navigator.of(parentContext, rootNavigator: true)
+                          Navigator.of(context, rootNavigator: true)
                               .pop(),
                       text: 'Stay here',
                     ),
@@ -95,8 +94,8 @@ class WarningPopup extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: TextButton(
                           onPressed: () {
-                            Navigator.of(parentContext, rootNavigator: true).pop();
-                            Navigator.of(parentContext, rootNavigator: true).pop();
+                            Navigator.of(context, rootNavigator: true).pop();
+                            Navigator.of(context, rootNavigator: true).pop();
                           },
                           child: Text(
                             'Go back',

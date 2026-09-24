@@ -8,6 +8,7 @@ class TopBar extends StatelessWidget {
   final bool hasTimer;
   final bool isBackButtonHidden;
   final bool isShowingWarningPopup;
+  static bool isShowedPopUp = false;
 
   const TopBar({
     super.key,
@@ -17,6 +18,7 @@ class TopBar extends StatelessWidget {
   });
 
   void showWarningPopup(BuildContext context) {
+    isShowedPopUp = true;
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -25,8 +27,8 @@ class TopBar extends StatelessWidget {
       enableDrag: true,
       backgroundColor: AppColors.clear,
       barrierColor: AppColors.clear,
-      builder: (_) => WarningPopup(parentContext: context),
-    );
+      builder: (_) => WarningPopup(),
+    ).then((_) => isShowedPopUp = false);
   }
 
   @override

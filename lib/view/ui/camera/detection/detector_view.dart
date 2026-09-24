@@ -1,29 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'camera_view.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
-import 'dart:typed_data';
+import 'package:dataspikemobilesdk/face_detector/models/camera_frame_input.dart';
+import 'package:dataspikemobilesdk/face_detector/models/captured_frame.dart';
 
 class DetectorView extends StatefulWidget {
   const DetectorView({
     super.key,
     required this.onImage,
     required this.onShootCallback,
-    this.status,
+    required this.status,
     this.customPaint,
     this.onCameraFeedReady,
+    this.onTimerReady,
   });
 
   final CustomPaint? customPaint;
-  final Function(InputImage inputImage, double cropRatio) onImage;
+  final Function(CameraFrameInput frame, double cropRatio) onImage;
   final Future<void> Function(
-    Uint8List imageBytes,
-    Size previewKeySize, 
+    List<CapturedFrame> frames,
+    Size previewKeySize,
     Size screenSize,
     Size previewSize
   ) onShootCallback;
   final Function()? onCameraFeedReady;
-  final AvatarDetectionStatus? status;
+  final Function()? onTimerReady;
+  final AvatarDetectionStatus status;
 
   @override
   State<DetectorView> createState() => _DetectorViewState();
@@ -42,6 +44,7 @@ class _DetectorViewState extends State<DetectorView> {
       onImage: widget.onImage,
       onCameraFeedReady: widget.onCameraFeedReady,
       onShootCallback: widget.onShootCallback,
+      onTimerReady: widget.onTimerReady,
       status: widget.status,
     );
   }
