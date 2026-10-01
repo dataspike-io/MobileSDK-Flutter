@@ -9,7 +9,7 @@ import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart'
 import 'package:dataspikemobilesdk/domain/models/document_type.dart';
 import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
 import 'package:dataspikemobilesdk/data/models/request/image_document_request_body.dart';
-import 'dart:io' show File;
+import 'dart:io' show File, Platform;
 import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
 import 'package:dataspikemobilesdk/view/ui/error/error_image_bottom_sheet.dart';
@@ -30,6 +30,10 @@ class CameraDocumentViewModel extends ChangeNotifier {
   final bool _allowPoiManualUploads;
 
   bool _isFirstSideUploaded = false;
+
+  // Newer iPhones can't focus closer than ~15–20 cm, so on iOS zoom in on the
+  // back camera to make the user hold the phone further from the document.
+  static const double _backCameraZoom = 2.0;
 
   VoidCallback? onProceed;
   VoidCallback? showLoader;
@@ -101,11 +105,36 @@ class CameraDocumentViewModel extends ChangeNotifier {
       }
     }
     final initial = backCam ?? frontCam ?? cams.first;
-    ctrl = CameraController(initial, ResolutionPreset.max, enableAudio: false);
+    ctrl = _createController(initial);
     await ctrl!.initialize();
     await ctrl!.lockCaptureOrientation(DeviceOrientation.portraitUp);
     await ctrl!.setFlashMode(FlashMode.off);
+    await _applyZoom();
     notifyListeners();
+  }
+
+  // On some iPhones (48 MP sensors) ResolutionPreset.max picks a 10-bit-only
+  // device format, and camera_avfoundation then crashes in
+  // AVCaptureVideoDataOutput setVideoSettings: with an unsupported pixel format.
+  CameraController _createController(CameraDescription desc) {
+    return CameraController(
+      desc,
+      Platform.isIOS ? ResolutionPreset.veryHigh : ResolutionPreset.max,
+      enableAudio: false,
+      imageFormatGroup: Platform.isIOS ? ImageFormatGroup.bgra8888 : null,
+    );
+  }
+
+  Future<void> _applyZoom() async {
+    final c = ctrl!;
+    if (!Platform.isIOS) return;
+    if (c.description.lensDirection != CameraLensDirection.back) return;
+    try {
+      final max = await c.getMaxZoomLevel();
+      await c.setZoomLevel(_backCameraZoom.clamp(1.0, max));
+    } catch (e) {
+      debugPrint('Camera zoom error: $e');
+    }
   }
 
   Future<void> toggleCamera() async {
@@ -117,11 +146,12 @@ class CameraDocumentViewModel extends ChangeNotifier {
     if (newDesc == ctrl!.description) return;
     _useFront = !_useFront;
     await ctrl?.dispose();
-    ctrl = CameraController(newDesc, ResolutionPreset.max, enableAudio: false);
+    ctrl = _createController(newDesc);
     try {
       await ctrl!.initialize();
       await ctrl!.lockCaptureOrientation(DeviceOrientation.portraitUp);
       await ctrl!.setFlashMode(FlashMode.off);
+      await _applyZoom();
       notifyListeners();
     } catch (e) {
       debugPrint('Camera switch error: $e');

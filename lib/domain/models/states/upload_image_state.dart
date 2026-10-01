@@ -41,7 +41,7 @@ class UploadImageError extends UploadImageState {
       case ERROR_TOO_MANY_ATTEMPTS:
         return 'Too many attempts to proceed liveness check';
       case ERROR_CODE_DOCUMENT_IS_SCAN:
-        return 'Take a photo of the physical document — not a scan or a screen.';
+        return 'Take a photo of the physical document - not a scan or a screen.';
       case ERROR_CODE_INCORRECT_DOCUMENT_LAYOUT:
         return 'Fit all four edges of the document into the frame.';
       case ERROR_CODE_DOCUMENT_NOT_RECOGNIZED:
@@ -54,7 +54,7 @@ class UploadImageError extends UploadImageState {
         return 'Photo is too blurry. Retake it in better light.';
       case ERROR_CODE_SELFIE_WITH_DOC:
       case ERROR_CODE_MIRRORED_DOC:
-        return 'Photo the document alone — flat, in full frame, in focus.';
+        return 'Photo the document alone - flat, in full frame, in focus.';
       case ERROR_CODE_DOCUMENT_TYPE_MISMATCH:
         return 'The document type does not match the expected type. Upload another one.';
       case ERROR_CODE_COUNTRY_NOT_ACCEPTED:
