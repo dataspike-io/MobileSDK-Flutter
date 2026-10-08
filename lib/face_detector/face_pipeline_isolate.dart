@@ -2,89 +2,11 @@ import 'dart:isolate';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:dataspikemobilesdk/face_detector/pipeline/facepipeline.dart';
+import 'package:dataspikemobilesdk/face_detector/ml_processing/image/camera_frame_conversion.dart';
+import 'package:dataspikemobilesdk/face_detector/ml_processing/image/rgb_frame.dart';
 import 'package:dataspikemobilesdk/face_detector/models/camera_frame_input.dart';
+import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
 import 'package:dataspikemobilesdk/face_detector/models/face_analyst_result.dart';
-
-/// Converts a raw YUV420 camera frame to RGB and rotates it -90°
-/// (portrait), mirroring what the Android camera preview needs. Runs
-/// inside the pipeline isolate so this per-pixel work never blocks the
-/// UI isolate.
-img.Image _convertYuv420ToImage({
-  required Uint8List yPlane,
-  required Uint8List uPlane,
-  required Uint8List vPlane,
-  required int sensorWidth,
-  required int sensorHeight,
-  required int yRowStride,
-  required int uvRowStride,
-  required int uvPixelStride,
-  required int step,
-}) {
-  final dstW = sensorWidth ~/ step;
-  final dstH = sensorHeight ~/ step;
-
-  final rgba = Uint8List(dstW * dstH * 4);
-  for (int dy = 0; dy < dstH; dy++) {
-    final sy = dy * step;
-    for (int dx = 0; dx < dstW; dx++) {
-      final sx = dx * step;
-      final yValue = yPlane[sy * yRowStride + sx] & 0xFF;
-      final uvIndex = (sy ~/ 2) * uvRowStride + (sx ~/ 2) * uvPixelStride;
-      final u = (uPlane[uvIndex] & 0xFF) - 128;
-      final v = (vPlane[uvIndex] & 0xFF) - 128;
-      final r = (yValue + 1.402 * v).clamp(0, 255).toInt();
-      final g = (yValue - 0.344136 * u - 0.714136 * v).clamp(0, 255).toInt();
-      final b = (yValue + 1.772 * u).clamp(0, 255).toInt();
-      final idx = (dy * dstW + dx) * 4;
-      rgba[idx] = r;
-      rgba[idx + 1] = g;
-      rgba[idx + 2] = b;
-      rgba[idx + 3] = 255;
-    }
-  }
-
-  final rgbImage = img.Image.fromBytes(
-    width: dstW,
-    height: dstH,
-    bytes: rgba.buffer,
-    order: img.ChannelOrder.rgba,
-  );
-  return img.copyRotate(rgbImage, angle: -90);
-}
-
-/// Downsamples raw BGRA camera bytes into an RGB image. No rotation: iOS
-/// delivers already portrait-oriented frames. Runs inside the pipeline
-/// isolate, mirroring the YUV420 path above.
-img.Image _convertBgraToImage({
-  required Uint8List bgraBytes,
-  required int sensorWidth,
-  required int sensorHeight,
-  required int bgraRowStride,
-  required int step,
-}) {
-  final dstW = sensorWidth ~/ step;
-  final dstH = sensorHeight ~/ step;
-
-  final out = Uint8List(dstW * dstH * 4);
-  for (int dy = 0; dy < dstH; dy++) {
-    final srcRowOffset = (dy * step) * bgraRowStride;
-    for (int dx = 0; dx < dstW; dx++) {
-      final srcIdx = srcRowOffset + (dx * step) * 4;
-      final dstIdx = (dy * dstW + dx) * 4;
-      out[dstIdx] = bgraBytes[srcIdx];
-      out[dstIdx + 1] = bgraBytes[srcIdx + 1];
-      out[dstIdx + 2] = bgraBytes[srcIdx + 2];
-      out[dstIdx + 3] = bgraBytes[srcIdx + 3];
-    }
-  }
-
-  return img.Image.fromBytes(
-    width: dstW,
-    height: dstH,
-    bytes: out.buffer,
-    order: img.ChannelOrder.bgra,
-  );
-}
 
 class _IsolateInitData {
   final SendPort toMain;
@@ -137,9 +59,11 @@ void _isolateEntry(_IsolateInitData init) async {
     }
 
     try {
-      final img.Image image;
+      // Camera bytes go straight into the RGB buffer the pipeline works on
+      // (single pass, rotation included on Android).
+      final RgbFrame frame;
       if (request.containsKey('yPlane')) {
-        image = _convertYuv420ToImage(
+        frame = yuv420ToRgbFrame(
           yPlane: request['yPlane'] as Uint8List,
           uPlane: request['uPlane'] as Uint8List,
           vPlane: request['vPlane'] as Uint8List,
@@ -151,7 +75,7 @@ void _isolateEntry(_IsolateInitData init) async {
           step: request['step'] as int,
         );
       } else if (request.containsKey('bgraBytes')) {
-        image = _convertBgraToImage(
+        frame = bgraToRgbFrame(
           bgraBytes: request['bgraBytes'] as Uint8List,
           sensorWidth: request['sensorWidth'] as int,
           sensorHeight: request['sensorHeight'] as int,
@@ -159,16 +83,25 @@ void _isolateEntry(_IsolateInitData init) async {
           step: request['step'] as int,
         );
       } else {
-        image = img.Image.fromBytes(
-          width: request['width'] as int,
-          height: request['height'] as int,
-          bytes: (request['bytes'] as Uint8List).buffer,
-          order: img.ChannelOrder.rgb,
+        frame = RgbFrame(
+          request['bytes'] as Uint8List,
+          request['width'] as int,
+          request['height'] as int,
         );
       }
 
-      final cropRatio = request['cropRatio'] as double? ?? 0.0;
-      final result = await pipeline.analyze(image, cropRatio: cropRatio);
+      final AvatarCropRect? avatarRect = request.containsKey('cropX')
+          ? (
+              x: request['cropX'] as int,
+              y: request['cropY'] as int,
+              w: request['cropW'] as int,
+              h: request['cropH'] as int,
+            )
+          : null;
+      final result = await pipeline.analyzeFrame(
+        frame,
+        avatarRect: avatarRect,
+      );
       
       if (result == null) {
         replyPort.send(null);
@@ -177,6 +110,8 @@ void _isolateEntry(_IsolateInitData init) async {
 
       replyPort.send({
         'detectionScore': result.detectionScore,
+        'facePresenceScore': result.facePresenceScore,
+        'blurryFrames': result.blurryFrames,
         'landmarks': result.landmarks,
         'headPose': result.headPose,
         'isHeadPoseAcceptable': result.isHeadPoseAcceptable,
@@ -190,6 +125,11 @@ void _isolateEntry(_IsolateInitData init) async {
         'isForeheadVisible': result.isForeheadVisible,
         'isTooBright': result.isTooBright,
         'isTooDark': result.isTooDark,
+        'blurScore': result.blurScore,
+        'brightRatio': result.brightRatio,
+        'darkRatio': result.darkRatio,
+        'leftEar': result.leftEar,
+        'rightEar': result.rightEar,
       });
     } catch (e) {
       replyPort.send({'error': e.toString()});
@@ -213,10 +153,10 @@ class FacePipelineIsolate {
       'packages/dataspikemobilesdk/assets/ml/iqa_mobilenetv3small100_sigmoid.tflite',
     );
     final detectorBytes = await rootBundle.load(
-      'packages/dataspikemobilesdk/assets/ml/mediapipe_face-facedetector-float.tflite',
+      'packages/dataspikemobilesdk/assets/ml/face_detector.tflite',
     );
     final landmarksBytes = await rootBundle.load(
-      'packages/dataspikemobilesdk/assets/ml/mediapipe_face-facelandmarkdetector-float.tflite',
+      'packages/dataspikemobilesdk/assets/ml/face_landmarks_detector.tflite',
     );
     final canonicalData = await rootBundle.loadString(
       'packages/dataspikemobilesdk/assets/ml/canonical_face_model.obj',
@@ -248,14 +188,17 @@ class FacePipelineIsolate {
 
   Future<FaceAnalysisResult?> analyze(
     CameraFrameInput frame, {
-    double cropRatio = 0.0,
+    AvatarCropRect? avatarRect,
   }) async {
     final replyPort = ReceivePort();
 
-    final Map<String, dynamic> message = {
-      'cropRatio': cropRatio,
-      'replyPort': replyPort.sendPort,
-    };
+    final Map<String, dynamic> message = {'replyPort': replyPort.sendPort};
+    if (avatarRect != null) {
+      message['cropX'] = avatarRect.x;
+      message['cropY'] = avatarRect.y;
+      message['cropW'] = avatarRect.w;
+      message['cropH'] = avatarRect.h;
+    }
 
     final decoded = frame.decoded;
     final bgraBytes = frame.bgraBytes;
@@ -295,6 +238,8 @@ class FacePipelineIsolate {
 
     return FaceAnalysisResult(
       detectionScore: map['detectionScore'] as double,
+      facePresenceScore: map['facePresenceScore'] as double,
+      blurryFrames: map['blurryFrames'] as int,
       landmarks: (map['landmarks'] as List).cast<Map<String, double>>(),
       headPose: map['headPose'] as Map<String, double>?,
       isHeadPoseAcceptable: map['isHeadPoseAcceptable'] as bool,
@@ -310,6 +255,11 @@ class FacePipelineIsolate {
       isForeheadVisible: map['isForeheadVisible'] as bool,
       isTooBright: map['isTooBright'] as bool,
       isTooDark: map['isTooDark'] as bool,
+      blurScore: map['blurScore'] as double,
+      brightRatio: map['brightRatio'] as double,
+      darkRatio: map['darkRatio'] as double,
+      leftEar: map['leftEar'] as double,
+      rightEar: map['rightEar'] as double,
     );
   }
 

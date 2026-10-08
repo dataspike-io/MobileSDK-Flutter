@@ -301,118 +301,142 @@ class HeadPoseEstimator {
       A[0][1] * (A[1][0]*A[2][2] - A[1][2]*A[2][0]) +
       A[0][2] * (A[1][0]*A[2][1] - A[1][1]*A[2][0]);
 
-  // Simple SVD for 3x3 using Jacobi iterations
+  // SVD for 3x3 via eigendecomposition of A^T*A. Port of svd3x3 (reference
+  // JS): singular values sorted descending, so the reflection fix in
+  // _procrustes always lands on the smallest one.
   static (List<List<double>>, List<double>, List<List<double>>)? _svd3x3(
     List<List<double>> A,
   ) {
-    // Use Golub-Reinsch via eigendecomposition of A^T*A
-    final At = _transpose3x3(A);
-    final AtA = _multiply3x3(At, A);
+    final eig = _eigen3x3Symmetric(_multiply3x3(_transpose3x3(A), A));
+    final values = eig.$1;
+    final vectors = eig.$2;
 
-    final eig = _eigen3x3Symmetric(AtA);
-    if (eig == null) return null;
+    final idx = [0, 1, 2]..sort((a, b) => values[b].compareTo(values[a]));
+    final sv = idx.map((i) => math.sqrt(math.max(0.0, values[i]))).toList();
+    final V = List.generate(
+      3,
+      (r) => List.generate(3, (c) => vectors[r][idx[c]]),
+    );
 
-    final eigenvalues = eig.$1;
-    final V = eig.$2;
-
-    final sv = eigenvalues.map((e) => math.sqrt(e.abs())).toList();
-
-    // U = A*V * diag(1/sv)
+    // U = A*V * diag(1/sv); degenerate columns completed by cross product.
     final AV = _multiply3x3(A, V);
     final U = List.generate(3, (_) => List<double>.filled(3, 0.0));
-    for (int i = 0; i < 3; i++) {
-      for (int j = 0; j < 3; j++) {
-        U[i][j] = sv[j] > 1e-10 ? AV[i][j] / sv[j] : 0.0;
+    for (int j = 0; j < 3; j++) {
+      if (sv[j] > 1e-10) {
+        for (int i = 0; i < 3; i++) {
+          U[i][j] = AV[i][j] / sv[j];
+        }
+      }
+    }
+    for (int j = 0; j < 3; j++) {
+      if (sv[j] <= 1e-10) {
+        final a = (j + 1) % 3;
+        final b = (j + 2) % 3;
+        U[0][j] = U[1][a] * U[2][b] - U[2][a] * U[1][b];
+        U[1][j] = U[2][a] * U[0][b] - U[0][a] * U[2][b];
+        U[2][j] = U[0][a] * U[1][b] - U[1][a] * U[0][b];
       }
     }
 
-    final Vt = _transpose3x3(V);
-    return (U, sv, Vt);
+    return (U, sv, _transpose3x3(V));
   }
 
-  // Jacobi eigendecomposition for 3x3 symmetric matrix
-  static (List<double>, List<List<double>>)? _eigen3x3Symmetric(
+  // Jacobi eigendecomposition for 3x3 symmetric matrix.
+  // Port of jacobiEigen3x3 (reference JS).
+  static (List<double>, List<List<double>>) _eigen3x3Symmetric(
     List<List<double>> A,
   ) {
     final a = List.generate(3, (i) => List<double>.from(A[i]));
-    var V = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
+    final v = [
+      [1.0, 0.0, 0.0],
+      [0.0, 1.0, 0.0],
+      [0.0, 0.0, 1.0],
+    ];
 
     for (int iter = 0; iter < 100; iter++) {
-      // Find largest off-diagonal element
+      double maxOff = 0;
       int p = 0, q = 1;
-      double maxVal = a[0][1].abs();
-      if (a[0][2].abs() > maxVal) { maxVal = a[0][2].abs(); p = 0; q = 2; }
-      if (a[1][2].abs() > maxVal) { maxVal = a[1][2].abs(); p = 1; q = 2; }
+      for (int i = 0; i < 3; i++) {
+        for (int j = i + 1; j < 3; j++) {
+          if (a[i][j].abs() > maxOff) {
+            maxOff = a[i][j].abs();
+            p = i;
+            q = j;
+          }
+        }
+      }
+      if (maxOff < 1e-15) break;
 
-      if (maxVal < 1e-12) break;
+      final diff = a[p][p] - a[q][q];
+      double tanTheta;
+      if (diff.abs() < 1e-15) {
+        tanTheta = 1;
+      } else {
+        final tau = diff / (2 * a[p][q]);
+        tanTheta = tau.sign / (tau.abs() + math.sqrt(1 + tau * tau));
+      }
+      final c = 1 / math.sqrt(1 + tanTheta * tanTheta);
+      final s = tanTheta * c;
 
-      final theta = (a[q][q] - a[p][p]) / (2 * a[p][q]);
-      final t = theta >= 0
-          ? 1.0 / (theta + math.sqrt(1 + theta * theta))
-          : 1.0 / (theta - math.sqrt(1 + theta * theta));
-      final c = 1.0 / math.sqrt(1 + t * t);
-      final s = t * c;
-
-      // Update a
-      final app = a[p][p] - t * a[p][q];
-      final aqq = a[q][q] + t * a[p][q];
-      a[p][p] = app;
-      a[q][q] = aqq;
-      a[p][q] = 0.0;
-      a[q][p] = 0.0;
+      final apq = a[p][q];
+      a[p][p] += tanTheta * apq;
+      a[q][q] -= tanTheta * apq;
+      a[p][q] = 0;
+      a[q][p] = 0;
 
       for (int r = 0; r < 3; r++) {
         if (r != p && r != q) {
-          final arp = c * a[r][p] - s * a[r][q];
-          final arq = s * a[r][p] + c * a[r][q];
-          a[r][p] = arp; a[p][r] = arp;
-          a[r][q] = arq; a[q][r] = arq;
+          final arp = a[r][p];
+          final arq = a[r][q];
+          final rp = c * arp + s * arq;
+          final rq = -s * arp + c * arq;
+          a[r][p] = rp;
+          a[p][r] = rp;
+          a[r][q] = rq;
+          a[q][r] = rq;
         }
       }
-
-      // Update V
       for (int r = 0; r < 3; r++) {
-        final vrp = c * V[r][p] - s * V[r][q];
-        final vrq = s * V[r][p] + c * V[r][q];
-        V[r][p] = vrp;
-        V[r][q] = vrq;
+        final vrp = v[r][p];
+        final vrq = v[r][q];
+        v[r][p] = c * vrp + s * vrq;
+        v[r][q] = -s * vrp + c * vrq;
       }
     }
 
-    return ([a[0][0], a[1][1], a[2][2]], V);
+    return ([a[0][0], a[1][1], a[2][2]], v);
   }
+
+  static final List<double> _weights = _buildWeights(468);
 
   // Main method — call this from FacePipeline
   static Map<String, double>? estimate(
-    List<Map<String, double>> landmarks,  // 468 points normalized [0,1]
-    List<List<double>> mInv,              // inverse affine from crop
-    List<List<double>> canonical,         // canonical face model
+    List<Map<String, double>> landmarks, // normalized [0,1], first 468 used
+    List<List<double>> lmOrig, // landmarks in original image pixels
+    List<List<double>> canonical, // canonical face model
+    double roiSize, // side of the landmarks ROI in original pixels
     int imgH,
     int imgW,
-    int ldW,
-    int ldH,
   ) {
-    final weights = _buildWeights(468);
+    // z is relative to the ROI width; rescale to the full-frame width.
+    final roiWidthNorm = roiSize / imgW;
+    final lmZ = landmarks.map((l) => l['z']! * roiWidthNorm).toList();
 
-    // Map landmarks back to original image space
-    final lmOrig = mapLandmarksToOriginal(landmarks, mInv, ldW, ldH);
-    final lmZ = landmarks.map((l) => l['z']!).toList();
-
-    final mat44 = estimatePose(lmOrig, lmZ, canonical, weights, imgH, imgW);
+    final mat44 = estimatePose(lmOrig, lmZ, canonical, _weights, imgH, imgW);
     if (mat44 == null) return null;
 
     return anglesFromMatrix(mat44);
   }
 
-  // Check if angles are within acceptable range
-  static bool isAcceptable(
-    Map<String, double> angles, {
-    double maxPitch = 14.0,
-    double maxYaw = 13.0, // 11???
-    double maxRoll = 15.0,
-  }) {
-    return angles['pitch']!.abs() <= maxPitch &&
-        angles['yaw']!.abs() <= maxYaw &&
-        angles['roll']!.abs() <= maxRoll;
+  // Head counts as rotated once any angle reaches its threshold
+  // (PITCH_THR / YAW_THR / ROLL_THR in the reference).
+  static const double maxPitch = 15.0;
+  static const double maxYaw = 11.0;
+  static const double maxRoll = 15.0;
+
+  static bool isAcceptable(Map<String, double> angles) {
+    return angles['pitch']!.abs() < maxPitch &&
+        angles['yaw']!.abs() < maxYaw &&
+        angles['roll']!.abs() < maxRoll;
   }
 }

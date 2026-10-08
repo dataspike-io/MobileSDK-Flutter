@@ -1,5 +1,7 @@
 class FaceAnalysisResult {
   final double detectionScore;
+  final double facePresenceScore;
+  final int blurryFrames;
   final List<Map<String, double>> landmarks;
   final Map<String, double>? headPose;
   final bool isHeadPoseAcceptable;
@@ -11,8 +13,17 @@ class FaceAnalysisResult {
   final bool isTooBright;
   final bool isTooDark;
 
+  // Raw single-frame metrics behind the flags above, for logging/tests.
+  final double blurScore;
+  final double brightRatio;
+  final double darkRatio;
+  final double leftEar;
+  final double rightEar;
+
   FaceAnalysisResult({
     required this.detectionScore,
+    required this.facePresenceScore,
+    required this.blurryFrames,
     required this.landmarks,
     required this.headPose,
     required this.isHeadPoseAcceptable,
@@ -23,6 +34,11 @@ class FaceAnalysisResult {
     required this.isForeheadVisible,
     required this.isTooBright,
     required this.isTooDark,
+    required this.blurScore,
+    required this.brightRatio,
+    required this.darkRatio,
+    required this.leftEar,
+    required this.rightEar,
   });
 }
 

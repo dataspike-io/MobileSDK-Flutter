@@ -6,10 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/avatar_instruction_pill.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
+import 'package:dataspikemobilesdk/utils/camera/camera_variable_environments.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/face_oval_outside_clipper.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/default_face_corner_painter.dart';
 import 'package:dataspikemobilesdk/face_detector/models/camera_frame_input.dart';
 import 'package:dataspikemobilesdk/face_detector/models/captured_frame.dart';
+import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 
@@ -23,10 +25,18 @@ class CameraView extends StatefulWidget {
     this.onCameraFeedReady,
     this.onTimerReady,
     this.onRetry,
+    this.scoresOverlay,
+    this.livenessDryRun = false,
   });
 
   final CustomPaint? customPaint;
-  final Function(CameraFrameInput frame, double cropRatio) onImage;
+
+  /// Optional debug panel pinned to the top of the preview.
+  final Widget? scoresOverlay;
+
+  /// Debug: reaching ok does not capture or upload anything.
+  final bool livenessDryRun;
+  final Function(CameraFrameInput frame, AvatarCropRect avatarRect) onImage;
   final Future<void> Function(
     List<CapturedFrame> frames,
     Size previewKeySize,
@@ -51,6 +61,9 @@ class _CameraViewState extends State<CameraView> {
   final _previewKey = GlobalKey();
   DateTime? _lastFrameTime;
   Completer<CameraImage>? _captureCompleter;
+  // Gap between the 4 uploaded liveness frames, so they are spread out
+  // instead of being consecutive (near-identical) stream frames.
+  static const _captureFrameGap = Duration(milliseconds: 300);
 
   Timer? _countdownTimer;
   int _countdownValue = 5;
@@ -173,6 +186,13 @@ class _CameraViewState extends State<CameraView> {
                                     : null,
                               ),
                             ),
+                      if (widget.scoresOverlay != null)
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          right: 8,
+                          child: widget.scoresOverlay!,
+                        ),
                       if (widget.status.isVisible || _showSuccessDots)
                         Positioned(
                           bottom: 30,
@@ -241,7 +261,9 @@ class _CameraViewState extends State<CameraView> {
   void didUpdateWidget(covariant CameraView oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (widget.status == AvatarDetectionStatus.ok &&
+    if (widget.livenessDryRun) {
+      // Dry run: green is only shown, nothing is captured or sent.
+    } else if (widget.status == AvatarDetectionStatus.ok &&
         oldWidget.status != AvatarDetectionStatus.ok) {
       _triggerCapture(MediaQuery.of(context).size);
       _startSuccessDotsTimer();
@@ -321,12 +343,26 @@ class _CameraViewState extends State<CameraView> {
     final frame = _buildFrameInput(image);
     if (frame == null) return;
 
+    // Analyze exactly the area that will be uploaded: the avatar mask rect,
+    // computed with the same geometry as the upload crop.
+    final renderBox =
+        _previewKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null || !renderBox.hasSize) return;
     final ps = _controller!.value.previewSize!;
-    final previewAR = ps.height / ps.width;
-    final coverScale = previewAR / _containerAR!;
-    final fraction = 1 - coverScale;
+    final avatarRect = avatarCropRect(
+      imageWidth: frame.width,
+      imageHeight: frame.height,
+      containerW: renderBox.size.width,
+      containerH: renderBox.size.height,
+      previewW: ps.width,
+      previewH: ps.height,
+      sideInsetPct: CameraConstants.avatarSideInsetPct,
+      topApexPct: CameraConstants.avatarTopApexPct,
+      bottomApexFromBottomPct: CameraConstants.avatarBottomApexFromBottomPct,
+      strokeWidth: CameraConstants.avatarStrokeWidth,
+    );
 
-    widget.onImage(frame, fraction);
+    widget.onImage(frame, avatarRect);
   }
 
   // Both platforms hand off raw, unconverted camera bytes and let the
@@ -370,6 +406,7 @@ class _CameraViewState extends State<CameraView> {
       final captured = <CapturedFrame>[];
 
       for (int i = 0; i < 4; i++) {
+        if (i > 0) await Future.delayed(_captureFrameGap);
         _captureCompleter = Completer<CameraImage>();
         final image = await _captureCompleter!.future;
         _captureCompleter = null;
@@ -409,6 +446,7 @@ class _CameraViewState extends State<CameraView> {
       final yuvFrames = <_YuvFrameData>[];
 
       for (int i = 0; i < 4; i++) {
+        if (i > 0) await Future.delayed(_captureFrameGap);
         _captureCompleter = Completer<CameraImage>();
         final image = await _captureCompleter!.future;
         _captureCompleter = null;

@@ -3,6 +3,7 @@ import 'camera_view.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
 import 'package:dataspikemobilesdk/face_detector/models/camera_frame_input.dart';
 import 'package:dataspikemobilesdk/face_detector/models/captured_frame.dart';
+import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
 
 class DetectorView extends StatefulWidget {
   const DetectorView({
@@ -14,10 +15,14 @@ class DetectorView extends StatefulWidget {
     this.onCameraFeedReady,
     this.onTimerReady,
     this.onRetry,
+    this.scoresOverlay,
+    this.livenessDryRun = false,
   });
 
   final CustomPaint? customPaint;
-  final Function(CameraFrameInput frame, double cropRatio) onImage;
+  final Widget? scoresOverlay;
+  final bool livenessDryRun;
+  final Function(CameraFrameInput frame, AvatarCropRect avatarRect) onImage;
   final Future<void> Function(
     List<CapturedFrame> frames,
     Size previewKeySize,
@@ -49,6 +54,8 @@ class _DetectorViewState extends State<DetectorView> {
       onTimerReady: widget.onTimerReady,
       onRetry: widget.onRetry,
       status: widget.status,
+      scoresOverlay: widget.scoresOverlay,
+      livenessDryRun: widget.livenessDryRun,
     );
   }
 }
