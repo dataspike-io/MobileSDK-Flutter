@@ -94,7 +94,14 @@ class DataspikeCoordinator {
       MaterialPageRoute(
         builder: (_) => DataspikeScreen(
           onSuccess: (context) {
-            showNextStep(context, DataspikeStep.onboarding);
+            if (DataspikeInjector.component.livenessOnly) {
+              // Debug: straight to the selfie camera (see _requiredSteps).
+              _bindFlowContext(context);
+              scheduleVerificationExpiryWatch();
+              proceedNext(context);
+            } else {
+              showNextStep(context, DataspikeStep.onboarding);
+            }
           },
           onFail: (context) {
             // Handle failure
@@ -218,7 +225,37 @@ class DataspikeCoordinator {
     }
   }
 
+  /// Camera permission screen to show first, if any.
+  static List<DataspikeStep> _cameraPermissionSteps() {
+    DataspikeInjector.component.permissionService.requestCameraStatus();
+    final cameraStatus =
+        DataspikeInjector.component.permissionService.initialStatus;
+
+    switch (cameraStatus) {
+      case PermissionStatus.restricted:
+      case PermissionStatus.permanentlyDenied:
+        return [DataspikeStep.cameraDenied];
+      case PermissionStatus.granted:
+        return [];
+      case PermissionStatus.denied:
+      case PermissionStatus.limited:
+      default:
+        return [DataspikeStep.cameraAccess];
+    }
+  }
+
   static List<DataspikeStep> _requiredSteps() {
+    if (DataspikeInjector.component.livenessOnly) {
+      // Debug: only the selfie camera, regardless of the verification's
+      // required checks.
+      return [
+        ..._cameraPermissionSteps(),
+        DataspikeStep.selfieCamera,
+        DataspikeStep.successSelfie,
+        DataspikeStep.verificationCompleted,
+      ];
+    }
+
     final vm = DataspikeInjector.component.verificationManager.checks;
 
     final requiresDocument = vm.poiIsRequired;
@@ -230,21 +267,7 @@ class DataspikeCoordinator {
     if (personalData) steps.add(DataspikeStep.personalData);
 
     if (requiresDocument || requiresSelfie) {
-      DataspikeInjector.component.permissionService.requestCameraStatus();
-      final cameraStatus =
-          DataspikeInjector.component.permissionService.initialStatus;
-
-      switch (cameraStatus) {
-        case PermissionStatus.restricted:
-        case PermissionStatus.permanentlyDenied:
-          steps.add(DataspikeStep.cameraDenied);
-        case PermissionStatus.granted:
-          break;
-        case PermissionStatus.denied:
-        case PermissionStatus.limited:
-        default:
-          steps.add(DataspikeStep.cameraAccess);
-      }
+      steps.addAll(_cameraPermissionSteps());
     }
     if (requiresDocument) {
       steps.add(DataspikeStep.documentInstruction);

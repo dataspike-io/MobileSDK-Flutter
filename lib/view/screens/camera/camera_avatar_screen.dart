@@ -1,5 +1,6 @@
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/detection/face_detector_view.dart';
+import 'package:dataspikemobilesdk/dependencies_provider/dataspike_injector.dart';
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:dataspikemobilesdk/view/ui/loader.dart';
@@ -141,6 +142,8 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
               Expanded(
                 child: FaceDetectorView(
                   key: _faceDetectorKey,
+                  showMlScores: DataspikeInjector.component.showMlScores,
+                  livenessDryRun: DataspikeInjector.component.livenessDryRun,
                   onShootCallback:
                       (imageBytes, previewKeySize, screenSize, previewSize) =>
                           viewModel.shootAndCropV2(

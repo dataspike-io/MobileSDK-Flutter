@@ -11,6 +11,9 @@ abstract class DataspikeComponent {
   VerificationManager get verificationManager;
   PersonalDataManager get personalDataManager;
   PermissionService get permissionService;
+  bool get showMlScores;
+  bool get livenessOnly;
+  bool get livenessDryRun;
 }
 
 class DataspikeComponentImpl implements DataspikeComponent {
@@ -33,4 +36,13 @@ class DataspikeComponentImpl implements DataspikeComponent {
 
   @override
   PermissionService get permissionService => _module.permissionService;
+
+  @override
+  bool get showMlScores => _module.showMlScores;
+
+  @override
+  bool get livenessOnly => _module.livenessOnly;
+
+  @override
+  bool get livenessDryRun => _module.livenessDryRun;
 }

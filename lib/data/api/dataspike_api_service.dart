@@ -11,6 +11,7 @@ import 'package:dataspikemobilesdk/data/models/request/country_request_body.dart
 import 'package:dataspikemobilesdk/data/models/response/country_response.dart';
 import 'package:dataspikemobilesdk/data/models/response/proceed_with_verification_response.dart';
 import 'package:dataspikemobilesdk/data/api/dataspike_endpoint.dart';
+import 'package:dataspikemobilesdk/data/api/dataspike_http_client.dart';
 import 'package:dataspikemobilesdk/data/models/response/upload_image_error_response.dart';
 import 'package:dataspikemobilesdk/data/models/response/dataspike_profile_fields_response.dart';
 import 'package:dataspikemobilesdk/data/models/request/profile_fields_request_body.dart';
@@ -64,6 +65,8 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
   final String baseUrl;
   final String apiToken;
 
+  final http.Client _client = DataspikeHttpClient();
+
   static const Duration _defaultTimeout = Duration(seconds: 20);
 
   DataspikeApiServiceImpl({required this.baseUrl, required this.apiToken});
@@ -76,7 +79,7 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     final headers = DataspikeEndpoint.getVerification.headers(apiToken);
 
     return _wrapNetworkErrors(() async {
-      final response = await http
+      final response = await _client
           .get(url, headers: headers)
           .timeout(_defaultTimeout);
       if (response.statusCode == 200) {
@@ -121,7 +124,7 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     }
 
     return _wrapNetworkErrors(() async {
-      final streamedResponse = await request.send().timeout(_defaultTimeout);
+      final streamedResponse = await _client.send(request).timeout(_defaultTimeout);
       final response = await http.Response.fromStream(streamedResponse);
       if (response.statusCode == 200) {
         final jsonBody = json.decode(response.body) as Map<String, dynamic>;
@@ -174,7 +177,7 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     }
 
     return _wrapNetworkErrors(() async {
-      final streamedResponse = await request.send().timeout(_defaultTimeout);
+      final streamedResponse = await _client.send(request).timeout(_defaultTimeout);
       final response = await http.Response.fromStream(streamedResponse);
       if (response.statusCode == 200) {
         final jsonBody = json.decode(response.body) as Map<String, dynamic>;
@@ -204,7 +207,7 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     final headers = DataspikeEndpoint.uploadImage.headers(apiToken);
 
     return _wrapNetworkErrors(() async {
-      final response = await http
+      final response = await _client
           .post(url, headers: headers, body: json.encode(body.toJson()))
           .timeout(_defaultTimeout);
       if (response.statusCode == 200) {
@@ -251,7 +254,7 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     }
 
     return _wrapNetworkErrors(() async {
-      final streamedResponse = await request.send().timeout(_defaultTimeout);
+      final streamedResponse = await _client.send(request).timeout(_defaultTimeout);
       final response = await http.Response.fromStream(streamedResponse);
       if (response.statusCode == 200) {
         final jsonBody = json.decode(response.body) as Map<String, dynamic>;
@@ -281,7 +284,7 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     final headers = DataspikeEndpoint.setCountry.headers(apiToken);
 
     return _wrapNetworkErrors(() async {
-      final response = await http
+      final response = await _client
           .post(url, headers: headers, body: json.encode(body.toJson()))
           .timeout(_defaultTimeout);
       if (response.statusCode == 200) {
@@ -299,7 +302,7 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     final headers = DataspikeEndpoint.getCountries.headers(apiToken);
 
     return _wrapNetworkErrors(() async {
-      final response = await http
+      final response = await _client
           .get(url, headers: headers)
           .timeout(_defaultTimeout);
       if (response.statusCode == 200) {
@@ -323,7 +326,7 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     final headers = DataspikeEndpoint.proceedWithVerification.headers(apiToken);
 
     return _wrapNetworkErrors(() async {
-      final response = await http
+      final response = await _client
           .post(url, headers: headers)
           .timeout(_defaultTimeout);
       if (response.statusCode == 200) {
@@ -358,7 +361,7 @@ class DataspikeApiServiceImpl implements IDataspikeApiService {
     final headers = DataspikeEndpoint.setProfileFields.headers(apiToken);
 
     return _wrapNetworkErrors(() async {
-      final response = await http
+      final response = await _client
           .post(url, headers: headers, body: json.encode(body.toJson()))
           .timeout(_defaultTimeout);
       if (response.statusCode == 200) {

@@ -3,7 +3,6 @@ import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:dataspikemobilesdk/face_detector/ml_processing/face_detector/postprocessing/face_detector_postprocessor.dart';
 import 'package:dataspikemobilesdk/face_detector/ml_processing/face_detector/preprocessing/face_detector_preprocessor.dart';
 import 'package:dataspikemobilesdk/face_detector/ml_processing/face_landmarks_detector/postprocessing/face_landmarks_postprocessor.dart';
-import 'package:dataspikemobilesdk/face_detector/ml_processing/face_landmarks_detector/preprocessing/face_landmarks_preprocessor.dart';
 import 'package:dataspikemobilesdk/face_detector/ml_processing/face_landmarks_detector/postprocessing/head_pose_estimator.dart';
 import 'package:dataspikemobilesdk/face_detector/ml_processing/iqa/preprocessing/iqa_preprocessor.dart';
 import 'package:dataspikemobilesdk/face_detector/models/face_analyst_result.dart';
@@ -11,31 +10,56 @@ import 'package:dataspikemobilesdk/face_detector/ml_processing/face_crop/face_cr
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:dataspikemobilesdk/face_detector/ml_processing/brightness_checker/brightness_checker.dart';
+import 'package:dataspikemobilesdk/face_detector/ml_processing/image/rgb_frame.dart';
+import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
 
 class FacePipeline {
   late Interpreter _faceDetector;
   late Interpreter _faceLandmarks;
   late Interpreter _iqa;
 
-  late final List<List<List<double>>> _boxCoords1;
-  late final List<List<List<double>>> _boxCoords2;
-  late final List<List<List<double>>> _boxScores1;
-  late final List<List<List<double>>> _boxScores2;
-  late final List<List<List<double>>> _landmarksTensor;
-  late final List<double> _scoresTensor;
+  /// IQA score above which a frame counts as blurry (0 = sharp, 1 = blurry).
+  static const double blurThreshold = 0.55;
+
+  /// Consecutive blurry frames needed before the frame is flagged blurry.
+  static const int blurryFramesToFlag = 4;
+
+  /// Minimum landmarks-model face presence probability.
+  static const double facePresenceThreshold = 0.5;
 
   List<List<double>> _canonical = [];
   int _blurryFrames = 0;
 
-  Map<String, dynamic>? _trackedFace;
-  int _framesSinceDetection = 0;
-  static const int _redetectEveryNFrames = 5;
+  // Exponential pose smoothing across frames (POSE_SMOOTH_ALPHA in the
+  // reference pipeline).
+  static const double _poseSmoothAlpha = 0.5;
+  Map<String, double>? _smoothedPose;
+
+  /// Wall time per stage of the last [analyze] call, in ms (profiling).
+  final Map<String, double> lastTimingsMs = {};
+  final Stopwatch _stageClock = Stopwatch();
+
+  void _lap(String stage) {
+    lastTimingsMs[stage] = _stageClock.elapsedMicroseconds / 1000;
+    _stageClock
+      ..reset()
+      ..start();
+  }
 
   void resetState() {
-    _trackedFace = null;
-    _framesSinceDetection = _redetectEveryNFrames;
     _blurryFrames = 0;
+    _smoothedPose = null;
+  }
+
+  Map<String, double> _smoothPose(Map<String, double> p) {
+    final prev = _smoothedPose;
+    if (prev == null) return _smoothedPose = Map.of(p);
+    return _smoothedPose = {
+      for (final k in const ['pitch', 'yaw', 'roll'])
+        k: _poseSmoothAlpha * p[k]! + (1 - _poseSmoothAlpha) * prev[k]!,
+    };
   }
 
   // Default interpreter options run on very few CPU threads. Apple
@@ -90,29 +114,27 @@ class FacePipeline {
 
     pipeline._canonical = await _parseCanonical(canonicalData);
 
-    pipeline._boxCoords1 = List.generate(
-      1,
-      (_) => List.generate(512, (_) => List.filled(16, 0.0)),
-    );
-    pipeline._boxCoords2 = List.generate(
-      1,
-      (_) => List.generate(384, (_) => List.filled(16, 0.0)),
-    );
-    pipeline._boxScores1 = List.generate(
-      1,
-      (_) => List.generate(512, (_) => List.filled(1, 0.0)),
-    );
-    pipeline._boxScores2 = List.generate(
-      1,
-      (_) => List.generate(384, (_) => List.filled(1, 0.0)),
-    );
-    pipeline._landmarksTensor = List.generate(
-      1,
-      (_) => List.generate(468, (_) => List.filled(3, 0.0)),
-    );
-    pipeline._scoresTensor = List.filled(1, 0.0);
-
     return pipeline;
+  }
+
+  /// Runs [interpreter] on a flat float32 input and returns every output
+  /// tensor as a flat Float32List (copied out of native memory).
+  ///
+  /// Raw bytes go straight into the tensor. Passing nested Lists (reshape)
+  /// instead makes tflite_flutter convert each element through its own
+  /// ByteData — ~350k allocations per frame here, which cost seconds per
+  /// frame on mid-range Android.
+  static List<Float32List> _infer(Interpreter interpreter, Float32List input) {
+    interpreter.runInference([input.buffer]);
+    return [
+      for (final tensor in interpreter.getOutputTensors())
+        Float32List.fromList(
+          tensor.data.buffer.asFloat32List(
+            tensor.data.offsetInBytes,
+            tensor.data.lengthInBytes ~/ 4,
+          ),
+        ),
+    ];
   }
 
   static Future<List<List<double>>> _parseCanonical(String data) async {
@@ -132,85 +154,88 @@ class FacePipeline {
 
   Future<FaceAnalysisResult?> analyze(
     img.Image inputImage, {
-    double cropRatio = 0.0,
-  }) async {
-    final origH = inputImage.height;
-    final origW = inputImage.width;
-    final scale = math.min(256 / origH, 256 / origW);
+    AvatarCropRect? avatarRect,
+  }) => analyzeFrame(RgbFrame.fromImage(inputImage), avatarRect: avatarRect);
 
-    if (_trackedFace == null ||
-        _framesSinceDetection >= _redetectEveryNFrames) {
-      final detectorInput = FaceDetectorPreprocessor.preprocess(inputImage);
-      _faceDetector.runForMultipleInputs(
-        [
-          detectorInput.reshape([1, 256, 256, 3]),
-        ],
-        {0: _boxCoords1, 1: _boxCoords2, 2: _boxScores1, 3: _boxScores2},
-      );
-      final detectedFaces = FaceDetectorPostprocessor.postprocess(
-        _boxCoords1,
-        _boxCoords2,
-        _boxScores1,
-        _boxScores2,
-        scale,
-      );
-      if (detectedFaces.isEmpty) {
-        _trackedFace = null;
-        return null;
-      }
-      _trackedFace = detectedFaces.first;
-      _framesSinceDetection = 0;
-    } else {
-      _framesSinceDetection++;
+  Future<FaceAnalysisResult?> analyzeFrame(
+    RgbFrame fullFrame, {
+    AvatarCropRect? avatarRect,
+  }) async {
+    // Everything below runs on the avatar-mask crop — the same pixels that
+    // get uploaded — so chin/forehead/size checks match the server's view.
+    lastTimingsMs.clear();
+    _stageClock
+      ..reset()
+      ..start();
+    final frame = avatarRect == null
+        ? fullFrame
+        : fullFrame.crop(
+            avatarRect.x,
+            avatarRect.y,
+            avatarRect.x + avatarRect.w,
+            avatarRect.y + avatarRect.h,
+          );
+    final origH = frame.height;
+    final origW = frame.width;
+
+    // The face is detected on every frame (as in production): the 128x128
+    // detector is cheap, and a cached box goes stale as soon as the user
+    // moves, which skews every landmark-based check.
+    _lap('crop');
+    // face_detector.tflite (v4): regressors [1,896,16], classificators [1,896,1]
+    final detectorOut = _infer(
+      _faceDetector,
+      FaceDetectorPreprocessor.preprocess(frame),
+    );
+    final detectedFaces = FaceDetectorPostprocessor.postprocess(
+      detectorOut[0],
+      detectorOut[1],
+      origW,
+      origH,
+    );
+    _lap('detector');
+    if (detectedFaces.isEmpty) return null;
+
+    // Production keeps the largest face, not the highest-scoring one.
+    double area(Map<String, dynamic> f) {
+      final b = f['box'] as Map<String, dynamic>;
+      return ((b['xMax'] as double) - (b['xMin'] as double)) *
+          ((b['yMax'] as double) - (b['yMin'] as double));
     }
 
-    final bestFace = _trackedFace!;
+    final bestFace = detectedFaces.reduce((a, b) => area(b) > area(a) ? b : a);
 
     final box = bestFace['box'] as Map<String, dynamic>;
 
     final kps = bestFace['keypoints'] as List<Map<String, double>>;
-    final ldH = 256;
-    final ldW = 256;
+    const ldH = 256;
+    const ldW = 256;
 
-    final (:patch, :mInv) = FaceCropHelper.cropFaceRoi(
-      inputImage,
+    final (:input, :mInv, :roiSize) = FaceCropHelper.cropFaceRoi(
+      frame,
       box,
       kps,
       ldH,
       ldW,
     );
 
-    final landmarksInput = FaceLandmarksPreprocessor.preprocess(patch);
-
-    _faceLandmarks.runForMultipleInputs(
-      [
-        landmarksInput.reshape([1, 192, 192, 3]),
-      ],
-      {0: _scoresTensor, 1: _landmarksTensor},
-    );
-
-    final facePresenceScore = _scoresTensor[0];
-    if (facePresenceScore < 0.5) return null;
+    _lap('landmarksCrop');
+    // face_landmarks_detector.tflite (v4): Identity [1,1,1,1434],
+    // Identity_1 [1,1,1,1] (face flag), Identity_2 [1,1]
+    final landmarksOut = _infer(_faceLandmarks, input);
 
     final landmarksResult = FaceLandmarksPostprocessor.postprocess(
-      _landmarksTensor,
-      _scoresTensor,
-    );
-
-    final landmarks = landmarksResult['landmarks'] as List<Map<String, double>>;
-
-    final headPose = HeadPoseEstimator.estimate(
-      landmarks,
-      mInv,
-      _canonical,
-      Platform.isAndroid ? inputImage.width : inputImage.height,
-      Platform.isAndroid ? inputImage.height : inputImage.width,
+      landmarksOut[0],
+      landmarksOut[1][0],
       ldW,
       ldH,
     );
 
-    final isHeadPoseOk =
-        headPose != null && HeadPoseEstimator.isAcceptable(headPose);
+    final facePresenceScore = landmarksResult['facePresenceScore'] as double;
+    _lap('landmarksModel');
+    if (facePresenceScore < facePresenceThreshold) return null;
+
+    final landmarks = landmarksResult['landmarks'] as List<Map<String, double>>;
 
     final lmOrig = HeadPoseEstimator.mapLandmarksToOriginal(
       landmarks,
@@ -218,9 +243,25 @@ class FacePipeline {
       ldW,
       ldH,
     );
+
+    final rawPose = HeadPoseEstimator.estimate(
+      landmarks,
+      lmOrig,
+      _canonical,
+      roiSize,
+      origH,
+      origW,
+    );
+    final headPose = rawPose == null ? null : _smoothPose(rawPose);
+    _lap('pose');
+
+    final isHeadPoseOk =
+        headPose != null && HeadPoseEstimator.isAcceptable(headPose);
+
     final eyeStatus = FaceLandmarksPostprocessor.checkEyesClosedFromPixels(
       lmOrig,
     );
+    final ears = FaceLandmarksPostprocessor.eyeAspectRatios(lmOrig);
 
     final absoluteBox = FaceBoundingBox(
       xMin: box['xMin'] as double,
@@ -229,54 +270,58 @@ class FacePipeline {
       yMax: box['yMax'] as double,
     );
 
-    bool isBlurry = false;
+    // IQA (and illumination) run on a landmark-based box, extended upwards
+    // by 10% of its height — same as analyze_selfies.py / face_analyzer.py.
+    double lmMinX = double.infinity, lmMaxX = double.negativeInfinity;
+    double lmMinY = double.infinity, lmMaxY = double.negativeInfinity;
+    for (final p in lmOrig) {
+      if (p[0] < lmMinX) lmMinX = p[0];
+      if (p[0] > lmMaxX) lmMaxX = p[0];
+      if (p[1] < lmMinY) lmMinY = p[1];
+      if (p[1] > lmMaxY) lmMaxY = p[1];
+    }
+    final cropX1 = math.max(0, lmMinX.truncate());
+    final cropX2 = math.min(origW, lmMaxX.truncate());
+    final cropY2 = math.min(origH, lmMaxY.truncate());
+    final lmTop = lmMinY.truncate();
+    final cropY1 = math.max(0, lmTop - ((cropY2 - lmTop) / 10).floor());
+    if (cropX2 <= cropX1 || cropY2 <= cropY1) return null;
+    final faceCrop = frame.crop(cropX1, cropY1, cropX2, cropY2);
 
-    final cropResult = FaceCropHelper.cropFaceRoi(
-      inputImage,
-      box,
-      kps,
-      ldH,
-      ldW,
-      scale: 1.1,
-    );
-
-    final iqaPatch = cropResult.patch;
-
-    final brightness = BrightnessChecker.check(iqaPatch);
+    final brightness = BrightnessChecker.check(faceCrop);
+    _lap('brightness');
     final isTooBright = BrightnessChecker.isTooBright(brightness);
     final isTooDark = BrightnessChecker.isTooDark(brightness);
 
-    final iqaInput = IQAPreprocessor.preprocess(iqaPatch);
-    final iqaOutput = List.filled(1, List.filled(1, 0.0));
-    _iqa.run(iqaInput.reshape([1, 224, 224, 3]), iqaOutput);
+    // Sigmoid is baked into the model: 0 = sharp, 1 = blurry.
+    final blurScore = _infer(_iqa, IQAPreprocessor.preprocess(faceCrop))[0][0];
+    _lap('iqa');
 
-    if (iqaOutput[0][0] > 0.55) {
+    if (blurScore > blurThreshold) {
       _blurryFrames++;
     } else {
       _blurryFrames = 0;
     }
 
-    isBlurry = _blurryFrames >= 4;
-
-    final visibleImgH = inputImage.height * (1.0 - cropRatio);
-    final cropOffset = inputImage.height * cropRatio;
+    final isBlurry = _blurryFrames >= blurryFramesToFlag;
 
     final chinVisible = FaceLandmarksPostprocessor.isChinVisible(
       lmOrig,
-      inputImage.width.toDouble(),
-      visibleImgH,
+      origW.toDouble(),
+      origH.toDouble(),
       box,
     );
 
     final foreheadVisible = FaceLandmarksPostprocessor.isForeheadVisible(
       lmOrig,
-      inputImage.width.toDouble(),
-      visibleImgH,
-      cropOffset,
+      origW.toDouble(),
+      origH.toDouble(),
     );
 
     return FaceAnalysisResult(
       detectionScore: bestFace['score'] as double,
+      facePresenceScore: facePresenceScore,
+      blurryFrames: _blurryFrames,
       landmarks: landmarks,
       headPose: headPose,
       isHeadPoseAcceptable: isHeadPoseOk,
@@ -287,6 +332,11 @@ class FacePipeline {
       isForeheadVisible: foreheadVisible,
       isTooBright: isTooBright,
       isTooDark: isTooDark,
+      blurScore: blurScore,
+      brightRatio: brightness['brightRatio']!,
+      darkRatio: brightness['darkRatio']!,
+      leftEar: ears.left,
+      rightEar: ears.right,
     );
   }
 
