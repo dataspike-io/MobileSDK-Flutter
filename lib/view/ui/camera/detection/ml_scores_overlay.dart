@@ -29,6 +29,34 @@ class MlScoresSnapshot {
   });
 }
 
+/// Dark rounded box with the monospace style shared by the ML score panels.
+class MlScoresPanel extends StatelessWidget {
+  const MlScoresPanel({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: DefaultTextStyle(
+        style: const TextStyle(
+          fontFamily: 'monospace',
+          fontFamilyFallback: ['Menlo', 'Courier'],
+          fontSize: 10.5,
+          height: 1.35,
+          color: MlScoresDetails.text,
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
 /// Debug panel with the raw on-device ML scores of the latest analyzed frame
 /// and the thresholds they are checked against. Enabled with
 /// `DataspikeDependencies.showMlScores`; red values fail their check.
@@ -37,152 +65,188 @@ class MlScoresOverlay extends StatelessWidget {
 
   final ValueListenable<MlScoresSnapshot?> scores;
 
-  static const _ok = Color(0xFF7CFC8A);
-  static const _bad = Color(0xFFFF6B6B);
-  static const _label = Color(0xFFB0B0B0);
-  static const _text = Colors.white;
-
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
       child: ValueListenableBuilder<MlScoresSnapshot?>(
         valueListenable: scores,
         builder: (context, s, _) {
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: DefaultTextStyle(
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                fontFamilyFallback: ['Menlo', 'Courier'],
-                fontSize: 10.5,
-                height: 1.35,
-                color: _text,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: s == null
-                    ? [const Text('ML scores: waiting for first frame…')]
-                    : _lines(s),
-              ),
-            ),
+          return MlScoresPanel(
+            child: s == null
+                ? const Text('ML scores: waiting for first frame…')
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _header(s),
+                      MlScoresDetails(
+                        result: s.result,
+                        faceAreaFraction: s.faceAreaFraction,
+                        showBlurStreak: true,
+                      ),
+                    ],
+                  ),
           );
         },
       ),
     );
   }
 
-  List<Widget> _lines(MlScoresSnapshot s) {
-    final r = s.result;
+  Widget _header(MlScoresSnapshot s) {
     final t = s.updatedAt;
     String two(int v) => v.toString().padLeft(2, '0');
     final time =
         '${two(t.hour)}:${two(t.minute)}:${two(t.second)}.'
         '${(t.millisecond ~/ 100)}';
-
-    final header = _row([
-      _v('#${s.frameNumber}'),
-      _l('  $time  '),
-      _v('${s.processingMs.toStringAsFixed(0)} ms'),
-      _l('  status '),
-      _v(s.status.name),
+    return MlScoresDetails.row([
+      MlScoresDetails.value('#${s.frameNumber}'),
+      MlScoresDetails.label('  $time  '),
+      MlScoresDetails.value('${s.processingMs.toStringAsFixed(0)} ms'),
+      MlScoresDetails.label('  status '),
+      MlScoresDetails.value(s.status.name),
     ]);
+  }
+}
+
+/// Score lines for one analyzed image: each value next to its threshold,
+/// green when it passes and red when it fails. Expects to sit inside an
+/// [MlScoresPanel] (or another monospace DefaultTextStyle).
+class MlScoresDetails extends StatelessWidget {
+  const MlScoresDetails({
+    super.key,
+    required this.result,
+    required this.faceAreaFraction,
+    this.showBlurStreak = false,
+  });
+
+  /// Null when no face passed the detector / landmarks presence check.
+  final FaceAnalysisResult? result;
+  final double? faceAreaFraction;
+
+  /// Live preview only: the blurry-frames streak is meaningless for a
+  /// single photo.
+  final bool showBlurStreak;
+
+  static const ok = Color(0xFF7CFC8A);
+  static const bad = Color(0xFFFF6B6B);
+  static const muted = Color(0xFFB0B0B0);
+  static const text = Colors.white;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: _lines(),
+    );
+  }
+
+  List<Widget> _lines() {
+    final r = result;
     if (r == null) {
-      return [header, _row([_err('no face (detector or landmarks < ${FacePipeline.facePresenceThreshold})')])];
+      return [
+        row([
+          error(
+            'no face (detector or landmarks < '
+            '${FacePipeline.facePresenceThreshold})',
+          ),
+        ]),
+      ];
     }
 
     final pose = r.headPose;
     final avgEar = (r.leftEar + r.rightEar) / 2;
-    final area = s.faceAreaFraction ?? 0;
+    final area = faceAreaFraction ?? 0;
 
     return [
-      header,
-      _row([
-        _l('face  det '),
-        _v(_f(r.detectionScore, 2)),
-        _l('  lm '),
-        _c(
+      row([
+        label('face  det '),
+        value(_f(r.detectionScore, 2)),
+        label('  lm '),
+        check(
           _f(r.facePresenceScore, 2),
           r.facePresenceScore >= FacePipeline.facePresenceThreshold,
         ),
-        _l('  area '),
-        _c(_f(area, 2), area >= CameraConstants.minFaceAreaFraction),
-        _l(' ≥${CameraConstants.minFaceAreaFraction}'),
+        label('  area '),
+        check(_f(area, 2), area >= CameraConstants.minFaceAreaFraction),
+        label(' ≥${CameraConstants.minFaceAreaFraction}'),
       ]),
-      _row([
-        _l('blur  '),
-        _c(_f(r.blurScore, 3), r.blurScore <= FacePipeline.blurThreshold),
-        _l(' ≤${FacePipeline.blurThreshold}  streak '),
-        _c(
-          '${r.blurryFrames}/${FacePipeline.blurryFramesToFlag}',
-          !r.isBlurry,
-        ),
+      row([
+        label('blur  '),
+        check(_f(r.blurScore, 3), r.blurScore <= FacePipeline.blurThreshold),
+        label(' ≤${FacePipeline.blurThreshold}'),
+        if (showBlurStreak) ...[
+          label('  streak '),
+          check(
+            '${r.blurryFrames}/${FacePipeline.blurryFramesToFlag}',
+            !r.isBlurry,
+          ),
+        ],
       ]),
-      _row([
-        _l('light '),
-        _c(_f(r.brightRatio, 2), !r.isTooBright),
-        _l(' ≤${BrightnessChecker.highIlluminationThreshold}  dark '),
-        _c(_f(r.darkRatio, 2), !r.isTooDark),
-        _l(' ≤${BrightnessChecker.lowIlluminationThreshold}'),
+      row([
+        label('light '),
+        check(_f(r.brightRatio, 2), !r.isTooBright),
+        label(' ≤${BrightnessChecker.highIlluminationThreshold}  dark '),
+        check(_f(r.darkRatio, 2), !r.isTooDark),
+        label(' ≤${BrightnessChecker.lowIlluminationThreshold}'),
       ]),
-      _row(
+      row(
         pose == null
-            ? [_l('pose  '), _err('not estimated')]
+            ? [label('pose  '), error('not estimated')]
             : [
-                _l('pose  p '),
-                _c(
+                label('pose  p '),
+                check(
                   _f(pose['pitch']!, 1),
                   pose['pitch']!.abs() < HeadPoseEstimator.maxPitch,
                 ),
-                _l(' y '),
-                _c(
+                label(' y '),
+                check(
                   _f(pose['yaw']!, 1),
                   pose['yaw']!.abs() < HeadPoseEstimator.maxYaw,
                 ),
-                _l(' r '),
-                _c(
+                label(' r '),
+                check(
                   _f(pose['roll']!, 1),
                   pose['roll']!.abs() < HeadPoseEstimator.maxRoll,
                 ),
-                _l(
+                label(
                   '  <${HeadPoseEstimator.maxPitch.toStringAsFixed(0)}/'
                   '${HeadPoseEstimator.maxYaw.toStringAsFixed(0)}/'
                   '${HeadPoseEstimator.maxRoll.toStringAsFixed(0)}°',
                 ),
               ],
       ),
-      _row([
-        _l('eyes  L '),
-        _v(_f(r.leftEar, 3)),
-        _l(' R '),
-        _v(_f(r.rightEar, 3)),
-        _l(' avg '),
-        _c(_f(avgEar, 3), avgEar >= FaceLandmarksPostprocessor.earThreshold),
-        _l(' ≥${FaceLandmarksPostprocessor.earThreshold}'),
+      row([
+        label('eyes  L '),
+        value(_f(r.leftEar, 3)),
+        label(' R '),
+        value(_f(r.rightEar, 3)),
+        label(' avg '),
+        check(
+          _f(avgEar, 3),
+          avgEar >= FaceLandmarksPostprocessor.earThreshold,
+        ),
+        label(' ≥${FaceLandmarksPostprocessor.earThreshold}'),
       ]),
-      _row([
-        _l('chin '),
-        _c(r.isChinVisible ? 'yes' : 'no', r.isChinVisible),
-        _l('  forehead '),
-        _c(r.isForeheadVisible ? 'yes' : 'no', r.isForeheadVisible),
+      row([
+        label('chin '),
+        check(r.isChinVisible ? 'yes' : 'no', r.isChinVisible),
+        label('  forehead '),
+        check(r.isForeheadVisible ? 'yes' : 'no', r.isForeheadVisible),
       ]),
     ];
   }
 
   static String _f(double v, int digits) => v.toStringAsFixed(digits);
 
-  static Widget _row(List<InlineSpan> spans) =>
+  static Widget row(List<InlineSpan> spans) =>
       Text.rich(TextSpan(children: spans));
 
-  static TextSpan _l(String s) =>
-      TextSpan(text: s, style: const TextStyle(color: _label));
-  static TextSpan _v(String s) => TextSpan(text: s);
-  static TextSpan _c(String s, bool ok) =>
-      TextSpan(text: s, style: TextStyle(color: ok ? _ok : _bad));
-  static TextSpan _err(String s) =>
-      TextSpan(text: s, style: const TextStyle(color: _bad));
+  static TextSpan label(String s) =>
+      TextSpan(text: s, style: const TextStyle(color: muted));
+  static TextSpan value(String s) => TextSpan(text: s);
+  static TextSpan check(String s, bool passed) =>
+      TextSpan(text: s, style: TextStyle(color: passed ? ok : bad));
+  static TextSpan error(String s) =>
+      TextSpan(text: s, style: const TextStyle(color: bad));
 }

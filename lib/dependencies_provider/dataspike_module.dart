@@ -21,6 +21,7 @@ abstract class DataspikeModule {
   bool get showMlScores;
   bool get livenessOnly;
   bool get livenessDryRun;
+  bool get showCapturedFrameScores;
 }
 
 class DataspikeModuleImpl implements DataspikeModule {
@@ -66,6 +67,9 @@ class DataspikeModuleImpl implements DataspikeModule {
 
   @override
   bool get livenessDryRun => dependencies.livenessDryRun;
+
+  @override
+  bool get showCapturedFrameScores => dependencies.showCapturedFrameScores;
 
   @override
   IDataspikeRepository get dataspikeRepository => _dataspikeRepository;

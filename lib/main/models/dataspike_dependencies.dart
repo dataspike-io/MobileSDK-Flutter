@@ -15,6 +15,11 @@ class DataspikeDependencies {
   /// detection keeps running.
   final bool livenessDryRun;
 
+  /// Debug: after the 4 liveness photos are taken, show their on-device ML
+  /// scores (and the server verdict, unless [livenessDryRun]) instead of the
+  /// regular result screen.
+  final bool showCapturedFrameScores;
+
   const DataspikeDependencies({
     required this.isDebug,
     required this.dsApiToken,
@@ -22,5 +27,6 @@ class DataspikeDependencies {
     this.showMlScores = false,
     this.livenessOnly = false,
     this.livenessDryRun = false,
+    this.showCapturedFrameScores = false,
   });
 }

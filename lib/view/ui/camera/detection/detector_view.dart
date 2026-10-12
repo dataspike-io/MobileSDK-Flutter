@@ -16,12 +16,17 @@ class DetectorView extends StatefulWidget {
     this.onTimerReady,
     this.onRetry,
     this.scoresOverlay,
-    this.livenessDryRun = false,
+    this.captureOnOk = true,
+    this.validateCaptureFrame,
+    this.onCaptureFailed,
   });
 
   final CustomPaint? customPaint;
   final Widget? scoresOverlay;
-  final bool livenessDryRun;
+  final bool captureOnOk;
+  final Future<bool> Function(CameraFrameInput frame, AvatarCropRect? avatarRect)?
+  validateCaptureFrame;
+  final VoidCallback? onCaptureFailed;
   final Function(CameraFrameInput frame, AvatarCropRect avatarRect) onImage;
   final Future<void> Function(
     List<CapturedFrame> frames,
@@ -55,7 +60,9 @@ class _DetectorViewState extends State<DetectorView> {
       onRetry: widget.onRetry,
       status: widget.status,
       scoresOverlay: widget.scoresOverlay,
-      livenessDryRun: widget.livenessDryRun,
+      captureOnOk: widget.captureOnOk,
+      validateCaptureFrame: widget.validateCaptureFrame,
+      onCaptureFailed: widget.onCaptureFailed,
     );
   }
 }

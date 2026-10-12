@@ -14,6 +14,7 @@ abstract class DataspikeComponent {
   bool get showMlScores;
   bool get livenessOnly;
   bool get livenessDryRun;
+  bool get showCapturedFrameScores;
 }
 
 class DataspikeComponentImpl implements DataspikeComponent {
@@ -45,4 +46,7 @@ class DataspikeComponentImpl implements DataspikeComponent {
 
   @override
   bool get livenessDryRun => _module.livenessDryRun;
+
+  @override
+  bool get showCapturedFrameScores => _module.showCapturedFrameScores;
 }

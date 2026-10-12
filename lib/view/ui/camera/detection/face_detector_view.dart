@@ -7,6 +7,7 @@ import 'package:dataspikemobilesdk/face_detector/models/camera_frame_input.dart'
 import 'package:dataspikemobilesdk/face_detector/models/captured_frame.dart';
 import 'package:dataspikemobilesdk/face_detector/models/face_analyst_result.dart';
 import 'package:dataspikemobilesdk/face_detector/face_pipeline_isolate.dart';
+import 'package:dataspikemobilesdk/face_detector/pipeline/facepipeline.dart';
 import 'package:dataspikemobilesdk/utils/camera/camera_variable_environments.dart';
 import 'ml_scores_overlay.dart';
 import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
@@ -17,13 +18,18 @@ class FaceDetectorView extends StatefulWidget {
     required this.onShootCallback,
     this.showMlScores = false,
     this.livenessDryRun = false,
+    this.showCapturedFrameScores = false,
   });
 
   /// Shows the raw ML scores panel on top of the preview (debug).
   final bool showMlScores;
 
-  /// Debug: green state is only shown — no capture/upload, detection goes on.
+  /// Debug: nothing is uploaded. Unless [showCapturedFrameScores], green is
+  /// only shown — no capture — and detection goes on.
   final bool livenessDryRun;
+
+  /// Debug: the captured photos are scored and shown instead of the result.
+  final bool showCapturedFrameScores;
 
   final Future<void> Function(
     List<CapturedFrame> frames,
@@ -64,11 +70,15 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
 
   final ValueNotifier<MlScoresSnapshot?> _mlScores = ValueNotifier(null);
 
-  // In dry-run mode the green (ok) state never captures, so it must not
-  // freeze detection either.
+  // Photos are taken on green unless it is a plain dry run (nothing to
+  // score or send).
+  bool get _captureOnOk =>
+      !widget.livenessDryRun || widget.showCapturedFrameScores;
+
+  // When green captures nothing it must not freeze detection either.
   bool get _isStatusLocked =>
       _status.isAutoHideDisabled &&
-      !(widget.livenessDryRun && _status == AvatarDetectionStatus.ok);
+      !(!_captureOnOk && _status == AvatarDetectionStatus.ok);
   int _analyzedFrames = 0;
 
   @override
@@ -88,7 +98,9 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
       onTimerReady: _onTimerReady,
       onRetry: _setUndetectedState,
       status: _status,
-      livenessDryRun: widget.livenessDryRun,
+      captureOnOk: _captureOnOk,
+      validateCaptureFrame: _validateCapturePhoto,
+      onCaptureFailed: removeStatus,
       scoresOverlay: widget.showMlScores
           ? MlScoresOverlay(scores: _mlScores)
           : null,
@@ -182,6 +194,23 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
     } catch (_, _) {
     } finally {
       _isProcessing = false;
+    }
+  }
+
+  // A photo goes into the liveness batch only if it passes the per-photo
+  // check; each one is judged on its own (no smoothing, no blur streak).
+  Future<bool> _validateCapturePhoto(
+    CameraFrameInput frame,
+    AvatarCropRect? avatarRect,
+  ) async {
+    final pipeline = _facePipeline;
+    if (pipeline == null) return false;
+    try {
+      await pipeline.resetState();
+      final result = await pipeline.analyze(frame, avatarRect: avatarRect);
+      return result != null && FacePipeline.isGoodLivenessPhoto(result);
+    } catch (_) {
+      return false;
     }
   }
 

@@ -128,6 +128,9 @@ class AvatarCropParams {
   final double bottomApexFromBottomPct;
   final double strokeWidth;
 
+  /// False: upload the whole frame instead of the avatar-mask crop.
+  final bool cropToMask;
+
   const AvatarCropParams({
     required this.rgbaBytes,
     required this.imageWidth,
@@ -140,6 +143,7 @@ class AvatarCropParams {
     required this.topApexPct,
     required this.bottomApexFromBottomPct,
     required this.strokeWidth,
+    required this.cropToMask,
   });
 }
 
@@ -209,30 +213,32 @@ Future<Uint8List> processAvatarShotInIsolate(AvatarCropParams p) async {
     order: img.ChannelOrder.rgba,
   );
 
-  final rect = avatarCropRect(
-    imageWidth: original.width,
-    imageHeight: original.height,
-    containerW: p.containerW,
-    containerH: p.containerH,
-    previewW: p.previewW,
-    previewH: p.previewH,
-    sideInsetPct: p.sideInsetPct,
-    topApexPct: p.topApexPct,
-    bottomApexFromBottomPct: p.bottomApexFromBottomPct,
-    strokeWidth: p.strokeWidth,
-  );
-
-  final cropped = img.copyCrop(
-    original,
-    x: rect.x,
-    y: rect.y,
-    width: rect.w,
-    height: rect.h,
-  );
+  img.Image toUpload = original;
+  if (p.cropToMask) {
+    final rect = avatarCropRect(
+      imageWidth: original.width,
+      imageHeight: original.height,
+      containerW: p.containerW,
+      containerH: p.containerH,
+      previewW: p.previewW,
+      previewH: p.previewH,
+      sideInsetPct: p.sideInsetPct,
+      topApexPct: p.topApexPct,
+      bottomApexFromBottomPct: p.bottomApexFromBottomPct,
+      strokeWidth: p.strokeWidth,
+    );
+    toUpload = img.copyCrop(
+      original,
+      x: rect.x,
+      y: rect.y,
+      width: rect.w,
+      height: rect.h,
+    );
+  }
   // 100 = essentially uncompressed JPEG; 90 is visually indistinguishable
   // for a liveness selfie but produces a meaningfully smaller file, which
   // is what actually goes over the wire in the upload request.
-  final out = img.encodeJpg(cropped, quality: 90);
+  final out = img.encodeJpg(toUpload, quality: 90);
   return Uint8List.fromList(out);
 }
 

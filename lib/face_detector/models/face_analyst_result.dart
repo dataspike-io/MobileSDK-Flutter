@@ -20,6 +20,10 @@ class FaceAnalysisResult {
   final double leftEar;
   final double rightEar;
 
+  /// Landmarks in pixels of the analyzed image (debug/tests only; not sent
+  /// across the pipeline isolate).
+  final List<List<double>> landmarksPx;
+
   FaceAnalysisResult({
     required this.detectionScore,
     required this.facePresenceScore,
@@ -39,6 +43,7 @@ class FaceAnalysisResult {
     required this.darkRatio,
     required this.leftEar,
     required this.rightEar,
+    this.landmarksPx = const [],
   });
 }
 

@@ -9,6 +9,8 @@ import 'package:dataspikemobilesdk/utils/camera/camera_variable_environments.dar
 import 'package:dataspikemobilesdk/data/models/request/image_selfie_v2_request_body.dart';
 import 'package:dataspikemobilesdk/domain/models/states/upload_image_state_v2.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
+import 'package:dataspikemobilesdk/dependencies_provider/dataspike_injector.dart';
+import 'package:dataspikemobilesdk/face_detector/captured_frames_scorer.dart';
 
 class CameraAvatarViewModel extends ChangeNotifier {
   late Future<void> init;
@@ -22,6 +24,14 @@ class CameraAvatarViewModel extends ChangeNotifier {
   void Function(String title, String message, bool withInstruction)? showError;
   void Function(AvatarDetectionStatus? status)? showErrorV2;
 
+  /// Debug (`showCapturedFrameScores`): replaces the regular result handling.
+  /// [serverResult] is null when nothing was sent (dry run).
+  void Function(
+    List<CapturedFrameScore> frames,
+    UploadImageStateV2? serverResult,
+  )?
+  showCapturedFrameScores;
+
   void attachCallbacks({
     VoidCallback? onProceed,
     VoidCallback? showLoader,
@@ -30,6 +40,11 @@ class CameraAvatarViewModel extends ChangeNotifier {
     void Function(String title, String message, bool withInstruction)?
     showError,
     showErrorV2,
+    void Function(
+      List<CapturedFrameScore> frames,
+      UploadImageStateV2? serverResult,
+    )?
+    showCapturedFrameScores,
   }) {
     this.onProceed = onProceed;
     this.showLoader = showLoader;
@@ -37,6 +52,7 @@ class CameraAvatarViewModel extends ChangeNotifier {
     this.showCommonError = showCommonError;
     this.showError = showError;
     this.showErrorV2 = showErrorV2;
+    this.showCapturedFrameScores = showCapturedFrameScores;
   }
 
   CameraAvatarViewModel({required UploadImageUseCase setUseCase})
@@ -73,6 +89,7 @@ class CameraAvatarViewModel extends ChangeNotifier {
               bottomApexFromBottomPct:
                   CameraConstants.avatarBottomApexFromBottomPct,
               strokeWidth: CameraConstants.avatarStrokeWidth,
+              cropToMask: CameraConstants.cropLivenessPhotosToMask,
             ),
           )
           .toList();
@@ -82,6 +99,18 @@ class CameraAvatarViewModel extends ChangeNotifier {
             processAvatarShotBatchInIsolate,
             paramsList,
           );
+
+      final debug = DataspikeInjector.component;
+      if (debug.livenessDryRun) {
+        // Dry run: photos are only taken to be scored, never uploaded.
+        if (debug.showCapturedFrameScores) {
+          showCapturedFrameScores?.call(
+            await CapturedFramesScorer.score(processedList),
+            null,
+          );
+        }
+        return;
+      }
 
       final batchFrames = <LivenessBatchFrame>[
         for (int i = 0; i < processedList.length; i++)
@@ -93,7 +122,21 @@ class CameraAvatarViewModel extends ChangeNotifier {
           ),
       ];
 
-      final result = await _setUseCase.uploadImageV2(frames: batchFrames);
+      // Scoring runs alongside the upload, so it adds no wait of its own.
+      final responses = await Future.wait<Object?>([
+        _setUseCase.uploadImageV2(frames: batchFrames),
+        if (debug.showCapturedFrameScores)
+          CapturedFramesScorer.score(processedList),
+      ]);
+      final result = responses[0] as UploadImageStateV2;
+
+      if (debug.showCapturedFrameScores) {
+        showCapturedFrameScores?.call(
+          responses[1] as List<CapturedFrameScore>,
+          result,
+        );
+        return;
+      }
 
       if (result is UploadImageSuccessV2) {
         onProceed?.call();

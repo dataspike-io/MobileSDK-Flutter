@@ -29,6 +29,15 @@ class FacePipeline {
   /// Minimum landmarks-model face presence probability.
   static const double facePresenceThreshold = 0.5;
 
+  /// Whether a single photo may go into the liveness batch: no head
+  /// rotation, eyes open and not blurry — the errors the server rejects a
+  /// batch on. Expects a result analyzed right after [resetState], so pose
+  /// is unsmoothed and the blur check is per photo.
+  static bool isGoodLivenessPhoto(FaceAnalysisResult result) =>
+      result.isHeadPoseAcceptable &&
+      !result.eyeStatus['bothEyesClosed']! &&
+      result.blurScore <= blurThreshold;
+
   List<List<double>> _canonical = [];
   int _blurryFrames = 0;
 
@@ -337,6 +346,7 @@ class FacePipeline {
       darkRatio: brightness['darkRatio']!,
       leftEar: ears.left,
       rightEar: ears.right,
+      landmarksPx: lmOrig,
     );
   }
 

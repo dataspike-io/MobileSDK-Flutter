@@ -24,6 +24,7 @@ class _DependenciesInputScreenState extends State<DependenciesInputScreen> {
   bool _showMlScores = false;
   bool _livenessOnly = false;
   bool _livenessDryRun = false;
+  bool _showCapturedFrameScores = false;
 
   late final InputViewModel viewModel;
 
@@ -76,6 +77,7 @@ class _DependenciesInputScreenState extends State<DependenciesInputScreen> {
       showMlScores: _showMlScores,
       livenessOnly: _livenessOnly,
       livenessDryRun: _livenessDryRun,
+      showCapturedFrameScores: _showCapturedFrameScores,
     );
     widget.onSubmit(context, deps);
   }
@@ -155,6 +157,16 @@ class _DependenciesInputScreenState extends State<DependenciesInputScreen> {
                       setState(() => _livenessDryRun = v ?? false),
                 ),
                 const Text('Liveness dry run (no upload)'),
+              ],
+            ),
+            Row(
+              children: [
+                Checkbox(
+                  value: _showCapturedFrameScores,
+                  onChanged: (v) =>
+                      setState(() => _showCapturedFrameScores = v ?? false),
+                ),
+                const Text('Show final scores (4 photos)'),
               ],
             ),
             const Spacer(),
