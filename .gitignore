@@ -32,5 +32,5 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 build/
 
-# Local test images
-/assets/images/test/
+# ML team liveness test set (real selfies) — local only, never commit
+assets/images/test/

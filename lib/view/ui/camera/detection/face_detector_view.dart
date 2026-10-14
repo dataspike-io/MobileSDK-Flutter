@@ -7,9 +7,29 @@ import 'package:dataspikemobilesdk/face_detector/models/camera_frame_input.dart'
 import 'package:dataspikemobilesdk/face_detector/models/captured_frame.dart';
 import 'package:dataspikemobilesdk/face_detector/models/face_analyst_result.dart';
 import 'package:dataspikemobilesdk/face_detector/face_pipeline_isolate.dart';
+import 'package:dataspikemobilesdk/face_detector/pipeline/facepipeline.dart';
+import 'package:dataspikemobilesdk/utils/camera/camera_variable_environments.dart';
+import 'ml_scores_overlay.dart';
+import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
 
 class FaceDetectorView extends StatefulWidget {
-  const FaceDetectorView({super.key, required this.onShootCallback});
+  const FaceDetectorView({
+    super.key,
+    required this.onShootCallback,
+    this.showMlScores = false,
+    this.livenessDryRun = false,
+    this.showCapturedFrameScores = false,
+  });
+
+  /// Shows the raw ML scores panel on top of the preview (debug).
+  final bool showMlScores;
+
+  /// Debug: nothing is uploaded. Unless [showCapturedFrameScores], green is
+  /// only shown — no capture — and detection goes on.
+  final bool livenessDryRun;
+
+  /// Debug: the captured photos are scored and shown instead of the result.
+  final bool showCapturedFrameScores;
 
   final Future<void> Function(
     List<CapturedFrame> frames,
@@ -48,10 +68,24 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
 
   bool _initialTimerAppeared = false;
 
+  final ValueNotifier<MlScoresSnapshot?> _mlScores = ValueNotifier(null);
+
+  // Photos are taken on green unless it is a plain dry run (nothing to
+  // score or send).
+  bool get _captureOnOk =>
+      !widget.livenessDryRun || widget.showCapturedFrameScores;
+
+  // When green captures nothing it must not freeze detection either.
+  bool get _isStatusLocked =>
+      _status.isAutoHideDisabled &&
+      !(!_captureOnOk && _status == AvatarDetectionStatus.ok);
+  int _analyzedFrames = 0;
+
   @override
   void dispose() {
     _canProcess = false;
     _facePipeline?.dispose();
+    _mlScores.dispose();
     super.dispose();
   }
 
@@ -64,6 +98,12 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
       onTimerReady: _onTimerReady,
       onRetry: _setUndetectedState,
       status: _status,
+      captureOnOk: _captureOnOk,
+      validateCaptureFrame: _validateCapturePhoto,
+      onCaptureFailed: removeStatus,
+      scoresOverlay: widget.showMlScores
+          ? MlScoresOverlay(scores: _mlScores)
+          : null,
     );
   }
 
@@ -93,11 +133,14 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
     );
   }
 
-  Future<void> _processImage(CameraFrameInput frame, double cropRatio) async {
+  Future<void> _processImage(
+    CameraFrameInput frame,
+    AvatarCropRect avatarRect,
+  ) async {
     if (!_canProcess) return;
     if (_isProcessing) return;
     if (_facePipeline == null) return;
-    if (_status.isAutoHideDisabled) {
+    if (_isStatusLocked) {
       return;
     }
 
@@ -109,24 +152,31 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
     _isProcessing = true;
 
     try {
-      final result = await _facePipeline?.analyze(frame, cropRatio: cropRatio);
+      final stopwatch = Stopwatch()..start();
+      final result = await _facePipeline?.analyze(
+        frame,
+        avatarRect: avatarRect,
+      );
+      stopwatch.stop();
 
       if (result == null) {
+        _publishScores(null, avatarRect, stopwatch, _status);
         // Don't let a single "no face" frame kick us out of a status that
         // must not be auto-hidden (e.g. the initial countdown, or a
         // just-reached "ok"/success moment) — only CameraView's own timer
         // (via _onTimerReady) is allowed to end the countdown.
-        if (!_status.isAutoHideDisabled) {
+        if (!_isStatusLocked) {
           _setUndetectedState();
         }
         return;
       }
 
+      // Box coordinates are relative to the avatar crop, so is the area.
       final status = _evaluateHeadPosition(
         result: result,
-        cropRatio: cropRatio,
-        imageSize: Size(frame.width.toDouble(), frame.height.toDouble()),
+        imageSize: Size(avatarRect.w.toDouble(), avatarRect.h.toDouble()),
       );
+      _publishScores(result, avatarRect, stopwatch, status);
 
       final isTopArcHighlighted = status.isTopArcHighlighted;
       final isBottomArcHighlighted = status.isBottomArcHighlighted;
@@ -147,11 +197,48 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
     }
   }
 
+  // A photo goes into the liveness batch only if it passes the per-photo
+  // check; each one is judged on its own (no smoothing, no blur streak).
+  Future<bool> _validateCapturePhoto(
+    CameraFrameInput frame,
+    AvatarCropRect? avatarRect,
+  ) async {
+    final pipeline = _facePipeline;
+    if (pipeline == null) return false;
+    try {
+      await pipeline.resetState();
+      final result = await pipeline.analyze(frame, avatarRect: avatarRect);
+      return result != null && FacePipeline.isGoodLivenessPhoto(result);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _publishScores(
+    FaceAnalysisResult? result,
+    AvatarCropRect avatarRect,
+    Stopwatch stopwatch,
+    AvatarDetectionStatus status,
+  ) {
+    if (!widget.showMlScores) return;
+    final box = result?.boundingBox;
+    _mlScores.value = MlScoresSnapshot(
+      frameNumber: ++_analyzedFrames,
+      updatedAt: DateTime.now(),
+      processingMs: stopwatch.elapsedMicroseconds / 1000,
+      result: result,
+      faceAreaFraction: box == null
+          ? null
+          : box.width * box.height / (avatarRect.w * avatarRect.h),
+      status: status,
+    );
+  }
+
   void _setStateIfChanged(
     CustomPaint? newPaint,
     AvatarDetectionStatus newStatus,
   ) {
-    if (_status.isAutoHideDisabled) {
+    if (_isStatusLocked) {
       return;
     }
 
@@ -192,8 +279,7 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
   AvatarDetectionStatus _evaluateHeadPosition({
     required FaceAnalysisResult result,
     required Size imageSize,
-    required double cropRatio,
-    double minFaceAreaFraction = 0.1,
+    double minFaceAreaFraction = CameraConstants.minFaceAreaFraction,
   }) {
     final box = result.boundingBox;
 
@@ -227,9 +313,9 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
     }
 
     final eyeStatus = result.eyeStatus;
-    if (eyeStatus['leftEyeClosed']! ||
-        eyeStatus['rightEyeClosed']! ||
-        eyeStatus['bothEyesClosed']!) {
+    // Average of both eyes, as on the server; a single narrow eye is not
+    // enough (it rejected ~19% of valid selfies in the ML test set).
+    if (eyeStatus['bothEyesClosed']!) {
       return AvatarDetectionStatus.closedEyes;
     }
 

@@ -21,6 +21,10 @@ class _DependenciesInputScreenState extends State<DependenciesInputScreen> {
   final _apiTokenController = TextEditingController();
   final _shortIdController = TextEditingController();
   bool _isDebug = false;
+  bool _showMlScores = false;
+  bool _livenessOnly = false;
+  bool _livenessDryRun = false;
+  bool _showCapturedFrameScores = false;
 
   late final InputViewModel viewModel;
 
@@ -70,6 +74,10 @@ class _DependenciesInputScreenState extends State<DependenciesInputScreen> {
       isDebug: _isDebug,
       dsApiToken: apiToken,
       shortId: shortId,
+      showMlScores: _showMlScores,
+      livenessOnly: _livenessOnly,
+      livenessDryRun: _livenessDryRun,
+      showCapturedFrameScores: _showCapturedFrameScores,
     );
     widget.onSubmit(context, deps);
   }
@@ -121,6 +129,44 @@ class _DependenciesInputScreenState extends State<DependenciesInputScreen> {
                   },
                 ),
                 const Text('Debug mode'),
+              ],
+            ),
+            Row(
+              children: [
+                Checkbox(
+                  value: _showMlScores,
+                  onChanged: (v) => setState(() => _showMlScores = v ?? false),
+                ),
+                const Text('Show ML scores'),
+              ],
+            ),
+            Row(
+              children: [
+                Checkbox(
+                  value: _livenessOnly,
+                  onChanged: (v) => setState(() => _livenessOnly = v ?? false),
+                ),
+                const Text('Liveness only'),
+              ],
+            ),
+            Row(
+              children: [
+                Checkbox(
+                  value: _livenessDryRun,
+                  onChanged: (v) =>
+                      setState(() => _livenessDryRun = v ?? false),
+                ),
+                const Text('Liveness dry run (no upload)'),
+              ],
+            ),
+            Row(
+              children: [
+                Checkbox(
+                  value: _showCapturedFrameScores,
+                  onChanged: (v) =>
+                      setState(() => _showCapturedFrameScores = v ?? false),
+                ),
+                const Text('Show final scores (4 photos)'),
               ],
             ),
             const Spacer(),

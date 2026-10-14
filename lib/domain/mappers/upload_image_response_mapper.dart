@@ -95,6 +95,21 @@ class UploadImageResponseMapper {
               ),
             )
             .toList(),
+        framesResults: (error.framesResults ?? [])
+            .map(
+              (f) => DataspikeFrameErrorsDomainModel(
+                documentId: f.documentId,
+                errors: (f.errors ?? [])
+                    .map(
+                      (e) => DataspikeErrorDomainModel(
+                        code: e.code ?? -1,
+                        message: e.message ?? "",
+                      ),
+                    )
+                    .toList(),
+              ),
+            )
+            .toList(),
       );
     } else {
       return UploadImageErrorV2(

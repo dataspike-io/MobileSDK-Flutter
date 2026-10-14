@@ -17,9 +17,14 @@ class UploadImageErrorV2 extends UploadImageStateV2 {
   final String message;
   final List<DataspikeErrorDomainModel> framesErrors;
 
+  /// Per-frame breakdown (`frames_results`), for the frames the model
+  /// returned one for.
+  final List<DataspikeFrameErrorsDomainModel> framesResults;
+
   UploadImageErrorV2({
     required this.code,
     required this.message,
     required this.framesErrors,
+    this.framesResults = const [],
   });
 }

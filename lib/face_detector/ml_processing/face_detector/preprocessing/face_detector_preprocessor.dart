@@ -1,36 +1,33 @@
 import 'dart:typed_data';
-import 'package:image/image.dart' as img;
 import 'dart:math' as math;
+import 'package:dataspikemobilesdk/face_detector/ml_processing/image/rgb_frame.dart';
 
+/// Letterbox + normalization for BlazeFace short-range (128x128, v4).
+/// Port of detect_faces (analyze_selfies.py): cv2.warpAffine with an
+/// exact float center offset, zero border, then x / 127.5 - 1.
 class FaceDetectorPreprocessor {
-  static const int inputSize = 256;
+  static const int inputSize = 128;
 
-  static Float32List preprocess(img.Image inputImage) {
-    final origH = inputImage.height;
-    final origW = inputImage.width;
-    final scale = math.min(inputSize / origH, inputSize / origW);
-    final rw = (origW * scale).toInt();
-    final rh = (origH * scale).toInt();
+  static Float32List preprocess(RgbFrame frame) {
+    final scale = math.min(inputSize / frame.height, inputSize / frame.width);
+    final xOff = (inputSize - frame.width * scale) / 2;
+    final yOff = (inputSize - frame.height * scale) / 2;
 
-    // Resize keeping aspect ratio
-    final resized = img.copyResize(inputImage, width: rw, height: rh);
+    // Inverse of [[scale, 0, xOff], [0, scale, yOff]].
+    final pixels = frame.warpAffine(
+      [
+        [1 / scale, 0.0, -xOff / scale],
+        [0.0, 1 / scale, -yOff / scale],
+      ],
+      inputSize,
+      inputSize,
+      replicateBorder: false,
+    );
 
-    // Create black canvas 256x256 and paste resized image
-    final padded = img.Image(width: inputSize, height: inputSize);
-    img.compositeImage(padded, resized, dstX: 0, dstY: 0);
-
-    final input = Float32List(1 * inputSize * inputSize * 3);
-    int index = 0;
-
-    for (int y = 0; y < inputSize; y++) {
-      for (int x = 0; x < inputSize; x++) {
-        final pixel = padded.getPixel(x, y);
-        input[index++] = pixel.r / 255.0;
-        input[index++] = pixel.g / 255.0;
-        input[index++] = pixel.b / 255.0;
-      }
+    final input = Float32List(pixels.length);
+    for (int i = 0; i < pixels.length; i++) {
+      input[i] = pixels[i] / 127.5 - 1.0;
     }
-
     return input;
   }
 }

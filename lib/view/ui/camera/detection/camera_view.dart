@@ -6,10 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/avatar_instruction_pill.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
+import 'package:dataspikemobilesdk/utils/camera/camera_variable_environments.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/face_oval_outside_clipper.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/default_face_corner_painter.dart';
 import 'package:dataspikemobilesdk/face_detector/models/camera_frame_input.dart';
 import 'package:dataspikemobilesdk/face_detector/models/captured_frame.dart';
+import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 
@@ -23,10 +25,30 @@ class CameraView extends StatefulWidget {
     this.onCameraFeedReady,
     this.onTimerReady,
     this.onRetry,
+    this.scoresOverlay,
+    this.captureOnOk = true,
+    this.validateCaptureFrame,
+    this.onCaptureFailed,
   });
 
   final CustomPaint? customPaint;
-  final Function(CameraFrameInput frame, double cropRatio) onImage;
+
+  /// Optional debug panel pinned to the top of the preview.
+  final Widget? scoresOverlay;
+
+  /// Whether reaching ok takes the liveness photos. Off only in a plain
+  /// debug dry run, where green is just shown.
+  final bool captureOnOk;
+
+  /// Checks one full-resolution candidate photo (on the area that will be
+  /// uploaded: the avatar rect, or the whole frame when [avatarRect] is
+  /// null). Only photos it accepts are sent.
+  final Future<bool> Function(CameraFrameInput frame, AvatarCropRect? avatarRect)?
+  validateCaptureFrame;
+
+  /// Not enough good photos were collected in time; nothing is sent.
+  final VoidCallback? onCaptureFailed;
+  final Function(CameraFrameInput frame, AvatarCropRect avatarRect) onImage;
   final Future<void> Function(
     List<CapturedFrame> frames,
     Size previewKeySize,
@@ -51,6 +73,15 @@ class _CameraViewState extends State<CameraView> {
   final _previewKey = GlobalKey();
   DateTime? _lastFrameTime;
   Completer<CameraImage>? _captureCompleter;
+  // Gap between the 4 uploaded liveness frames, so they are spread out
+  // instead of being consecutive (near-identical) stream frames.
+  static const _captureFrameGap = Duration(milliseconds: 300);
+
+  // Multi-frame capture: send this many photos that pass the per-photo
+  // check, collected within the timeout (capture_config in the
+  // liveness-batch API: target_min / max_capture_time_ms).
+  static const _framesToSend = 4;
+  static const _captureTimeout = Duration(seconds: 8);
 
   Timer? _countdownTimer;
   int _countdownValue = 5;
@@ -173,6 +204,13 @@ class _CameraViewState extends State<CameraView> {
                                     : null,
                               ),
                             ),
+                      if (widget.scoresOverlay != null)
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          right: 8,
+                          child: widget.scoresOverlay!,
+                        ),
                       if (widget.status.isVisible || _showSuccessDots)
                         Positioned(
                           bottom: 30,
@@ -241,7 +279,9 @@ class _CameraViewState extends State<CameraView> {
   void didUpdateWidget(covariant CameraView oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (widget.status == AvatarDetectionStatus.ok &&
+    if (!widget.captureOnOk) {
+      // Dry run: green is only shown, nothing is captured or sent.
+    } else if (widget.status == AvatarDetectionStatus.ok &&
         oldWidget.status != AvatarDetectionStatus.ok) {
       _triggerCapture(MediaQuery.of(context).size);
       _startSuccessDotsTimer();
@@ -321,19 +361,81 @@ class _CameraViewState extends State<CameraView> {
     final frame = _buildFrameInput(image);
     if (frame == null) return;
 
-    final ps = _controller!.value.previewSize!;
-    final previewAR = ps.height / ps.width;
-    final coverScale = previewAR / _containerAR!;
-    final fraction = 1 - coverScale;
+    // Live checks look at the avatar mask rect, computed with the same
+    // geometry as the upload crop.
+    final avatarRect = _avatarRectFor(frame);
+    if (avatarRect == null) return;
 
-    widget.onImage(frame, fraction);
+    widget.onImage(frame, avatarRect);
+  }
+
+  AvatarCropRect? _avatarRectFor(CameraFrameInput frame) {
+    final renderBox =
+        _previewKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null || !renderBox.hasSize) return null;
+    final ps = _controller!.value.previewSize!;
+    return avatarCropRect(
+      imageWidth: frame.width,
+      imageHeight: frame.height,
+      containerW: renderBox.size.width,
+      containerH: renderBox.size.height,
+      previewW: ps.width,
+      previewH: ps.height,
+      sideInsetPct: CameraConstants.avatarSideInsetPct,
+      topApexPct: CameraConstants.avatarTopApexPct,
+      bottomApexFromBottomPct: CameraConstants.avatarBottomApexFromBottomPct,
+      strokeWidth: CameraConstants.avatarStrokeWidth,
+    );
+  }
+
+  // Checks a candidate photo at full resolution on the area that will be
+  // uploaded (mask crop, or the whole frame when photos are not cropped).
+  Future<bool> _isGoodCapturePhoto(CameraImage image) async {
+    final validate = widget.validateCaptureFrame;
+    if (validate == null) return true;
+    final frame = _buildFrameInput(image, step: 1);
+    if (frame == null) return false;
+    final rect = CameraConstants.cropLivenessPhotosToMask
+        ? _avatarRectFor(frame)
+        : null;
+    return validate(frame, rect);
+  }
+
+  // Collects [_framesToSend] stream frames that pass [_isGoodCapturePhoto],
+  // taken at least [_captureFrameGap] apart. Null if the timeout runs out
+  // first.
+  Future<List<CameraImage>?> _collectGoodPhotos() async {
+    final accepted = <CameraImage>[];
+    final deadline = DateTime.now().add(_captureTimeout);
+    DateTime? lastAcceptedAt;
+
+    while (accepted.length < _framesToSend &&
+        DateTime.now().isBefore(deadline)) {
+      if (lastAcceptedAt != null) {
+        final wait = lastAcceptedAt
+            .add(_captureFrameGap)
+            .difference(DateTime.now());
+        if (wait > Duration.zero) await Future.delayed(wait);
+      }
+      _captureCompleter = Completer<CameraImage>();
+      final image = await _captureCompleter!.future;
+      _captureCompleter = null;
+      final capturedAt = DateTime.now();
+      if (!mounted) return null;
+
+      if (await _isGoodCapturePhoto(image)) {
+        accepted.add(image);
+        lastAcceptedAt = capturedAt;
+      }
+    }
+    return accepted.length == _framesToSend ? accepted : null;
   }
 
   // Both platforms hand off raw, unconverted camera bytes and let the
   // pipeline isolate do the per-pixel conversion (YUV->RGB + rotate on
   // Android, BGRA downsample+copy on iOS), so the UI isolate never does
   // that work, however cheap it might be on a given platform.
-  CameraFrameInput? _buildFrameInput(CameraImage image) {
+  CameraFrameInput? _buildFrameInput(CameraImage image, {int step = 2}) {
     if (Platform.isAndroid) {
       return CameraFrameInput.yuv420Rotated90(
         yPlane: image.planes[0].bytes,
@@ -344,7 +446,7 @@ class _CameraViewState extends State<CameraView> {
         yRowStride: image.planes[0].bytesPerRow,
         uvRowStride: image.planes[1].bytesPerRow,
         uvPixelStride: image.planes[1].bytesPerPixel ?? 1,
-        step: 2,
+        step: step,
       );
     } else if (Platform.isIOS) {
       return CameraFrameInput.bgraRaw(
@@ -352,28 +454,31 @@ class _CameraViewState extends State<CameraView> {
         sensorWidth: image.width,
         sensorHeight: image.height,
         bgraRowStride: image.planes[0].bytesPerRow,
-        step: 2,
+        step: step,
       );
     }
     return null;
   }
 
-  // Captures 4 frames and hands off their raw (already correctly
+  // Collects 4 good photos and hands off their raw (already correctly
   // oriented) RGBA pixels, deliberately *not* JPEG-encoded — the crop
   // step (processAvatarShotInIsolate) does the one-and-only JPEG encode
   // after cropping, instead of an encode here that just gets decoded
   // and thrown away moments later.
   Future<void> _triggerCapture(Size screenSize) async {
+    final photos = await _collectGoodPhotos();
+    if (!mounted) return;
+    if (photos == null) {
+      widget.onCaptureFailed?.call();
+      return;
+    }
+
     List<CapturedFrame> frames;
 
     if (Platform.isIOS) {
       final captured = <CapturedFrame>[];
 
-      for (int i = 0; i < 4; i++) {
-        _captureCompleter = Completer<CameraImage>();
-        final image = await _captureCompleter!.future;
-        _captureCompleter = null;
-
+      for (final image in photos) {
         // ui.decodeImageFromPixels needs the Flutter engine's raster
         // context, so it has to run here rather than in a background
         // isolate — but it's a fast, hardware-accelerated decode, not a
@@ -406,14 +511,8 @@ class _CameraViewState extends State<CameraView> {
 
       frames = captured;
     } else {
-      final yuvFrames = <_YuvFrameData>[];
-
-      for (int i = 0; i < 4; i++) {
-        _captureCompleter = Completer<CameraImage>();
-        final image = await _captureCompleter!.future;
-        _captureCompleter = null;
-
-        yuvFrames.add(
+      final yuvFrames = [
+        for (final image in photos)
           _YuvFrameData(
             yPlane: image.planes[0].bytes,
             uPlane: image.planes[1].bytes,
@@ -424,8 +523,7 @@ class _CameraViewState extends State<CameraView> {
             uvRowStride: image.planes[1].bytesPerRow,
             uvPixelStride: image.planes[1].bytesPerPixel ?? 1,
           ),
-        );
-      }
+      ];
 
       frames = await compute(_convertYuvBatchIsolate, yuvFrames);
     }
