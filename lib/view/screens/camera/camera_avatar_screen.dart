@@ -1,4 +1,9 @@
+import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/detection/face_detector_view.dart';
+import 'package:dataspikemobilesdk/dependencies_provider/dataspike_injector.dart';
+import 'package:dataspikemobilesdk/domain/models/states/upload_image_state_v2.dart';
+import 'package:dataspikemobilesdk/face_detector/captured_frames_scorer.dart';
+import 'package:dataspikemobilesdk/view/ui/camera/detection/captured_frames_scores_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:dataspikemobilesdk/view/ui/loader.dart';
@@ -19,6 +24,7 @@ class LiveAvatarCamera extends StatefulWidget {
 
 class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
   late final CameraAvatarViewModel viewModel;
+  final _faceDetectorKey = GlobalKey<FaceDetectorViewState>();
 
   @override
   void initState() {
@@ -29,7 +35,10 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
       hideLoader: hideLoader,
       showError: (title, msg, instruction) =>
           showError(title, msg, instruction),
+      showErrorV2: (status) =>
+          showErrorV2(status),
       showCommonError: (type) => _showCommonError(type),
+      showCapturedFrameScores: _showCapturedFrameScores,
     );
     super.initState();
   }
@@ -42,10 +51,16 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
 
   void proceedNext() {
     if (!mounted) return;
-    DataspikeCoordinator.proceedNext(
-      context,
-      after: DataspikeStep.selfieCamera,
-    );
+    _faceDetectorKey.currentState?.setSuccessStatus();
+
+    Future.delayed(const Duration(seconds: 3), () {
+      if (!mounted) return;
+
+      DataspikeCoordinator.proceedNext(
+        context,
+        after: DataspikeStep.selfieCamera,
+      );
+    });
   }
 
   void showLoader() async {
@@ -55,10 +70,8 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
       useRootNavigator: true,
       barrierDismissible: false,
       barrierColor: AppColors.slateGray,
-      builder: (_) => Align(
-        alignment: const Alignment(0, -0.15), 
-        child: const Loader(),
-      ),
+      builder: (_) =>
+          Align(alignment: const Alignment(0, -0.15), child: const Loader()),
     );
   }
 
@@ -83,7 +96,45 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
         message: message,
         instruction: withInstruction ? InstructionType.liveness : null,
       ),
-    );
+    ).then((_) => { 
+      _faceDetectorKey.currentState?.removeStatus()
+    });
+  }
+
+  void showErrorV2(AvatarDetectionStatus? status) {
+    if (!mounted) return;
+
+    if (status != null) {
+      _faceDetectorKey.currentState?.setExternalError(status);
+    } else {
+      _faceDetectorKey.currentState?.removeStatus();
+    }
+  }
+
+  // Debug: shown instead of the regular result. After a server pass the flow
+  // continues as usual; otherwise detection restarts for another attempt.
+  void _showCapturedFrameScores(
+    List<CapturedFrameScore> frames,
+    UploadImageStateV2? serverResult,
+  ) {
+    if (!mounted) return;
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: AppColors.clear,
+      builder: (_) => CapturedFramesScoresSheet(
+        frames: frames,
+        serverResult: serverResult,
+      ),
+    ).then((_) {
+      if (!mounted) return;
+      if (serverResult is UploadImageSuccessV2) {
+        proceedNext();
+      } else {
+        _faceDetectorKey.currentState?.removeStatus();
+      }
+    });
   }
 
   void _showCommonError(ErrorImageBottomSheetType type) {
@@ -102,7 +153,9 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
           Navigator.of(context, rootNavigator: true).pop();
         },
       ),
-    );
+    ).then((_) => { 
+      _faceDetectorKey.currentState?.removeStatus()
+    });
   }
 
   @override
@@ -118,9 +171,14 @@ class _LiveAvatarCameraState extends State<LiveAvatarCamera> {
               TopBar(hasTimer: true),
               Expanded(
                 child: FaceDetectorView(
+                  key: _faceDetectorKey,
+                  showMlScores: DataspikeInjector.component.showMlScores,
+                  livenessDryRun: DataspikeInjector.component.livenessDryRun,
+                  showCapturedFrameScores:
+                      DataspikeInjector.component.showCapturedFrameScores,
                   onShootCallback:
                       (imageBytes, previewKeySize, screenSize, previewSize) =>
-                          viewModel.shootAndCrop(
+                          viewModel.shootAndCropV2(
                             imageBytes,
                             previewKeySize,
                             screenSize,

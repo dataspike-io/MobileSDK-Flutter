@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:dataspikemobilesdk/main/manager/dataspike_manager.dart';
+import 'package:dataspikemobilesdk/view/screens/camera/liveness_screen/liveness_instruction_screen.dart';
+import 'package:dataspikemobilesdk/view/ui/top_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/view/screens/dataspike_screen/dataspike_screen.dart';
 import 'package:dataspikemobilesdk/view/screens/onboarding_screen/onboarding_screen.dart';
@@ -17,6 +19,7 @@ import 'package:dataspikemobilesdk/view/screens/verification_expired_screen/veri
 import 'package:dataspikemobilesdk/view/screens/camera/instruction_screen/instruction_screen.dart';
 import 'package:dataspikemobilesdk/domain/models/instruction_type.dart';
 import 'package:dataspikemobilesdk/view/screens/countries_screen/countries_screen.dart';
+import 'package:dataspikemobilesdk/view/screens/success_selfie_screen/success_selfie_screen.dart';
 
 enum DataspikeStep {
   onboarding,
@@ -26,23 +29,24 @@ enum DataspikeStep {
   poaInstruction,
   documentCamera,
   selfieCamera,
+  successSelfie,
   address,
   verificationCompleted,
   cameraAccess,
   cameraDenied,
-  verificationExpired
+  verificationExpired,
 }
 
 class DataspikeCoordinator {
   static BuildContext? _flowContext;
   static Timer? _verificationExpiryTimer;
-  
+
   static bool _lifecycleObserverAttached = false;
   static final WidgetsBindingObserver _lifecycleObserver =
       _CoordinatorLifecycleObserver(_onAppResumed);
 
   static void _bindFlowContext(BuildContext context) {
-      _flowContext = Navigator.of(context).context;
+    _flowContext = Navigator.of(context).context;
   }
 
   static void _cancelVerificationExpiryWatch({bool clearContext = false}) {
@@ -90,7 +94,14 @@ class DataspikeCoordinator {
       MaterialPageRoute(
         builder: (_) => DataspikeScreen(
           onSuccess: (context) {
-            showNextStep(context, DataspikeStep.onboarding);
+            if (DataspikeInjector.component.livenessOnly) {
+              // Debug: straight to the selfie camera (see _requiredSteps).
+              _bindFlowContext(context);
+              scheduleVerificationExpiryWatch();
+              proceedNext(context);
+            } else {
+              showNextStep(context, DataspikeStep.onboarding);
+            }
           },
           onFail: (context) {
             // Handle failure
@@ -101,13 +112,17 @@ class DataspikeCoordinator {
   }
 
   static void showNextStep(BuildContext context, DataspikeStep step) {
+    if (TopBar.isShowedPopUp) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+   
     switch (step) {
       case DataspikeStep.onboarding:
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const OnboardingScreen()),
           (route) => false,
         );
-        
+
         // TODO: IN CASE OF REMOVING ONBOARDING CHANGE PLACE OF CALLING
         _bindFlowContext(context);
         scheduleVerificationExpiryWatch();
@@ -151,7 +166,7 @@ class DataspikeCoordinator {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) =>
-                const InstructionScreen(type: InstructionType.liveness),
+                const LivenessInstructionScreen(),
           ),
         );
         break;
@@ -170,6 +185,16 @@ class DataspikeCoordinator {
           MaterialPageRoute(
             maintainState: false,
             builder: (_) => const LiveAvatarCamera()
+          )
+        );
+        break;
+      case DataspikeStep.successSelfie:
+        Navigator.of(
+          context,
+        ).push(
+          MaterialPageRoute(
+            maintainState: false,
+            builder: (_) => const SuccessSelfieScreen()
           )
         );
         break;
@@ -193,16 +218,44 @@ class DataspikeCoordinator {
       case DataspikeStep.verificationExpired:
         _cancelVerificationExpiryWatch(clearContext: true);
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (_) => const VerificationExpiredScreen(),
-          ),
+          MaterialPageRoute(builder: (_) => const VerificationExpiredScreen()),
           (route) => false,
         );
-        break;  
+        break;
     }
   }
 
-  static List<DataspikeStep> _requiredSteps()  {
+  /// Camera permission screen to show first, if any.
+  static List<DataspikeStep> _cameraPermissionSteps() {
+    DataspikeInjector.component.permissionService.requestCameraStatus();
+    final cameraStatus =
+        DataspikeInjector.component.permissionService.initialStatus;
+
+    switch (cameraStatus) {
+      case PermissionStatus.restricted:
+      case PermissionStatus.permanentlyDenied:
+        return [DataspikeStep.cameraDenied];
+      case PermissionStatus.granted:
+        return [];
+      case PermissionStatus.denied:
+      case PermissionStatus.limited:
+      default:
+        return [DataspikeStep.cameraAccess];
+    }
+  }
+
+  static List<DataspikeStep> _requiredSteps() {
+    if (DataspikeInjector.component.livenessOnly) {
+      // Debug: only the selfie camera, regardless of the verification's
+      // required checks.
+      return [
+        ..._cameraPermissionSteps(),
+        DataspikeStep.selfieCamera,
+        DataspikeStep.successSelfie,
+        DataspikeStep.verificationCompleted,
+      ];
+    }
+
     final vm = DataspikeInjector.component.verificationManager.checks;
 
     final requiresDocument = vm.poiIsRequired;
@@ -214,19 +267,7 @@ class DataspikeCoordinator {
     if (personalData) steps.add(DataspikeStep.personalData);
 
     if (requiresDocument || requiresSelfie) {
-      final cameraStatus = DataspikeInjector.component.permissionService.initialStatus;
-
-      switch (cameraStatus) {
-        case PermissionStatus.restricted:
-        case PermissionStatus.permanentlyDenied:
-          steps.add(DataspikeStep.cameraDenied);
-        case PermissionStatus.granted:
-          break;
-        case PermissionStatus.denied:
-        case PermissionStatus.limited:
-        default:
-          steps.add(DataspikeStep.cameraAccess);
-      }
+      steps.addAll(_cameraPermissionSteps());
     }
     if (requiresDocument) {
       steps.add(DataspikeStep.documentInstruction);
@@ -235,6 +276,7 @@ class DataspikeCoordinator {
     if (requiresSelfie) {
       steps.add(DataspikeStep.selfieInstruction);
       steps.add(DataspikeStep.selfieCamera);
+      steps.add(DataspikeStep.successSelfie);
     }
     if (requiresAddress) {
       steps.add(DataspikeStep.poaInstruction);
@@ -263,7 +305,16 @@ class DataspikeCoordinator {
     }
 
     if (next != null) {
-      showNextStep(context, next);
+      if (
+        after == DataspikeStep.cameraAccess 
+      ) {
+        Navigator.of(context).pop();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          showNextStep(context, next!);
+        });
+      } else {
+        showNextStep(context, next);
+      }
     } else {
       showNextStep(context, DataspikeStep.verificationCompleted);
     }
@@ -273,6 +324,8 @@ class DataspikeCoordinator {
       showNextStep(context, DataspikeStep.onboarding);
   static void showSelfieCamera(BuildContext context) =>
       showNextStep(context, DataspikeStep.selfieCamera);
+  static void showSuccessSelfie(BuildContext context) =>
+      showNextStep(context, DataspikeStep.successSelfie);
   static void showDocumentCamera(BuildContext context) =>
       showNextStep(context, DataspikeStep.documentCamera);
   static void showPersonalData(BuildContext context) =>

@@ -151,7 +151,6 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
     final screenSize = MediaQuery.of(context).size;
 
     final camWidth = screenSize.width;
-    final camHeight = screenSize.height * 0.65;
 
     final cropWidth =
         screenSize.width *
@@ -198,11 +197,10 @@ class _LiveCropCameraState extends State<LiveCropCamera> {
                     mainAxisSize: MainAxisSize.max,
                     children: [
                       TopBar(hasTimer: true),
-                      Center(
+                      Expanded(
                         child: SizedBox(
                           key: previewKey,
                           width: camWidth,
-                          height: camHeight,
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(32),
                             child: LayoutBuilder(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:dataspikemobilesdk/view/ui/camera/additional/swipable_view.dart';
+import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
 import 'package:dataspikemobilesdk/domain/models/instruction_type.dart';
 
 class ErrorBottomSheet extends StatelessWidget {
@@ -49,22 +48,6 @@ class ErrorBottomSheet extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        InkWell(
-                          onTap: () =>
-                              Navigator.of(context, rootNavigator: true).pop(),
-                          child: SvgPicture.asset(
-                            'packages/dataspikemobilesdk/assets/images/cross_circled.svg',
-                            width: 32,
-                            height: 32,
-                            alignment: Alignment.center,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 11),
                     Text(
                       title,
                       style: const TextStyle(
@@ -75,27 +58,6 @@ class ErrorBottomSheet extends StatelessWidget {
                         package: 'dataspikemobilesdk',
                       ),
                       textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 6),
-
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.transparentRed,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      width: double.infinity,
-                      child: Text(
-                        message,
-                        style: const TextStyle(
-                          color: AppColors.lightRed,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Figtree',
-                          package: 'dataspikemobilesdk',
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
                     ),
 
                     const SizedBox(height: 32), // Add for case without instruction
@@ -111,6 +73,12 @@ class ErrorBottomSheet extends StatelessWidget {
                     //     ),
                     //   ),
                     // ],
+
+                    ContinueButton(
+                      text: 'Try again',
+                      onPressed: () =>
+                          Navigator.of(context, rootNavigator: true).pop(),
+                    ),
                   ],
                 ),
               ),

@@ -4,20 +4,16 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:dataspikemobilesdk/view/ui/continue_button.dart';
 
 class WarningPopup extends StatelessWidget {
-  final BuildContext parentContext;
 
-  const WarningPopup({super.key, required this.parentContext});
+  const WarningPopup({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final h = MediaQuery.of(context).size.height;
-
     return SafeArea(
       top: false,
       bottom: false,
       child: Container(
         width: double.infinity,
-        height: h * 0.5,
         decoration: const BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.only(
@@ -38,6 +34,7 @@ class WarningPopup extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Row(
@@ -45,7 +42,7 @@ class WarningPopup extends StatelessWidget {
                       children: [
                         InkWell(
                           onTap: () =>
-                              Navigator.of(parentContext, rootNavigator: true)
+                              Navigator.of(context, rootNavigator: true)
                                   .pop(),
                           child: SvgPicture.asset(
                             'packages/dataspikemobilesdk/assets/images/cross_circled.svg',
@@ -80,10 +77,10 @@ class WarningPopup extends StatelessWidget {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 24),
                     ContinueButton(
                       onPressed: () =>
-                          Navigator.of(parentContext, rootNavigator: true)
+                          Navigator.of(context, rootNavigator: true)
                               .pop(),
                       text: 'Stay here',
                     ),
@@ -95,8 +92,8 @@ class WarningPopup extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: TextButton(
                           onPressed: () {
-                            Navigator.of(parentContext, rootNavigator: true).pop();
-                            Navigator.of(parentContext, rootNavigator: true).pop();
+                            Navigator.of(context, rootNavigator: true).pop();
+                            Navigator.of(context, rootNavigator: true).pop();
                           },
                           child: Text(
                             'Go back',

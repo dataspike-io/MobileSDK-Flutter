@@ -1,0 +1,76 @@
+class FaceAnalysisResult {
+  final double detectionScore;
+  final double facePresenceScore;
+  final int blurryFrames;
+  final List<Map<String, double>> landmarks;
+  final Map<String, double>? headPose;
+  final bool isHeadPoseAcceptable;
+  final Map<String, bool> eyeStatus;
+  final FaceBoundingBox boundingBox;
+  final bool isBlurry;
+  final bool isChinVisible;
+  final bool isForeheadVisible;
+  final bool isTooBright;
+  final bool isTooDark;
+
+  // Raw single-frame metrics behind the flags above, for logging/tests.
+  final double blurScore;
+  final double brightRatio;
+  final double darkRatio;
+  final double leftEar;
+  final double rightEar;
+
+  /// Landmarks in pixels of the analyzed image (debug/tests only; not sent
+  /// across the pipeline isolate).
+  final List<List<double>> landmarksPx;
+
+  FaceAnalysisResult({
+    required this.detectionScore,
+    required this.facePresenceScore,
+    required this.blurryFrames,
+    required this.landmarks,
+    required this.headPose,
+    required this.isHeadPoseAcceptable,
+    required this.eyeStatus,
+    required this.boundingBox,
+    required this.isBlurry,
+    required this.isChinVisible,
+    required this.isForeheadVisible,
+    required this.isTooBright,
+    required this.isTooDark,
+    required this.blurScore,
+    required this.brightRatio,
+    required this.darkRatio,
+    required this.leftEar,
+    required this.rightEar,
+    this.landmarksPx = const [],
+  });
+}
+
+class FaceBoundingBox {
+  final double xMin;
+  final double yMin;
+  final double xMax;
+  final double yMax;
+
+  FaceBoundingBox({
+    required this.xMin,
+    required this.yMin,
+    required this.xMax,
+    required this.yMax,
+  });
+
+  double get width => xMax - xMin;
+  double get height => yMax - yMin;
+  double get centerX => (xMin + xMax) / 2;
+  double get centerY => (yMin + yMax) / 2;
+
+  FaceBoundingBox toAbsolute(double imageWidth, double imageHeight) {
+    return FaceBoundingBox(
+      xMin: xMin * imageWidth,
+      yMin: yMin * imageHeight,
+      xMax: xMax * imageWidth,
+      yMax: yMax * imageHeight,
+    );
+  }
+}

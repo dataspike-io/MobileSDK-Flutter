@@ -3,7 +3,8 @@ import 'package:dataspikemobilesdk/data/api/dataspike_sdk_info.dart';
 enum DataspikeEndpoint {
   getVerification,
   uploadImage,
-  uploadManualDocument, 
+  uploadImageV2,
+  uploadManualDocument,
   setCountry,
   getCountries,
   proceedWithVerification,
@@ -17,6 +18,8 @@ extension DataspikeEndpointPath on DataspikeEndpoint {
         return 'api/v3/sdk/${shortId ?? ''}';
       case DataspikeEndpoint.uploadImage:
         return 'api/v3/upload/sdk/${shortId ?? ''}';
+      case DataspikeEndpoint.uploadImageV2:
+        return 'api/v4/upload/sdk/${shortId ?? ''}/liveness-batch';
       case DataspikeEndpoint.uploadManualDocument:
         return 'api/v3/sdk/${shortId ?? ''}/upload';
       case DataspikeEndpoint.setCountry:
@@ -36,6 +39,7 @@ extension DataspikeEndpointPath on DataspikeEndpoint {
       case DataspikeEndpoint.getCountries:
         return 'GET';
       case DataspikeEndpoint.uploadImage:
+      case DataspikeEndpoint.uploadImageV2:
       case DataspikeEndpoint.uploadManualDocument:
       case DataspikeEndpoint.setCountry:
       case DataspikeEndpoint.proceedWithVerification:
@@ -47,11 +51,15 @@ extension DataspikeEndpointPath on DataspikeEndpoint {
 
 extension DataspikeEndpointHeaders on DataspikeEndpoint {
   Map<String, String> headers(String apiToken) {
-    return {
+    final sdkHeaders = {
       'ds-api-token': apiToken,
-      'Content-Type': 'application/json',
-      'User-Agent': DataspikeSdkInfo.userAgent,
-      DataspikeSdkInfo.buildVersionHeader: dataspikeSdkVersion,
+      dataspikeBuildVersionHeader: dataspikeSdkVersion,
     };
+    switch (this) {
+      case DataspikeEndpoint.uploadImageV2:
+        return sdkHeaders;
+      default:
+        return {...sdkHeaders, 'Content-Type': 'application/json'};
+    }
   }
 }

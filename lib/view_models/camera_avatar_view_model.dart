@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:dataspikemobilesdk/data/use_cases/uploading_image_use_case.dart';
-import 'package:flutter/services.dart';
-import 'package:dataspikemobilesdk/domain/models/states/upload_image_state.dart';
+import 'package:dataspikemobilesdk/face_detector/models/captured_frame.dart';
 import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
 import 'package:flutter/foundation.dart';
 import 'package:dataspikemobilesdk/view/ui/error/error_image_bottom_sheet.dart';
 import 'package:dataspikemobilesdk/data/models/errors/common_errors.dart';
 import 'package:dataspikemobilesdk/utils/camera/camera_variable_environments.dart';
+import 'package:dataspikemobilesdk/data/models/request/image_selfie_v2_request_body.dart';
+import 'package:dataspikemobilesdk/domain/models/states/upload_image_state_v2.dart';
+import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
+import 'package:dataspikemobilesdk/dependencies_provider/dataspike_injector.dart';
+import 'package:dataspikemobilesdk/face_detector/captured_frames_scorer.dart';
 
 class CameraAvatarViewModel extends ChangeNotifier {
   late Future<void> init;
@@ -18,7 +22,16 @@ class CameraAvatarViewModel extends ChangeNotifier {
 
   void Function(ErrorImageBottomSheetType type)? showCommonError;
   void Function(String title, String message, bool withInstruction)? showError;
-  
+  void Function(AvatarDetectionStatus? status)? showErrorV2;
+
+  /// Debug (`showCapturedFrameScores`): replaces the regular result handling.
+  /// [serverResult] is null when nothing was sent (dry run).
+  void Function(
+    List<CapturedFrameScore> frames,
+    UploadImageStateV2? serverResult,
+  )?
+  showCapturedFrameScores;
+
   void attachCallbacks({
     VoidCallback? onProceed,
     VoidCallback? showLoader,
@@ -26,12 +39,20 @@ class CameraAvatarViewModel extends ChangeNotifier {
     void Function(ErrorImageBottomSheetType type)? showCommonError,
     void Function(String title, String message, bool withInstruction)?
     showError,
+    showErrorV2,
+    void Function(
+      List<CapturedFrameScore> frames,
+      UploadImageStateV2? serverResult,
+    )?
+    showCapturedFrameScores,
   }) {
     this.onProceed = onProceed;
     this.showLoader = showLoader;
     this.hideLoader = hideLoader;
     this.showCommonError = showCommonError;
     this.showError = showError;
+    this.showErrorV2 = showErrorV2;
+    this.showCapturedFrameScores = showCapturedFrameScores;
   }
 
   CameraAvatarViewModel({required UploadImageUseCase setUseCase})
@@ -39,62 +60,131 @@ class CameraAvatarViewModel extends ChangeNotifier {
     init = _setup();
   }
 
-  Future<void> _setup() async { }
+  Future<void> _setup() async {}
 
-
-  Future<void> shootAndCrop(
-    Uint8List imageBytes,
-    Size previewKeySize, 
+  Future<void> shootAndCropV2(
+    List<CapturedFrame> frames,
+    Size previewKeySize,
     Size screenSize,
     Size previewSize,
   ) async {
-    showLoader?.call();
-    notifyListeners();
-
     try {
       final containerW = previewKeySize.width;
       final containerH = previewKeySize.height;
+      final previewW = previewSize.width;
+      final previewH = previewSize.height;
 
-      final ps = previewSize;
-      final previewW = ps.width;
-      final previewH = ps.height;
+      final paramsList = frames
+          .map(
+            (frame) => AvatarCropParams(
+              rgbaBytes: frame.rgbaBytes,
+              imageWidth: frame.width,
+              imageHeight: frame.height,
+              containerW: containerW,
+              containerH: containerH,
+              previewW: previewW,
+              previewH: previewH,
+              sideInsetPct: CameraConstants.avatarSideInsetPct,
+              topApexPct: CameraConstants.avatarTopApexPct,
+              bottomApexFromBottomPct:
+                  CameraConstants.avatarBottomApexFromBottomPct,
+              strokeWidth: CameraConstants.avatarStrokeWidth,
+              cropToMask: CameraConstants.cropLivenessPhotosToMask,
+            ),
+          )
+          .toList();
 
-      final processed = await compute<AvatarCropParams, Uint8List>(
-        processAvatarShotInIsolate,
-        AvatarCropParams(
-          imageBytes: imageBytes,
-          containerW: containerW,
-          containerH: containerH,
-          previewW: previewW,
-          previewH: previewH,
-          sideInsetPct: CameraConstants.avatarSideInsetPct,
-          topApexPct: CameraConstants.avatarTopApexPct,
-          bottomApexFromBottomPct: CameraConstants.avatarBottomApexFromBottomPct,
-          strokeWidth: CameraConstants.avatarStrokeWidth,
-        ),
-      );
+      final processedList =
+          await compute<List<AvatarCropParams>, List<Uint8List>>(
+            processAvatarShotBatchInIsolate,
+            paramsList,
+          );
 
-      final result = await _setUseCase.uploadImage(
-        documentType: 'liveness_photo',
-        imageBytes: processed,
-        ext: 'jpg',
-        fileName: 'selfie.jpg',
-      );
+      final debug = DataspikeInjector.component;
+      if (debug.livenessDryRun) {
+        // Dry run: photos are only taken to be scored, never uploaded.
+        if (debug.showCapturedFrameScores) {
+          showCapturedFrameScores?.call(
+            await CapturedFramesScorer.score(processedList),
+            null,
+          );
+        }
+        return;
+      }
 
-      hideLoader?.call();
-      notifyListeners();
+      final batchFrames = <LivenessBatchFrame>[
+        for (int i = 0; i < processedList.length; i++)
+          LivenessBatchFrame(
+            frameId: 'frame_$i',
+            fileBytes: processedList[i],
+            ext: 'jpg',
+            fileName: 'selfie_$i.jpg',
+          ),
+      ];
 
-      if (result is UploadImageSuccess) {
+      // Scoring runs alongside the upload, so it adds no wait of its own.
+      final responses = await Future.wait<Object?>([
+        _setUseCase.uploadImageV2(frames: batchFrames),
+        if (debug.showCapturedFrameScores)
+          CapturedFramesScorer.score(processedList),
+      ]);
+      final result = responses[0] as UploadImageStateV2;
+
+      if (debug.showCapturedFrameScores) {
+        showCapturedFrameScores?.call(
+          responses[1] as List<CapturedFrameScore>,
+          result,
+        );
+        return;
+      }
+
+      if (result is UploadImageSuccessV2) {
         onProceed?.call();
-      } else if (result is UploadImageError) {
-        showError?.call(result.title, result.message, result.withInstruction);
+      } else if (result is UploadImageErrorV2) {
+        switch (result.code) {
+          // showErrorV2?.call(AvatarDetectionStatus.halfAttempts); //
+          case 5013:
+          case 5023:
+            showErrorV2?.call(AvatarDetectionStatus.headwearIsOn);
+          case 5017:
+            showErrorV2?.call(AvatarDetectionStatus.excessiveBrightness);
+          case 5020:
+            showErrorV2?.call(AvatarDetectionStatus.faceCovered);
+          case 5021:
+            showErrorV2?.call(AvatarDetectionStatus.faceMaskOn);
+          case 5022: 
+            showErrorV2?.call(AvatarDetectionStatus.handNearFace);
+          case 5024: 
+            showErrorV2?.call(AvatarDetectionStatus.sunglassesOn);
+          case 5012:
+            showErrorV2?.call(AvatarDetectionStatus.chinOutOfFrame);
+          case 5011: 
+            showErrorV2?.call(AvatarDetectionStatus.foreheadOutOfFrame);
+          case 5010:
+            showErrorV2?.call(AvatarDetectionStatus.lowCameraResolution);
+          case 5009:
+            showErrorV2?.call(AvatarDetectionStatus.blurryPhoto);
+          case 5008:
+            showErrorV2?.call(AvatarDetectionStatus.eyesNotDetected);
+          case 5006: 
+          case 5003: 
+            showErrorV2?.call(AvatarDetectionStatus.faceTooFarFromCamera);
+          case 5004:
+            showErrorV2?.call(AvatarDetectionStatus.excessiveDarkness);
+          case 5007: // MY 3d depth phase? BACK: More faces
+          case 5005: // Disputed
+          case 5002: // Spoofing
+          case 5001: // Deepfake
+          case 4001: // No face
+          default: showErrorV2?.call(null);
+        }
+      } else {
+        showErrorV2?.call(null);
       }
     } on NoInternetException {
-      hideLoader?.call();
       notifyListeners();
       showCommonError?.call(ErrorImageBottomSheetType.noInternet);
     } catch (e) {
-      hideLoader?.call();
       notifyListeners();
       showError?.call(
         'Processing error',

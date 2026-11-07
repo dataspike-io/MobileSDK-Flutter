@@ -18,6 +18,10 @@ abstract class DataspikeModule {
   PersonalDataManager get personalDataManager;
   PermissionService get permissionService;
   String get shortId;
+  bool get showMlScores;
+  bool get livenessOnly;
+  bool get livenessDryRun;
+  bool get showCapturedFrameScores;
 }
 
 class DataspikeModuleImpl implements DataspikeModule {
@@ -54,6 +58,18 @@ class DataspikeModuleImpl implements DataspikeModule {
 
   @override
   String get shortId => dependencies.shortId;
+
+  @override
+  bool get showMlScores => dependencies.showMlScores;
+
+  @override
+  bool get livenessOnly => dependencies.livenessOnly;
+
+  @override
+  bool get livenessDryRun => dependencies.livenessDryRun;
+
+  @override
+  bool get showCapturedFrameScores => dependencies.showCapturedFrameScores;
 
   @override
   IDataspikeRepository get dataspikeRepository => _dataspikeRepository;

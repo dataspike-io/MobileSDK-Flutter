@@ -12,10 +12,16 @@ void main() {
     expect(dataspikeSdkVersion, match!.group(1));
   });
 
-  test('headers include User-Agent and build version', () {
-    final headers = DataspikeEndpoint.getVerification.headers('token');
-    expect(headers['ds-api-token'], 'token');
-    expect(headers['User-Agent'], startsWith('DataspikeFlutterSDK/$dataspikeSdkVersion ('));
-    expect(headers['x-flutter-build-version'], dataspikeSdkVersion);
+  test('every endpoint sends the build version header', () {
+    for (final endpoint in DataspikeEndpoint.values) {
+      final headers = endpoint.headers('token');
+      expect(headers['ds-api-token'], 'token');
+      expect(headers['x-flutter-build-version'], dataspikeSdkVersion);
+    }
+  });
+
+  test('uploadImageV2 has no JSON Content-Type', () {
+    expect(DataspikeEndpoint.uploadImageV2.headers('t').containsKey('Content-Type'), isFalse);
+    expect(DataspikeEndpoint.getVerification.headers('t')['Content-Type'], 'application/json');
   });
 }
