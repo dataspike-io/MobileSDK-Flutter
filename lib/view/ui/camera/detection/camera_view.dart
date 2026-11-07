@@ -29,6 +29,7 @@ class CameraView extends StatefulWidget {
     this.captureOnOk = true,
     this.validateCaptureFrame,
     this.onCaptureFailed,
+    this.isInterrupted = false,
   });
 
   final CustomPaint? customPaint;
@@ -61,6 +62,9 @@ class CameraView extends StatefulWidget {
   final VoidCallback? onRetry;
   final AvatarDetectionStatus status;
 
+  /// Tier 3: capture is stopped and the pill offers "Try again".
+  final bool isInterrupted;
+
   @override
   State<CameraView> createState() => _CameraViewState();
 }
@@ -84,7 +88,8 @@ class _CameraViewState extends State<CameraView> {
   static const _captureTimeout = Duration(seconds: 8);
 
   Timer? _countdownTimer;
-  int _countdownValue = 5;
+  static const int _gracePeriodSeconds = 3;
+  int _countdownValue = _gracePeriodSeconds;
 
   Timer? _successDotsTimer;
   bool _showSuccessDots = false;
@@ -221,8 +226,10 @@ class _CameraViewState extends State<CameraView> {
                                 ? const _SuccessDotsLoader()
                                 : AvatarInstructionPill(
                                     status: widget.status,
+                                    showRetryButton: widget.isInterrupted,
                                     firstAction: () {
-                                      if (widget.status.isButtonEnabled) {
+                                      if (widget.status.isButtonEnabled ||
+                                          widget.isInterrupted) {
                                         widget.onRetry?.call();
                                       }
                                     },
@@ -312,7 +319,7 @@ class _CameraViewState extends State<CameraView> {
 
   void _startCountdown() {
     _countdownTimer?.cancel();
-    _countdownValue = 5;
+    _countdownValue = _gracePeriodSeconds;
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
         timer.cancel();

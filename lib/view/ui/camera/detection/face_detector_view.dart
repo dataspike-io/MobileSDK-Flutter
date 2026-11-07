@@ -1,7 +1,10 @@
 // import 'package:dataspikemobilesdk/face_detector/pipeline/facepipeline.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'detector_view.dart';
+import 'package:dataspikemobilesdk/res/colors/app_colors.dart';
 import 'package:dataspikemobilesdk/view/ui/camera/two_arcs_painter.dart';
+import 'package:dataspikemobilesdk/domain/managers/liveness_error_tracker.dart';
 import 'package:dataspikemobilesdk/domain/models/avatar_detection_status.dart';
 import 'package:dataspikemobilesdk/face_detector/models/camera_frame_input.dart';
 import 'package:dataspikemobilesdk/face_detector/models/captured_frame.dart';
@@ -44,6 +47,9 @@ class FaceDetectorView extends StatefulWidget {
 }
 
 class FaceDetectorViewState extends State<FaceDetectorView> {
+  // Tier 2 hint stays on screen for 3-4 seconds.
+  static const _hintDuration = Duration(milliseconds: 3500);
+
   FacePipelineIsolate? _facePipeline;
 
   @override
@@ -81,9 +87,23 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
       !(!_captureOnOk && _status == AvatarDetectionStatus.ok);
   int _analyzedFrames = 0;
 
+  // Progressive error handling (see "Error handling logic in Liveness"):
+  // Tier 1 is a red oval, Tier 2 a timed hint pill, Tier 3 an interruption
+  // that stops the analysis until the user taps "Try again".
+  final _errorTracker = LivenessErrorTracker();
+  Timer? _hintTimer;
+  AvatarDetectionStatus? _hintStatus;
+  AvatarDetectionStatus? _lastError;
+  bool _isInterrupted = false;
+
+  // Frames are not analyzed while the user must tap "Try again" or while a
+  // status that must not be auto-hidden is on screen.
+  bool get _isAnalysisPaused => _isInterrupted || _isStatusLocked;
+
   @override
   void dispose() {
     _canProcess = false;
+    _hintTimer?.cancel();
     _facePipeline?.dispose();
     _mlScores.dispose();
     super.dispose();
@@ -96,7 +116,7 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
       onImage: _processImage,
       onShootCallback: _onShootCallback,
       onTimerReady: _onTimerReady,
-      onRetry: _setUndetectedState,
+      onRetry: _onRetry,
       status: _status,
       captureOnOk: _captureOnOk,
       validateCaptureFrame: _validateCapturePhoto,
@@ -104,6 +124,7 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
       scoresOverlay: widget.showMlScores
           ? MlScoresOverlay(scores: _mlScores)
           : null,
+      isInterrupted: _isInterrupted,
     );
   }
 
@@ -116,6 +137,15 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
       _customPaint = CustomPaint(painter: TwoArcsPainter());
     }
     _status = AvatarDetectionStatus.undetected;
+    if (mounted) setState(() {});
+  }
+
+  // "Try again" starts the grace period again; its countdown is driven by
+  // CameraView, which calls _onTimerReady once it is over.
+  void _onRetry() {
+    _resetErrorState();
+    _customPaint = null;
+    _status = AvatarDetectionStatus.initialTimer;
     if (mounted) setState(() {});
   }
 
@@ -140,13 +170,14 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
     if (!_canProcess) return;
     if (_isProcessing) return;
     if (_facePipeline == null) return;
-    if (_isStatusLocked) {
+    if (_isAnalysisPaused) {
       return;
     }
 
     if (!_initialTimerAppeared) {
       _initialTimerAppeared = true;
       _setStateIfChanged(null, AvatarDetectionStatus.initialTimer);
+      return;
     }
 
     _isProcessing = true;
@@ -159,38 +190,26 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
       );
       stopwatch.stop();
 
-      if (result == null) {
-        _publishScores(null, avatarRect, stopwatch, _status);
-        // Don't let a single "no face" frame kick us out of a status that
-        // must not be auto-hidden (e.g. the initial countdown, or a
-        // just-reached "ok"/success moment) — only CameraView's own timer
-        // (via _onTimerReady) is allowed to end the countdown.
-        if (!_isStatusLocked) {
-          _setUndetectedState();
-        }
+      // The screen may have moved on while this frame was being analyzed
+      // (interruption, retry, backend result): drop the stale result.
+      if (!_canProcess || _isAnalysisPaused) {
         return;
       }
 
+      // No face at all is the same error as a face that is not in frame.
       // Box coordinates are relative to the avatar crop, so is the area.
-      final status = _evaluateHeadPosition(
-        result: result,
-        imageSize: Size(avatarRect.w.toDouble(), avatarRect.h.toDouble()),
-      );
+      final status = result == null
+          ? AvatarDetectionStatus.lookStraight
+          : _evaluateHeadPosition(
+              result: result,
+              imageSize: Size(
+                avatarRect.w.toDouble(),
+                avatarRect.h.toDouble(),
+              ),
+            );
       _publishScores(result, avatarRect, stopwatch, status);
 
-      final isTopArcHighlighted = status.isTopArcHighlighted;
-      final isBottomArcHighlighted = status.isBottomArcHighlighted;
-
-      final painter = TwoArcsPainter(
-        isTopArcHighlighted: isTopArcHighlighted,
-        isBottomArcHighlighted: isBottomArcHighlighted,
-        highlightColor: status.arcColor,
-        isArrowsEnabled: status.isArrowsEnabled,
-      );
-
-      final paint = CustomPaint(painter: painter);
-
-      _setStateIfChanged(paint, status);
+      _handleFrameStatus(status);
     } catch (_, _) {
     } finally {
       _isProcessing = false;
@@ -234,6 +253,99 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
     );
   }
 
+  void _handleFrameStatus(AvatarDetectionStatus status) {
+    final outcome = _errorTracker.onFrame(status.errorGroup);
+
+    // A clean frame: counters are already reset, a visible hint goes away
+    // (the capture is about to start).
+    if (outcome == null) {
+      _lastError = null;
+      _cancelHint();
+
+      final painter = TwoArcsPainter(
+        isTopArcHighlighted: status.isTopArcHighlighted,
+        isBottomArcHighlighted: status.isBottomArcHighlighted,
+        highlightColor: status.arcColor,
+        isArrowsEnabled: status.isArrowsEnabled,
+      );
+      _setStateIfChanged(CustomPaint(painter: painter), status);
+      return;
+    }
+
+    _lastError = status;
+
+    if (outcome == LivenessFrameOutcome.showHint) {
+      _startHint(status);
+    } else if (outcome == LivenessFrameOutcome.interrupt &&
+        _hintTimer == null) {
+      _interrupt(status);
+      return;
+    }
+    // While a hint is still visible the interruption waits for it to hide
+    // (see _onHintExpired).
+
+    _setStateIfChanged(
+      _errorPaint(status),
+      _hintStatus ?? AvatarDetectionStatus.undetected,
+    );
+  }
+
+  // The oval stays red for as long as the current frame has an error,
+  // whichever tier is active.
+  CustomPaint _errorPaint(AvatarDetectionStatus error) {
+    return CustomPaint(
+      painter: TwoArcsPainter(
+        isTopArcHighlighted: true,
+        isBottomArcHighlighted: true,
+        highlightColor: AppColors.lightRed,
+        isArrowsEnabled: error.isArrowsEnabled,
+      ),
+    );
+  }
+
+  void _startHint(AvatarDetectionStatus error) {
+    _hintStatus = error;
+    _hintTimer?.cancel();
+    _hintTimer = Timer(_hintDuration, _onHintExpired);
+  }
+
+  void _cancelHint() {
+    _hintTimer?.cancel();
+    _hintTimer = null;
+    _hintStatus = null;
+  }
+
+  void _onHintExpired() {
+    final expired = _hintStatus;
+    _hintTimer = null;
+    _hintStatus = null;
+    if (!mounted || _isInterrupted) return;
+
+    final error = _lastError;
+    if (error != null && _errorTracker.isInterruptionDue) {
+      _interrupt(error);
+    } else if (_status == expired) {
+      // The error may well still be there: the oval keeps its red paint.
+      _status = AvatarDetectionStatus.undetected;
+      setState(() {});
+    }
+  }
+
+  void _interrupt(AvatarDetectionStatus error) {
+    _cancelHint();
+    _isInterrupted = true;
+    _status = error;
+    _customPaint = _errorPaint(error);
+    if (mounted) setState(() {});
+  }
+
+  void _resetErrorState() {
+    _cancelHint();
+    _errorTracker.reset();
+    _lastError = null;
+    _isInterrupted = false;
+  }
+
   void _setStateIfChanged(
     CustomPaint? newPaint,
     AvatarDetectionStatus newStatus,
@@ -250,12 +362,14 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
   }
 
   void setExternalError(AvatarDetectionStatus newStatus) {
+    _resetErrorState();
     _status = newStatus;
     _customPaint = null;
     if (mounted) setState(() {});
   }
 
   void setSuccessStatus() {
+    _resetErrorState();
     _status = AvatarDetectionStatus.success;
 
     final painter = TwoArcsPainter(
@@ -271,6 +385,7 @@ class FaceDetectorViewState extends State<FaceDetectorView> {
   }
 
   void removeStatus() {
+    _resetErrorState();
     _status = AvatarDetectionStatus.notStarted;
     _customPaint = null;
     if (mounted) setState(() {});
