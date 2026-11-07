@@ -1,3 +1,5 @@
+import 'package:dataspikemobilesdk/data/api/dataspike_sdk_info.dart';
+
 enum DataspikeEndpoint {
   getVerification,
   uploadImage,
@@ -48,6 +50,8 @@ extension DataspikeEndpointHeaders on DataspikeEndpoint {
     return {
       'ds-api-token': apiToken,
       'Content-Type': 'application/json',
+      'User-Agent': DataspikeSdkInfo.userAgent,
+      DataspikeSdkInfo.buildVersionHeader: dataspikeSdkVersion,
     };
   }
 }
