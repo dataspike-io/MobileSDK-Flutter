@@ -88,7 +88,7 @@ class _CameraViewState extends State<CameraView> {
   static const _captureTimeout = Duration(seconds: 8);
 
   Timer? _countdownTimer;
-  static const int _gracePeriodSeconds = 3;
+  static const int _gracePeriodSeconds = 5;
   int _countdownValue = _gracePeriodSeconds;
 
   Timer? _successDotsTimer;
