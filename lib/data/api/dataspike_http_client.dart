@@ -4,13 +4,14 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:dataspikemobilesdk/data/api/dataspike_sdk_info.dart';
+
 const String _sdkName = 'DataspikeFlutterSDK';
-const String _sdkVersion = '0.0.1';
 
 /// http.Client that adds a browser-like User-Agent with the device model and OS version.
 ///
-/// Android: Mozilla/5.0 (Linux; Android 14; samsung SM-S918B) DataspikeFlutterSDK/0.0.1
-/// iOS:     Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X; iPhone16,1) DataspikeFlutterSDK/0.0.1
+/// Android: Mozilla/5.0 (Linux; Android 14; samsung SM-S918B) DataspikeFlutterSDK/1.0.0
+/// iOS:     Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X; iPhone16,1) DataspikeFlutterSDK/1.0.0
 class DataspikeHttpClient extends http.BaseClient {
   final http.Client _inner;
 
@@ -30,7 +31,7 @@ class DataspikeHttpClient extends http.BaseClient {
   void close() => _inner.close();
 
   static Future<String> _buildUserAgent() async {
-    const sdk = '$_sdkName/$_sdkVersion';
+    const sdk = '$_sdkName/$dataspikeSdkVersion';
     try {
       final deviceInfo = DeviceInfoPlugin();
       if (Platform.isAndroid) {

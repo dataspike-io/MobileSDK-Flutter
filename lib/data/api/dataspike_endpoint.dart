@@ -1,3 +1,5 @@
+import 'package:dataspikemobilesdk/data/api/dataspike_sdk_info.dart';
+
 enum DataspikeEndpoint {
   getVerification,
   uploadImage,
@@ -49,11 +51,15 @@ extension DataspikeEndpointPath on DataspikeEndpoint {
 
 extension DataspikeEndpointHeaders on DataspikeEndpoint {
   Map<String, String> headers(String apiToken) {
+    final sdkHeaders = {
+      'ds-api-token': apiToken,
+      dataspikeBuildVersionHeader: dataspikeSdkVersion,
+    };
     switch (this) {
       case DataspikeEndpoint.uploadImageV2:
-        return {'ds-api-token': apiToken};
+        return sdkHeaders;
       default:
-        return {'ds-api-token': apiToken, 'Content-Type': 'application/json'};
+        return {...sdkHeaders, 'Content-Type': 'application/json'};
     }
   }
 }
