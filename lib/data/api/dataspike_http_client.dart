@@ -10,8 +10,8 @@ const String _sdkName = 'DataspikeFlutterSDK';
 
 /// http.Client that adds a browser-like User-Agent with the device model and OS version.
 ///
-/// Android: Mozilla/5.0 (Linux; Android 14; samsung SM-S918B) DataspikeFlutterSDK/1.0.0
-/// iOS:     Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X; iPhone16,1) DataspikeFlutterSDK/1.0.0
+/// Android: Mozilla/5.0 (Linux; Android 14; samsung SM-S918B) DataspikeFlutterSDK/1.0.1
+/// iOS:     Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X; iPhone16,1) DataspikeFlutterSDK/1.0.1
 class DataspikeHttpClient extends http.BaseClient {
   final http.Client _inner;
 

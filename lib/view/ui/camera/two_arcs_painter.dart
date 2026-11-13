@@ -190,6 +190,8 @@ class TwoArcsPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant TwoArcsPainter old) =>
       color != old.color ||
+      highlightColor != old.highlightColor ||
+      isArrowsEnabled != old.isArrowsEnabled ||
       topRisePx != old.topRisePx ||
       bottomRisePx != old.bottomRisePx ||
       ctrlXpx != old.ctrlXpx ||

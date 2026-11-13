@@ -11,6 +11,7 @@ import 'package:dataspikemobilesdk/view/ui/camera/face_oval_outside_clipper.dart
 import 'package:dataspikemobilesdk/view/ui/camera/default_face_corner_painter.dart';
 import 'package:dataspikemobilesdk/face_detector/models/camera_frame_input.dart';
 import 'package:dataspikemobilesdk/face_detector/models/captured_frame.dart';
+import 'package:dataspikemobilesdk/domain/managers/capture_budget.dart';
 import 'package:dataspikemobilesdk/domain/managers/isolate_image_processing.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
@@ -29,6 +30,7 @@ class CameraView extends StatefulWidget {
     this.captureOnOk = true,
     this.validateCaptureFrame,
     this.onCaptureFailed,
+    this.isInterrupted = false,
   });
 
   final CustomPaint? customPaint;
@@ -61,6 +63,9 @@ class CameraView extends StatefulWidget {
   final VoidCallback? onRetry;
   final AvatarDetectionStatus status;
 
+  /// Tier 3: capture is stopped and the pill offers "Try again".
+  final bool isInterrupted;
+
   @override
   State<CameraView> createState() => _CameraViewState();
 }
@@ -83,8 +88,14 @@ class _CameraViewState extends State<CameraView> {
   static const _framesToSend = 4;
   static const _captureTimeout = Duration(seconds: 8);
 
+  // A slow device needs longer to validate every photo, so the timeout above
+  // is stretched to fit them (see CaptureBudget), up to this limit.
+  static const _captureTimeoutMax = Duration(seconds: 20);
+  static const _captureSpareCandidates = 2;
+
   Timer? _countdownTimer;
-  int _countdownValue = 5;
+  static const int _gracePeriodSeconds = 5;
+  int _countdownValue = _gracePeriodSeconds;
 
   Timer? _successDotsTimer;
   bool _showSuccessDots = false;
@@ -221,8 +232,10 @@ class _CameraViewState extends State<CameraView> {
                                 ? const _SuccessDotsLoader()
                                 : AvatarInstructionPill(
                                     status: widget.status,
+                                    showRetryButton: widget.isInterrupted,
                                     firstAction: () {
-                                      if (widget.status.isButtonEnabled) {
+                                      if (widget.status.isButtonEnabled ||
+                                          widget.isInterrupted) {
                                         widget.onRetry?.call();
                                       }
                                     },
@@ -312,7 +325,7 @@ class _CameraViewState extends State<CameraView> {
 
   void _startCountdown() {
     _countdownTimer?.cancel();
-    _countdownValue = 5;
+    _countdownValue = _gracePeriodSeconds;
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
         timer.cancel();
@@ -403,14 +416,21 @@ class _CameraViewState extends State<CameraView> {
 
   // Collects [_framesToSend] stream frames that pass [_isGoodCapturePhoto],
   // taken at least [_captureFrameGap] apart. Null if the timeout runs out
-  // first.
+  // first; the timeout adapts to how long validating a photo takes here.
   Future<List<CameraImage>?> _collectGoodPhotos() async {
     final accepted = <CameraImage>[];
-    final deadline = DateTime.now().add(_captureTimeout);
+    final startedAt = DateTime.now();
+    final budget = CaptureBudget(
+      baseTimeout: _captureTimeout,
+      maxTimeout: _captureTimeoutMax,
+      photosToSend: _framesToSend,
+      spareCandidates: _captureSpareCandidates,
+      frameGap: _captureFrameGap,
+    );
     DateTime? lastAcceptedAt;
 
     while (accepted.length < _framesToSend &&
-        DateTime.now().isBefore(deadline)) {
+        DateTime.now().isBefore(startedAt.add(budget.timeout))) {
       if (lastAcceptedAt != null) {
         final wait = lastAcceptedAt
             .add(_captureFrameGap)
@@ -423,7 +443,10 @@ class _CameraViewState extends State<CameraView> {
       final capturedAt = DateTime.now();
       if (!mounted) return null;
 
-      if (await _isGoodCapturePhoto(image)) {
+      final isGood = await _isGoodCapturePhoto(image);
+      budget.recordValidation(DateTime.now().difference(capturedAt));
+
+      if (isGood) {
         accepted.add(image);
         lastAcceptedAt = capturedAt;
       }

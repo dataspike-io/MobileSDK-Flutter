@@ -8,11 +8,16 @@ class AvatarInstructionPill extends StatelessWidget {
   final VoidCallback? firstAction;
   final VoidCallback? secondAction;
 
+  /// Shows the "Try again" button for statuses that have none of their own
+  /// (front errors escalated to Tier 3).
+  final bool showRetryButton;
+
   const AvatarInstructionPill({
     super.key,
     required this.status,
     this.firstAction,
-    this.secondAction
+    this.secondAction,
+    this.showRetryButton = false,
   });
 
   @override
@@ -92,7 +97,7 @@ class AvatarInstructionPill extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
 
-            if (status.isButtonEnabled)
+            if (status.isButtonEnabled || showRetryButton)
               Column(
                 children: [
                   const SizedBox(height: 12),
@@ -109,7 +114,7 @@ class AvatarInstructionPill extends StatelessWidget {
                       ),
                       onPressed: firstAction,
                       child: Text(
-                        status.buttonTitle ?? '',
+                        status.buttonTitle ?? 'Try again',
                         style: const TextStyle(
                           fontFamily: 'Figtree',
                           package: 'dataspikemobilesdk',

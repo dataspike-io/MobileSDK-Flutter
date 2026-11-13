@@ -103,7 +103,10 @@ enum AvatarDetectionStatus {
 
   bool get isVisible {
     switch (this) {
+      // No text after the grace period: an error shows up as a red oval
+      // first and only then as a hint pill.
       case AvatarDetectionStatus.notStarted:
+      case AvatarDetectionStatus.undetected:
         return false;
       default:
         return true;

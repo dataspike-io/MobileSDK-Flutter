@@ -11,7 +11,7 @@ class SampleAppDependencies {
 
   static const dependencies = SampleAppDependencies(
     isDebug: true,
-    dsApiToken: '', 
+    dsApiToken: '',
     shortId: '',
   );
 }

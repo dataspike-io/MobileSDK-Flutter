@@ -62,6 +62,87 @@ class CameraAvatarViewModel extends ChangeNotifier {
 
   Future<void> _setup() async {}
 
+  // Backend errors from most to least critical, following the priority table
+  // in "Error handling logic in Liveness". The backend may return several
+  // errors for one attempt; only the first entry of this list that is
+  // present is shown.
+  static const _backendErrorPriority = [
+    AvatarDetectionStatus.halfAttempts,
+    AvatarDetectionStatus.headwearIsOn,
+    AvatarDetectionStatus.sunglassesOn,
+    AvatarDetectionStatus.faceCovered,
+    AvatarDetectionStatus.faceMaskOn,
+    AvatarDetectionStatus.handNearFace,
+    AvatarDetectionStatus.lowCameraResolution,
+    AvatarDetectionStatus.chinOutOfFrame,
+    AvatarDetectionStatus.foreheadOutOfFrame,
+    AvatarDetectionStatus.faceTooFarFromCamera,
+    AvatarDetectionStatus.eyesNotDetected,
+    AvatarDetectionStatus.excessiveDarkness,
+    AvatarDetectionStatus.excessiveBrightness,
+    AvatarDetectionStatus.blurryPhoto,
+  ];
+
+  static AvatarDetectionStatus? _backendErrorStatus(int code) {
+    switch (code) {
+      // TODO: map the half-attempts signal to AvatarDetectionStatus.halfAttempts
+      case 5013:
+      case 5023:
+        return AvatarDetectionStatus.headwearIsOn;
+      case 5017:
+        return AvatarDetectionStatus.excessiveBrightness;
+      case 5020:
+        return AvatarDetectionStatus.faceCovered;
+      case 5021:
+        return AvatarDetectionStatus.faceMaskOn;
+      case 5022:
+        return AvatarDetectionStatus.handNearFace;
+      case 5024:
+        return AvatarDetectionStatus.sunglassesOn;
+      case 5012:
+        return AvatarDetectionStatus.chinOutOfFrame;
+      case 5011:
+        return AvatarDetectionStatus.foreheadOutOfFrame;
+      case 5010:
+        return AvatarDetectionStatus.lowCameraResolution;
+      case 5009:
+        return AvatarDetectionStatus.blurryPhoto;
+      case 5008:
+        return AvatarDetectionStatus.eyesNotDetected;
+      case 5006:
+      case 5003:
+        return AvatarDetectionStatus.faceTooFarFromCamera;
+      case 5004:
+        return AvatarDetectionStatus.excessiveDarkness;
+      case 5007: // MY 3d depth phase? BACK: More faces
+      case 5005: // Disputed
+      case 5002: // Spoofing
+      case 5001: // Deepfake
+      case 4001: // No face
+      default:
+        return null;
+    }
+  }
+
+  AvatarDetectionStatus? _pickBackendError(UploadImageErrorV2 result) {
+    final codes = result.framesErrors.isEmpty
+        ? [result.code]
+        : result.framesErrors.map((e) => e.code);
+
+    AvatarDetectionStatus? best;
+    var bestRank = _backendErrorPriority.length;
+    for (final code in codes) {
+      final status = _backendErrorStatus(code);
+      if (status == null) continue;
+      final rank = _backendErrorPriority.indexOf(status);
+      if (rank < bestRank) {
+        best = status;
+        bestRank = rank;
+      }
+    }
+    return best;
+  }
+
   Future<void> shootAndCropV2(
     List<CapturedFrame> frames,
     Size previewKeySize,
@@ -141,43 +222,7 @@ class CameraAvatarViewModel extends ChangeNotifier {
       if (result is UploadImageSuccessV2) {
         onProceed?.call();
       } else if (result is UploadImageErrorV2) {
-        switch (result.code) {
-          // showErrorV2?.call(AvatarDetectionStatus.halfAttempts); //
-          case 5013:
-          case 5023:
-            showErrorV2?.call(AvatarDetectionStatus.headwearIsOn);
-          case 5017:
-            showErrorV2?.call(AvatarDetectionStatus.excessiveBrightness);
-          case 5020:
-            showErrorV2?.call(AvatarDetectionStatus.faceCovered);
-          case 5021:
-            showErrorV2?.call(AvatarDetectionStatus.faceMaskOn);
-          case 5022: 
-            showErrorV2?.call(AvatarDetectionStatus.handNearFace);
-          case 5024: 
-            showErrorV2?.call(AvatarDetectionStatus.sunglassesOn);
-          case 5012:
-            showErrorV2?.call(AvatarDetectionStatus.chinOutOfFrame);
-          case 5011: 
-            showErrorV2?.call(AvatarDetectionStatus.foreheadOutOfFrame);
-          case 5010:
-            showErrorV2?.call(AvatarDetectionStatus.lowCameraResolution);
-          case 5009:
-            showErrorV2?.call(AvatarDetectionStatus.blurryPhoto);
-          case 5008:
-            showErrorV2?.call(AvatarDetectionStatus.eyesNotDetected);
-          case 5006: 
-          case 5003: 
-            showErrorV2?.call(AvatarDetectionStatus.faceTooFarFromCamera);
-          case 5004:
-            showErrorV2?.call(AvatarDetectionStatus.excessiveDarkness);
-          case 5007: // MY 3d depth phase? BACK: More faces
-          case 5005: // Disputed
-          case 5002: // Spoofing
-          case 5001: // Deepfake
-          case 4001: // No face
-          default: showErrorV2?.call(null);
-        }
+        showErrorV2?.call(_pickBackendError(result));
       } else {
         showErrorV2?.call(null);
       }

@@ -19,6 +19,7 @@ class DetectorView extends StatefulWidget {
     this.captureOnOk = true,
     this.validateCaptureFrame,
     this.onCaptureFailed,
+    this.isInterrupted = false,
   });
 
   final CustomPaint? customPaint;
@@ -38,6 +39,7 @@ class DetectorView extends StatefulWidget {
   final Function()? onTimerReady;
   final VoidCallback? onRetry;
   final AvatarDetectionStatus status;
+  final bool isInterrupted;
 
   @override
   State<DetectorView> createState() => _DetectorViewState();
@@ -63,6 +65,7 @@ class _DetectorViewState extends State<DetectorView> {
       captureOnOk: widget.captureOnOk,
       validateCaptureFrame: widget.validateCaptureFrame,
       onCaptureFailed: widget.onCaptureFailed,
+      isInterrupted: widget.isInterrupted,
     );
   }
 }
